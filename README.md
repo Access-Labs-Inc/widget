@@ -1,18 +1,6 @@
-# Help Web Widget
+# ACS Web Widget
 
-This is a reference project that demonstrate how to build web UI widget that can be embedded into 3rd party website. See walkthrough for details [here](https://blog.jenyay.com/web-ui-widget/).
-
-![](https://github.com/jenyayel/help-widget/workflows/CI/badge.svg?branch=master)
-
-This structure provides those advantages:
-
-* Small footprint and solid snippet on hosting website (see [usage](#usage))
-* Multi-instance on the same page
-* Isolation of code execution and CSS
-* Customization via configuration injection and API to Widget
-* Minimal dependencies and small size via single request (>30KB gzipped)
-
-and a few more.
+This is a web widget to help you integrate with ACS protocol.
 
 ## Usage
 
@@ -43,8 +31,8 @@ You can find a full list of configurations in `AppConfigurations` interface.
 The widget dev setup is similar to regular client application. To get started:
 
 ```bash
-npm i
-npm start
+yarn install
+yarn start
 ```
 
 This will open browser with "demo" page which hosts the widget.

@@ -9,7 +9,7 @@ import { Configurations } from './models';
  */
 const defaultConfig: Configurations = {
     debug: false,
-    serviceBaseUrl: 'https://help-widget-backend.glitch.me',
+    serviceBaseUrl: 'https://localhost:7891',
     minimized: false,
     disableDarkMode: false,
     text: {},
