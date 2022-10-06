@@ -1,11 +1,30 @@
 {
+  "editor.tabSize": 2,
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": [
+    "source.addMissingImports",
+    "source.fixAll.eslint"
+  ],
   "files.exclude": {
-      "**/.git": true,
-      "**/.DS_Store": true,
-      "**/*.js": {"when": "$(basename).ts"},
-      "**/*.js.map": true,
-      "dist/**": true,
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/*.js": { "when": "$(basename).ts" },
+    "**/*.js.map": true,
+    "dist/**": true
   },
   "typescript.preferences.quoteStyle": "single",
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  // Multiple language settings for json and jsonc files
+  "[json][jsonc]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

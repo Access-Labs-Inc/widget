@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 var copyWebpackPlugin = require('copy-webpack-plugin');
+
 const bundleOutputDir = './dist';
 
 module.exports = (env) => {
@@ -13,11 +14,23 @@ module.exports = (env) => {
       path: path.resolve(bundleOutputDir),
     },
     devServer: {
-      contentBase: bundleOutputDir
+      static: bundleOutputDir
     },
     plugins: isDevBuild
-      ? [new webpack.SourceMapDevToolPlugin(), new copyWebpackPlugin([{ from: 'dev/' }])]
-      : [],
+      ? [
+        new webpack.ProvidePlugin({
+          process: 'process/browser',
+          Buffer: ['buffer', 'Buffer'],
+        }),
+        new webpack.SourceMapDevToolPlugin(),
+        new copyWebpackPlugin([{ from: 'dev/' }]),
+      ]
+      : [
+        new webpack.ProvidePlugin({
+          process: 'process/browser',
+          Buffer: ['buffer', 'Buffer'],
+        }),
+      ],
     optimization: {
       minimize: !isDevBuild
     },
@@ -31,7 +44,6 @@ module.exports = (env) => {
           use: [
             {
               loader: 'style-loader',
-              options: { injectType: 'singletonStyleTag' }
             },
             {
               // allows import CSS as modules
@@ -58,14 +70,7 @@ module.exports = (env) => {
               loader: 'babel-loader',
               options: {
                 presets: [
-                  ['@babel/preset-env', {
-                    'targets': {
-                      'browsers': ['IE 11, last 2 versions']
-                    },
-                    // makes usage of @babel/polyfill because of IE11
-                    // there is at least async functions and for..of
-                    useBuiltIns: 'usage'
-                  }],
+                  ['@babel/preset-env'],
                   [
                     // enable transpiling ts => js
                     "@babel/typescript",
@@ -74,6 +79,8 @@ module.exports = (env) => {
                   ]
                 ],
                 'plugins': [
+                  'babel-plugin-macros',
+                  'babel-plugin-styled-components',
                   // syntax sugar found in React components
                   '@babel/proposal-class-properties',
                   '@babel/proposal-object-rest-spread',
@@ -90,7 +97,17 @@ module.exports = (env) => {
         }]
     },
     resolve: {
-      extensions: ['*', '.js', '.ts', '.tsx']
+      extensions: ['*', '.js', '.ts', '.tsx'],
+      alias: {
+        react: 'preact/compat',
+        'react-dom': 'preact/compat',
+      },
+      fallback: {
+        "crypto": require.resolve("crypto-browserify"),
+        "stream": require.resolve("stream-browserify"),
+        "path": require.resolve("path-browserify"),
+        "buffer": require.resolve('buffer'),
+      }
     }
   }];
 };

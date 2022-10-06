@@ -3,13 +3,15 @@ import { App } from './App';
 import loader from './loader';
 import { Configurations } from './models';
 
+import "tailwindcss/base.css";
+import "tailwindcss/tailwind.css";
+
 /**
  * Default configurations that are overridden by
  * parameters in embedded script.
  */
 const defaultConfig: Configurations = {
     debug: false,
-    serviceBaseUrl: 'https://localhost:7891',
     minimized: false,
     disableDarkMode: false,
     text: {},
