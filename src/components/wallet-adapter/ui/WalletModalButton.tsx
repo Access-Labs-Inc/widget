@@ -26,7 +26,7 @@ export const WalletModalButton: FunctionalComponent<ButtonProps> = ({
 
   return (
     <Button
-      css={styles.wallet_adapter_button_trigger}
+      cssClass={styles.wallet_adapter_button_trigger}
       onClick={handleClick}
       {...props}
     >

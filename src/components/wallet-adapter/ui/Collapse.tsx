@@ -83,6 +83,7 @@ export const Collapse: FunctionalComponent<CollapseProps> = ({
       style={{
         height: 0,
         transition: instant.current ? undefined : transition,
+        width: '100%',
       }}
     >
       {children}

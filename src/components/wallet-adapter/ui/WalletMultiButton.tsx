@@ -15,6 +15,14 @@ import { WalletIcon } from './WalletIcon';
 import { WalletModalButton } from './WalletModalButton';
 import tw from 'twin.macro';
 
+const styles = {
+  wallet_adapter_dropdown: tw`relative inline-block text-left`,
+  wallet_adapter_button_trigger: tw`bg-[#512da8]`,
+  wallet_adapter_dropdown_list: tw`grid gap-10 absolute top-[100%]`,
+  wallet_adapter_dropdown_list_active: tw`visible opacity-100`,
+  wallet_adapter_dropdown_list_item: tw`flex flex-row content-center items-center border-none`,
+};
+
 export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
   children,
   ...props
@@ -77,11 +85,6 @@ export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
   if (!base58)
     return <WalletConnectButton {...props}>{children}</WalletConnectButton>;
 
-  const styles = {
-    wallet_adapter_dropdown: tw`relative inline-block text-left`,
-    wallet_adapter_button_trigger: tw`bg-[#512da8]`,
-  };
-
   return (
     <div css={styles.wallet_adapter_dropdown}>
       <Button
@@ -96,29 +99,30 @@ export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
       </Button>
       <ul
         aria-label="dropdown-list"
-        className={`wallet-adapter-dropdown-list ${
-          active && 'wallet-adapter-dropdown-list-active'
-        }`}
+        css={[
+          styles.wallet_adapter_dropdown_list,
+          active && styles.wallet_adapter_dropdown_list_active,
+        ]}
         ref={ref}
         role="menu"
       >
         <li
           onClick={copyAddress}
-          className="wallet-adapter-dropdown-list-item"
+          css={styles.wallet_adapter_dropdown_list_item}
           role="menuitem"
         >
           {copied ? 'Copied' : 'Copy address'}
         </li>
         <li
           onClick={openModal}
-          className="wallet-adapter-dropdown-list-item"
+          css={styles.wallet_adapter_dropdown_list_item}
           role="menuitem"
         >
           Change wallet
         </li>
         <li
           onClick={disconnect}
-          className="wallet-adapter-dropdown-list-item"
+          css={styles.wallet_adapter_dropdown_list_item}
           role="menuitem"
         >
           Disconnect
