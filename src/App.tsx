@@ -25,8 +25,8 @@ export const App = ({ element, ...appSettings }: Props) => {
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
-      new TorusWalletAdapter({ params: { network } }),
       new SolflareWalletAdapter({ network }),
+      new TorusWalletAdapter({ params: { network } }),
     ],
     [network]
   );

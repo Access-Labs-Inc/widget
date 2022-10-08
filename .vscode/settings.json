@@ -26,5 +26,6 @@
   },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "editor.fontFamily": "'Martian Mono', Menlo, Monaco, 'Courier New', monospace"
 }

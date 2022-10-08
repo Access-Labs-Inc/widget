@@ -13,6 +13,7 @@ import { useWalletModal } from './useWalletModal';
 import { WalletConnectButton } from './WalletConnectButton';
 import { WalletIcon } from './WalletIcon';
 import { WalletModalButton } from './WalletModalButton';
+import tw from 'twin.macro';
 
 export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
   children,
@@ -76,11 +77,16 @@ export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
   if (!base58)
     return <WalletConnectButton {...props}>{children}</WalletConnectButton>;
 
+  const styles = {
+    wallet_adapter_dropdown: tw`relative inline-block text-left`,
+    wallet_adapter_button_trigger: tw`bg-[#512da8]`,
+  };
+
   return (
-    <div className="wallet-adapter-dropdown">
+    <div css={styles.wallet_adapter_dropdown}>
       <Button
         aria-expanded={active}
-        className="wallet-adapter-button-trigger"
+        css={styles.wallet_adapter_button_trigger}
         style={{ pointerEvents: active ? 'none' : 'auto', ...props.style }}
         onClick={openDropdown}
         startIcon={<WalletIcon wallet={wallet} />}

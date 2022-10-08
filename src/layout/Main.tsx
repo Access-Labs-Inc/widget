@@ -1,23 +1,26 @@
 import tw from 'twin.macro';
-import { h } from 'preact';
+import { Fragment, h } from 'preact';
 import { WalletMultiButton } from '../components/wallet-adapter/ui/WalletMultiButton';
+import { useContext } from 'preact/hooks';
+import { GlobalsContext } from '../AppContext';
 
 const Main = () => {
-  // const config = useContext(ConfigContext);
-  // const { widgetOpen } = useContext(GlobalsContext);
+  const { widgetOpen } = useContext(GlobalsContext);
+
+  console.log('Widget open: ', widgetOpen);
 
   const styles = {
-    container: tw`mx-10 bg-gray-500`,
+    container: tw`relative`,
   };
 
   return (
-    <div css={styles.container}>
-      <div>
-        <div css={tw`text-white`}>
+    <Fragment>
+      {widgetOpen && (
+        <div css={styles.container}>
           <WalletMultiButton />
         </div>
-      </div>
-    </div>
+      )}
+    </Fragment>
   );
 };
 

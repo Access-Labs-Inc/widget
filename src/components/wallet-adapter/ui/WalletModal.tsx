@@ -16,21 +16,29 @@ import { Collapse } from './Collapse';
 import { useWalletModal } from './useWalletModal';
 import { WalletListItem } from './WalletListItem';
 import { WalletSVG } from './WalletSVG';
+import tw from 'twin.macro';
 
 export interface WalletModalProps {
   className?: string;
   container?: string;
 }
 
+const styles = {
+  wallet_adapter_modal_title: tw`text-2xl font-sans font-semibold text-center pb-10 px-10`,
+  wallet_adapter_modal: tw`absolute left-0 top-12 text-white`,
+  wallet_adapter_modal_wrapper: tw`relative flex flex-col items-center justify-center pb-10`,
+  wallet_adapter_modal_container: tw`rounded-[1rem] bg-gray-800 p-3 content-center items-center`,
+  wallet_adapter_modal_button_close: tw`absolute top-4 right-4 p-3 cursor-pointer bg-gray-800 border-0 fill-[#fff]`,
+};
+
 export const WalletModal: FunctionalComponent<WalletModalProps> = ({
   className = '',
-  container = 'body',
+  container = '#acs',
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const { wallets, select } = useWallet();
   const { setVisible } = useWalletModal();
   const [expanded, setExpanded] = useState(false);
-  const [fadeIn, setFadeIn] = useState(false);
   const [portal, setPortal] = useState<Element | null>(null);
 
   const [installedWallets, otherWallets] = useMemo(() => {
@@ -72,7 +80,6 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
   }, [installedWallets, wallets, otherWallets]);
 
   const hideModal = useCallback(() => {
-    setFadeIn(false);
     setTimeout(() => setVisible(false), 150);
   }, [setVisible]);
 
@@ -137,8 +144,6 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
 
     // Get original overflow
     const { overflow } = window.getComputedStyle(document.body);
-    // Hack to enable fade in animation after mount
-    setTimeout(() => setFadeIn(true), 0);
     // Prevent scrolling on mount
     document.body.style.overflow = 'hidden';
     // Listen for keydown events
@@ -162,26 +167,16 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
       <div
         aria-labelledby="wallet-adapter-modal-title"
         aria-modal="true"
-        className={`wallet-adapter-modal ${
-          fadeIn && 'wallet-adapter-modal-fade-in'
-        } ${className}`}
+        css={[styles.wallet_adapter_modal, className]}
         ref={ref}
         role="dialog"
       >
-        <div className="wallet-adapter-modal-container">
-          <div className="wallet-adapter-modal-wrapper">
-            <button
-              onClick={handleClose}
-              className="wallet-adapter-modal-button-close"
-            >
-              <svg width="14" height="14">
-                <path d="M14 12.461 8.3 6.772l5.234-5.233L12.006 0 6.772 5.234 1.54 0 0 1.539l5.234 5.233L0 12.006l1.539 1.528L6.772 8.3l5.69 5.7L14 12.461z" />
-              </svg>
-            </button>
+        <div css={styles.wallet_adapter_modal_container}>
+          <div css={styles.wallet_adapter_modal_wrapper}>
             {installedWallets.length ? (
               <Fragment>
-                <h1 className="wallet-adapter-modal-title">
-                  Connect a wallet on Solana to continue
+                <h1 css={styles.wallet_adapter_modal_title}>
+                  Connect your wallet
                 </h1>
                 <ul className="wallet-adapter-modal-list">
                   {installedWallets.map((wallet) => (

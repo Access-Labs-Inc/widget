@@ -4,6 +4,11 @@ import { useCallback, useMemo } from 'preact/hooks';
 import type { ButtonProps } from './Button';
 import { Button } from './Button';
 import { WalletIcon } from './WalletIcon';
+import tw from 'twin.macro';
+
+const styles = {
+  wallet_adapter_button_trigger: tw`bg-gray-400 text-gray-800 border-0 py-3 px-5 rounded-full`,
+};
 
 export const WalletConnectButton: FunctionalComponent<ButtonProps> = ({
   children,
@@ -32,7 +37,7 @@ export const WalletConnectButton: FunctionalComponent<ButtonProps> = ({
 
   return (
     <Button
-      className="wallet-adapter-button-trigger"
+      css={styles.wallet_adapter_button_trigger}
       disabled={disabled || !wallet || connecting || connected}
       startIcon={wallet ? <WalletIcon wallet={wallet} /> : undefined}
       onClick={handleClick}
