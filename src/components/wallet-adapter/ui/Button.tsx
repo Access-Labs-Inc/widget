@@ -8,7 +8,7 @@ export type ButtonProps = {
   endIcon?: ComponentChildren;
   onClick?: (e: any) => void;
   startIcon?: ComponentChildren;
-  cssClass?: TwStyle;
+  cssClass?: TwStyle | (TwStyle | null)[];
   style?: CSSProperties;
   tabIndex?: number;
 };

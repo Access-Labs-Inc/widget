@@ -3,8 +3,6 @@ import { App } from './App';
 import loader from './loader';
 import { Configurations } from './models';
 
-import "tailwindcss/base.css";
-import "tailwindcss/tailwind.css";
 
 /**
  * Default configurations that are overridden by

@@ -9,16 +9,15 @@ import {
 import type { ButtonProps } from './Button';
 import { Button } from './Button';
 import { useWallet } from '../useWallet';
-import { useWalletModal } from './useWalletModal';
 import { WalletConnectButton } from './WalletConnectButton';
-import { WalletIcon } from './WalletIcon';
 import { WalletModalButton } from './WalletModalButton';
 import tw from 'twin.macro';
 
 const styles = {
   wallet_adapter_dropdown: tw`relative inline-block text-left`,
-  wallet_adapter_button_trigger: tw`bg-[#512da8]`,
-  wallet_adapter_dropdown_list: tw`grid gap-10 absolute top-[100%]`,
+  wallet_adapter_button_trigger: tw`bg-gray-400 text-gray-800 border-0 py-3 px-5 rounded-full`,
+  wallet_adapter_button_trigger_active: tw`bg-indigo-400`,
+  wallet_adapter_dropdown_list: tw`grid gap-10 absolute top-[100%] bg-gray-800 text-white rounded-[1rem] opacity-0`,
   wallet_adapter_dropdown_list_active: tw`visible opacity-100`,
   wallet_adapter_dropdown_list_item: tw`flex flex-row content-center items-center border-none`,
 };
@@ -28,7 +27,6 @@ export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
   ...props
 }) => {
   const { publicKey, wallet, disconnect } = useWallet();
-  const { setVisible } = useWalletModal();
   const [copied, setCopied] = useState(false);
   const [active, setActive] = useState(false);
   const ref = useRef<HTMLUListElement>(null);
@@ -48,18 +46,13 @@ export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
     }
   }, [base58]);
 
-  const openDropdown = useCallback(() => {
-    setActive(true);
-  }, []);
+  const toggleDropdown = useCallback(() => {
+    setActive(!active);
+  }, [active]);
 
   const closeDropdown = useCallback(() => {
     setActive(false);
   }, []);
-
-  const openModal = useCallback(() => {
-    setVisible(true);
-    closeDropdown();
-  }, [setVisible, closeDropdown]);
 
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
@@ -89,10 +82,12 @@ export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
     <div css={styles.wallet_adapter_dropdown}>
       <Button
         aria-expanded={active}
-        css={styles.wallet_adapter_button_trigger}
+        cssClass={[
+          styles.wallet_adapter_button_trigger,
+          publicKey && styles.wallet_adapter_button_trigger_active,
+        ]}
         style={{ pointerEvents: active ? 'none' : 'auto', ...props.style }}
-        onClick={openDropdown}
-        startIcon={<WalletIcon wallet={wallet} />}
+        onClick={toggleDropdown}
         {...props}
       >
         {content}
@@ -112,13 +107,6 @@ export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
           role="menuitem"
         >
           {copied ? 'Copied' : 'Copy address'}
-        </li>
-        <li
-          onClick={openModal}
-          css={styles.wallet_adapter_dropdown_list_item}
-          role="menuitem"
-        >
-          Change wallet
         </li>
         <li
           onClick={disconnect}

@@ -15,7 +15,6 @@ import { useWallet, type Wallet } from '../useWallet';
 import { Collapse } from './Collapse';
 import { useWalletModal } from './useWalletModal';
 import { WalletListItem } from './WalletListItem';
-import { WalletSVG } from './WalletSVG';
 import tw from 'twin.macro';
 
 export interface WalletModalProps {
