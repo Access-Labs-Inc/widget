@@ -32,6 +32,7 @@
     "webpack-dev-server": "^4.11.1"
   },
   "dependencies": {
+    "@access-protocol/js": "https://gitpkg.now.sh/Access-Labs-Inc/access-protocol/smart-contract/js?master",
     "@emotion/core": "^11.0.0",
     "@emotion/preact-core": "^0.13.1",
     "@emotion/react": "^11.10.4",
