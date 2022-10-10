@@ -3,12 +3,17 @@ import { h } from 'preact';
 import { RouteLink } from '../layout/Router';
 import { Header } from '../components/Header';
 import { useWallet } from '../components/wallet-adapter/useWallet';
+import { useEffect, useState } from 'preact/hooks';
+import { useConnection } from '../components/wallet-adapter/useConnection';
+import { getUserACSBalance } from '../libs/program';
+import BN from 'bn.js';
 
 const styles = {
   links_wrapper: tw`block my-4 flex flex-col gap-3`,
   actions_disconnect: tw`self-end cursor-pointer text-red-400 no-underline`,
   logo: tw`my-6 flex items-center justify-center`,
   button: tw`rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center text-indigo-500 bg-gray-700`,
+  balance: tw`text-xl text-white text-center`,
 };
 
 const hoverButtonStyles = css`
@@ -18,7 +23,17 @@ const hoverButtonStyles = css`
 `;
 
 export const Actions = () => {
-  const { disconnect } = useWallet();
+  const { connection } = useConnection();
+  const { publicKey, disconnect } = useWallet();
+  const [balance, setBalance] = useState<BN | null>(null);
+
+  useEffect(() => {
+    if (!publicKey) return;
+    (async () => {
+      const balance = await getUserACSBalance(connection, publicKey);
+      setBalance(balance);
+    })();
+  }, [publicKey, connection]);
 
   return (
     <div>
@@ -43,6 +58,9 @@ export const Actions = () => {
         </svg>
       </div>
 
+      {balance && (
+        <div css={styles.balance}>{balance.toNumber()} ACS available</div>
+      )}
       <div css={styles.links_wrapper}>
         <RouteLink css={[styles.button, hoverButtonStyles]} href="/stake">
           Stake

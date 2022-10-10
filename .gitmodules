@@ -1,0 +1,3 @@
+[submodule "access-protocol"]
+	path = access-protocol
+	url = https://github.com/Access-Labs-Inc/access-protocol

@@ -4,6 +4,7 @@
     "target": "es6",
     "lib": ["es6", "dom"],
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "rootDir": "./",
     "sourceMap": true,
     "allowJs": false,
