@@ -12,22 +12,23 @@ import { useWallet } from '../useWallet';
 import { WalletConnectButton } from './WalletConnectButton';
 import { WalletModalButton } from './WalletModalButton';
 import tw from 'twin.macro';
+import { Router, RouteComponent } from '../../../layout/Router';
+import { Actions } from '../../../routes/Actions';
+import { Stake } from '../../../routes/Stake';
 
 const styles = {
-  wallet_adapter_dropdown: tw`relative inline-block text-left`,
-  wallet_adapter_button_trigger: tw`bg-gray-400 text-gray-800 border-0 py-3 px-5 rounded-full`,
+  wallet_adapter_dropdown_wrapper: tw`relative inline-block text-left font-sans`,
+  wallet_adapter_button_trigger: tw`bg-gray-400 text-gray-800 border-0 py-3 px-5 text-xl rounded-full`,
   wallet_adapter_button_trigger_active: tw`bg-indigo-400`,
-  wallet_adapter_dropdown_list: tw`grid gap-10 absolute top-[100%] bg-gray-800 text-white rounded-[1rem] opacity-0`,
-  wallet_adapter_dropdown_list_active: tw`visible opacity-100`,
-  wallet_adapter_dropdown_list_item: tw`flex flex-row content-center items-center border-none`,
+  wallet_adapter_dropdown: tw`absolute mt-2 w-80 px-6 py-4 top-[100%] bg-gray-800 text-white rounded-[1rem] opacity-0`,
+  wallet_adapter_dropdown_active: tw`visible opacity-100`,
 };
 
 export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
   children,
   ...props
 }) => {
-  const { publicKey, wallet, disconnect } = useWallet();
-  const [copied, setCopied] = useState(false);
+  const { publicKey, wallet } = useWallet();
   const [active, setActive] = useState(false);
   const ref = useRef<HTMLUListElement>(null);
 
@@ -37,14 +38,6 @@ export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
     if (!wallet || !base58) return null;
     return base58.slice(0, 4) + '..' + base58.slice(-4);
   }, [children, wallet, base58]);
-
-  const copyAddress = useCallback(async () => {
-    if (base58) {
-      await navigator.clipboard.writeText(base58);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 400);
-    }
-  }, [base58]);
 
   const toggleDropdown = useCallback(() => {
     setActive(!active);
@@ -79,7 +72,7 @@ export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
     return <WalletConnectButton {...props}>{children}</WalletConnectButton>;
 
   return (
-    <div css={styles.wallet_adapter_dropdown}>
+    <div css={styles.wallet_adapter_dropdown_wrapper}>
       <Button
         aria-expanded={active}
         cssClass={[
@@ -92,30 +85,20 @@ export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
       >
         {content}
       </Button>
-      <ul
-        aria-label="dropdown-list"
+      <div
         css={[
-          styles.wallet_adapter_dropdown_list,
-          active && styles.wallet_adapter_dropdown_list_active,
+          styles.wallet_adapter_dropdown,
+          active && styles.wallet_adapter_dropdown_active,
         ]}
         ref={ref}
-        role="menu"
       >
-        <li
-          onClick={copyAddress}
-          css={styles.wallet_adapter_dropdown_list_item}
-          role="menuitem"
-        >
-          {copied ? 'Copied' : 'Copy address'}
-        </li>
-        <li
-          onClick={disconnect}
-          css={styles.wallet_adapter_dropdown_list_item}
-          role="menuitem"
-        >
-          Disconnect
-        </li>
-      </ul>
+        <Router
+          routes={{
+            '/': <RouteComponent component={Actions} />,
+            '/stake': <RouteComponent component={Stake} />,
+          }}
+        />
+      </div>
     </div>
   );
 };

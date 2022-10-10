@@ -34,7 +34,7 @@ const styles = {
   wallet_adapter_modal_list_more_icon_rotate: tw`transform rotate-0 pl-2`,
   wallet_adapter_modal_list_more_icon_rotate_expanded: tw`pl-2 transform rotate-180`,
   wallet_adapter_modal_middle: tw`flex flex-col align-middle justify-center`,
-  wallet_adapter_modal_middle_button: tw`w-full block rounded-full mt-2 px-6 py-3 bg-gray-700 border-0 text-white`,
+  wallet_adapter_modal_middle_button: tw`w-full block rounded-full mt-2 px-6 py-3 bg-gray-700 border-0 text-white cursor-pointer`,
 };
 
 export const WalletModal: FunctionalComponent<WalletModalProps> = ({

@@ -44,11 +44,7 @@ export const RouteComponent = (props: { component: ComponentType<null> }) =>
  * We intentionally override final `href`, so links within widget won't lead to actual
  * pages on website.
  */
-export const RouteLink = ({
-  href,
-  children,
-  ...rest
-}: h.JSX.HTMLAttributes<HTMLAnchorElement>) => (
+export const RouteLink = ({ href, children, ...rest }: any) => (
   <RouterContext.Consumer>
     {({ setRoute }) => (
       <a

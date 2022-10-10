@@ -6,7 +6,7 @@ import { Button } from './Button';
 import tw from 'twin.macro';
 
 const styles = {
-  wallet_adapter_button_trigger: tw`bg-yellow-600 text-gray-800 border-0 py-3 px-5 rounded-full`,
+  wallet_adapter_button_trigger: tw`bg-yellow-600 text-gray-800 border-0 py-3 px-5 text-xl rounded-full`,
 };
 
 export const WalletConnectButton: FunctionalComponent<ButtonProps> = ({

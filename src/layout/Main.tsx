@@ -7,8 +7,6 @@ import { GlobalsContext } from '../AppContext';
 const Main = () => {
   const { widgetOpen } = useContext(GlobalsContext);
 
-  console.log('Widget open: ', widgetOpen);
-
   const styles = {
     container: tw`relative`,
   };
