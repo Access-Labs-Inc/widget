@@ -11,17 +11,11 @@ export interface AppConfigurations {
     debug: boolean;
     minimized: boolean;
     disableDarkMode: boolean;
-    text: {
-        minimizedTitle?: string;
-        formTitle?: string;
-        formSubTitle?: string;
-        thankYouTitle?: string;
-        thankYouBody?: string;
-        faqTitle?: string;
-    };
     styles: {
         classNameContainer?: string;
     };
+    poolId: string | null;
+    poolName: string | null;
 }
 
 export type Configurations = InfraConfigurations & AppConfigurations;

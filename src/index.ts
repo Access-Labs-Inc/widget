@@ -12,8 +12,8 @@ const defaultConfig: Configurations = {
     debug: false,
     minimized: false,
     disableDarkMode: false,
-    text: {},
-    styles: {}
+    styles: {},
+    poolId: null
 };
 
 // main entry point - calls loader and render Preact app into supplied element

@@ -3,17 +3,20 @@ import { h } from 'preact';
 import { RouteLink } from '../layout/Router';
 import { Header } from '../components/Header';
 import { useWallet } from '../components/wallet-adapter/useWallet';
-import { useEffect, useState } from 'preact/hooks';
+import { useContext, useEffect, useState } from 'preact/hooks';
 import { useConnection } from '../components/wallet-adapter/useConnection';
-import { getUserACSBalance } from '../libs/program';
+import { getStakeAccounts, getUserACSBalance } from '../libs/program';
 import BN from 'bn.js';
+import { ConfigContext } from '../AppContext';
+import { StakeAccount } from '../../access-protocol/smart-contract/js/src';
 
 const styles = {
-  links_wrapper: tw`block my-4 flex flex-col gap-3`,
+  links_wrapper: tw`block my-4 mt-8 flex flex-col gap-3`,
   actions_disconnect: tw`self-end cursor-pointer text-red-400 no-underline`,
-  logo: tw`my-6 flex items-center justify-center`,
+  logo: tw`my-8 mt-16 flex items-center justify-center`,
   button: tw`rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center text-indigo-500 bg-gray-700`,
-  balance: tw`text-xl text-white text-center`,
+  balance: tw`text-white text-center text-gray-400`,
+  stakedAmount: tw`text-xl text-white text-center my-3`,
 };
 
 const hoverButtonStyles = css`
@@ -23,9 +26,11 @@ const hoverButtonStyles = css`
 `;
 
 export const Actions = () => {
+  const { poolId } = useContext(ConfigContext);
   const { connection } = useConnection();
   const { publicKey, disconnect } = useWallet();
   const [balance, setBalance] = useState<BN | null>(null);
+  const [stakeAmount, setStakeAmount] = useState<BN | null>(null);
 
   useEffect(() => {
     if (!publicKey) return;
@@ -34,6 +39,22 @@ export const Actions = () => {
       setBalance(balance);
     })();
   }, [publicKey, connection]);
+
+  useEffect(() => {
+    if (!publicKey || !poolId) return;
+    (async () => {
+      const stakedAccounts = await getStakeAccounts(connection, publicKey);
+      if (stakedAccounts != null && stakedAccounts.length > 0) {
+        stakedAccounts.forEach((st) => {
+          const stakeAccount = StakeAccount.deserialize(st.account.data);
+          if (stakeAccount.stakePool.toBase58() === poolId) {
+            setStakeAmount(stakeAccount.stakeAmount as BN);
+            return;
+          }
+        });
+      }
+    })();
+  }, [publicKey, connection, poolId]);
 
   return (
     <div>
@@ -58,9 +79,26 @@ export const Actions = () => {
         </svg>
       </div>
 
-      {balance && (
-        <div css={styles.balance}>{balance.toNumber()} ACS available</div>
+      {stakeAmount && (
+        <div css={styles.stakedAmount}>
+          {stakeAmount.toNumber().toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}{' '}
+          ACS staked
+        </div>
       )}
+
+      {balance && (
+        <div css={styles.balance}>
+          {balance.toNumber().toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}{' '}
+          ACS available
+        </div>
+      )}
+
       <div css={styles.links_wrapper}>
         <RouteLink css={[styles.button, hoverButtonStyles]} href="/stake">
           Stake

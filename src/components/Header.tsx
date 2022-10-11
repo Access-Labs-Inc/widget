@@ -1,8 +1,8 @@
 import tw from 'twin.macro';
-import { h } from 'preact';
-import { Copy, ArrowUpRight } from 'phosphor-react';
-import { ComponentChildren } from 'preact';
+import { h, ComponentChildren } from 'preact';
 import { useState, useMemo, useCallback } from 'preact/hooks';
+import { Copy, ArrowUpRight } from 'phosphor-react';
+
 import { useWallet } from './wallet-adapter/useWallet';
 
 const styles = {
