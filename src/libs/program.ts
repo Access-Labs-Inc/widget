@@ -15,7 +15,7 @@ import {
 import BN from 'bn.js';
 
 // Hard-coded values.
-const ACCESS_PROGRAM_ID = new PublicKey('acp1VPqNoMs5KC5aEH3MzxnyPZNyKQF1TCPouCoNRuX');
+export const ACCESS_PROGRAM_ID = new PublicKey('acp1VPqNoMs5KC5aEH3MzxnyPZNyKQF1TCPouCoNRuX');
 const SECONDS_IN_DAY = 900;
 
 /**
