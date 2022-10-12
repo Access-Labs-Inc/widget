@@ -1,7 +1,7 @@
 import tw from 'twin.macro';
 import { FunctionalComponent, h } from 'preact';
 import { useState, useRef } from 'preact/hooks';
-import RcInputNumber from 'rc-input-number';
+import RcInputNumber from '../libs/rc-input-number';
 import ReactSlider from 'react-slider';
 
 export interface InputProps {
