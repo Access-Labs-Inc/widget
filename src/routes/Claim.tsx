@@ -31,7 +31,7 @@ export const Claim = () => {
         </RouteLink>
       </Header>
 
-      <div css={styles.title}>Unstake ACS</div>
+      <div css={styles.title}>Claim ACS</div>
       <div css={styles.subtitle}>
         Claim is currently only possible on the access app.
       </div>

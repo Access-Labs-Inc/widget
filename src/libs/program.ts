@@ -16,7 +16,7 @@ import BN from 'bn.js';
 
 // Hard-coded values.
 export const ACCESS_PROGRAM_ID = new PublicKey('acp1VPqNoMs5KC5aEH3MzxnyPZNyKQF1TCPouCoNRuX');
-const SECONDS_IN_DAY = 900;
+const SECONDS_IN_DAY = 86400;
 
 /**
  * This function can be used to find all stake accounts of a user
@@ -279,8 +279,9 @@ const calculateReward = (
   );
   nbDaysBehind = nbDaysBehind > BUFF_LEN - 1 ? BUFF_LEN - 1 : nbDaysBehind;
 
-  const idx = stakePool.currentDayIdx;
+  const idx = stakePool.currentDayIdx + 1;
   let i = (idx - nbDaysBehind) % BUFF_LEN;
+
   let reward = new BN(0);
   while (i !== (idx + 1) % BUFF_LEN) {
     const rewardForDday = staker
