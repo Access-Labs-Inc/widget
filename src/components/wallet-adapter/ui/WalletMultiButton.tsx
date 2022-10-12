@@ -1,3 +1,4 @@
+import tw from 'twin.macro';
 import { type FunctionalComponent, h } from 'preact';
 import {
   useCallback,
@@ -6,15 +7,15 @@ import {
   useRef,
   useState,
 } from 'preact/hooks';
-import type { ButtonProps } from './Button';
-import { Button } from './Button';
+import { type ButtonProps, Button } from './Button';
 import { useWallet } from '../useWallet';
 import { WalletConnectButton } from './WalletConnectButton';
 import { WalletModalButton } from './WalletModalButton';
-import tw from 'twin.macro';
 import { Router, RouteComponent } from '../../../layout/Router';
 import { Actions } from '../../../routes/Actions';
 import { Stake } from '../../../routes/Stake';
+import { Unstake } from '../../../routes/Unstake';
+import { Claim } from '../../../routes/Claim';
 
 const styles = {
   wallet_adapter_dropdown_wrapper: tw`relative inline-block text-left font-sans`,
@@ -96,6 +97,8 @@ export const WalletMultiButton: FunctionalComponent<ButtonProps> = ({
           routes={{
             '/': <RouteComponent component={Actions} />,
             '/stake': <RouteComponent component={Stake} />,
+            '/unstake': <RouteComponent component={Unstake} />,
+            '/claim': <RouteComponent component={Claim} />,
           }}
         />
       </div>

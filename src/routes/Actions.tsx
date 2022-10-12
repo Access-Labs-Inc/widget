@@ -3,12 +3,20 @@ import { h } from 'preact';
 import { RouteLink } from '../layout/Router';
 import { Header } from '../components/Header';
 import { useWallet } from '../components/wallet-adapter/useWallet';
-import { useContext, useEffect, useState } from 'preact/hooks';
+import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 import { useConnection } from '../components/wallet-adapter/useConnection';
-import { getStakeAccounts, getUserACSBalance } from '../libs/program';
+import {
+  calculateRewardForStaker,
+  getStakeAccounts,
+  getUserACSBalance,
+} from '../libs/program';
 import BN from 'bn.js';
 import { ConfigContext } from '../AppContext';
-import { StakeAccount } from '../../access-protocol/smart-contract/js/src';
+import {
+  StakeAccount,
+  StakePool,
+} from '../../access-protocol/smart-contract/js/src';
+import { PublicKey } from '@solana/web3.js';
 
 const styles = {
   links_wrapper: tw`block my-4 mt-8 flex flex-col gap-3`,
@@ -17,6 +25,7 @@ const styles = {
   button: tw`rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center text-indigo-500 bg-gray-700`,
   balance: tw`text-white text-center text-gray-400`,
   stakedAmount: tw`text-xl text-white text-center my-3`,
+  disabledButtonStyles: tw`bg-gray-500 text-gray-300 cursor-not-allowed`,
 };
 
 const hoverButtonStyles = css`
@@ -30,7 +39,8 @@ export const Actions = () => {
   const { connection } = useConnection();
   const { publicKey, disconnect } = useWallet();
   const [balance, setBalance] = useState<BN | null>(null);
-  const [stakeAmount, setStakeAmount] = useState<BN | null>(null);
+  const [stakeAccount, setStakeAccount] = useState<StakeAccount | null>(null);
+  const [stakePool, setStakePool] = useState<StakePool | null>(null);
 
   useEffect(() => {
     if (!publicKey) return;
@@ -41,6 +51,17 @@ export const Actions = () => {
   }, [publicKey, connection]);
 
   useEffect(() => {
+    if (!stakeAccount || !poolId || stakePool) return;
+    (async () => {
+      const stakePool = await StakePool.retrieve(
+        connection,
+        new PublicKey(poolId)
+      );
+      setStakePool(stakePool);
+    })();
+  }, [poolId, stakeAccount, stakePool]);
+
+  useEffect(() => {
     if (!publicKey || !poolId) return;
     (async () => {
       const stakedAccounts = await getStakeAccounts(connection, publicKey);
@@ -48,13 +69,22 @@ export const Actions = () => {
         stakedAccounts.forEach((st) => {
           const stakeAccount = StakeAccount.deserialize(st.account.data);
           if (stakeAccount.stakePool.toBase58() === poolId) {
-            setStakeAmount(stakeAccount.stakeAmount as BN);
+            setStakeAccount(stakeAccount);
             return;
           }
         });
       }
     })();
   }, [publicKey, connection, poolId]);
+
+  const claimableAmount = useMemo(() => {
+    if (!stakeAccount || !stakePool) return new BN(0);
+    return calculateRewardForStaker(
+      stakeAccount.lastClaimedTime as BN,
+      stakePool,
+      stakeAccount.stakeAmount as BN
+    );
+  }, [stakeAccount, stakePool]);
 
   return (
     <div>
@@ -79,9 +109,9 @@ export const Actions = () => {
         </svg>
       </div>
 
-      {stakeAmount && (
+      {stakeAccount?.stakeAmount && (
         <div css={styles.stakedAmount}>
-          {stakeAmount.toNumber().toLocaleString(undefined, {
+          {stakeAccount?.stakeAmount.toNumber().toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}{' '}
@@ -99,16 +129,36 @@ export const Actions = () => {
         </div>
       )}
 
+      {claimableAmount && (
+        <div css={styles.balance}>
+          {claimableAmount.toNumber().toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}{' '}
+          ACS claimable
+        </div>
+      )}
+
       <div css={styles.links_wrapper}>
         <RouteLink css={[styles.button, hoverButtonStyles]} href="/stake">
           Stake
         </RouteLink>
-        <RouteLink css={[styles.button, hoverButtonStyles]} href="/">
-          Unstake
-        </RouteLink>
-        <RouteLink css={[styles.button, hoverButtonStyles]} href="/">
-          Claim
-        </RouteLink>
+        {stakeAccount && stakeAccount.stakeAmount.toNumber() > 0 ? (
+          <RouteLink css={[styles.button, hoverButtonStyles]} href="/unstake">
+            Unstake
+          </RouteLink>
+        ) : (
+          <span css={[styles.button, styles.disabledButtonStyles]}>
+            Unstake
+          </span>
+        )}
+        {claimableAmount && claimableAmount.toNumber() > 0 ? (
+          <RouteLink css={[styles.button, hoverButtonStyles]} href="/claim">
+            Claim
+          </RouteLink>
+        ) : (
+          <span css={[styles.button, styles.disabledButtonStyles]}>Claim</span>
+        )}
       </div>
     </div>
   );

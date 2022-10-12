@@ -298,7 +298,7 @@ export const calculateRewardForStaker = (
   stakeAmount: BN,
 ) => {
   const reward = calculateReward(lastClaimedTime, stakePool, true);
-  return reward.mul(new BN(stakeAmount.toNumber())).iushrn(32).toNumber();
+  return reward.mul(new BN(stakeAmount.toNumber())).iushrn(32).divn(10 ** 6);
 };
 
 export const calculateRewardForPool = (
