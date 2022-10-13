@@ -1,7 +1,7 @@
+import tw from 'twin.macro';
 import { h, Ref } from 'preact';
 import { useCallback, useMemo, useRef, useState } from 'preact/hooks';
 import { ChangeEventHandler, forwardRef } from 'preact/compat';
-import classNames from 'classnames';
 import KeyCode from 'rc-util/lib/KeyCode';
 import { useLayoutUpdateEffect } from 'rc-util/lib/hooks/useLayoutEffect';
 import { composeRef } from 'rc-util/lib/ref';
@@ -31,6 +31,18 @@ import useFrame from './hooks/useFrame';
  *    III. if min > 0, round up with precision. Example: min= 3.5, precision=0  afterFormat: 4
  *    IV. if min < 0, round down with precision. Example: max= -3.5, precision=0  afterFormat: -3
  */
+
+const styles = {
+  root: tw`text-xl w-auto pl-8 py-4 border-0 rounded-[0.5rem] bg-gray-900 text-gray-200 outline-none`,
+  rootFocused: tw`block text-xl pl-8 py-4 border-0 rounded-[0.5rem] bg-gray-900 text-gray-200 outline-none ring-gray-900`,
+  rootDisabled: tw`block bg-gray-500`,
+  rootReadonly: tw`border-2 border-indigo-500`,
+  rootNaN: tw`border-2 border-red-500`,
+  rootOutOfRange: tw`border-2 border-red-500`,
+  wrap: tw`w-auto overflow-hidden`,
+  input: tw`text-gray-200 bg-gray-900 outline-none ring-gray-800 border-0 text-3xl`,
+};
+
 const getDecimalValue = (stringMode: boolean, decimalValue: DecimalClass) => {
   if (stringMode || decimalValue.isEmpty()) {
     return decimalValue.toString();
@@ -46,8 +58,6 @@ const getDecimalIfValidate = (value: ValueType) => {
 
 const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
   const {
-    prefixCls = 'rc-input-number',
-    className,
     style,
     min,
     max,
@@ -76,8 +86,6 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
     ...inputProps
   } = props;
 
-  const inputClassName = `${prefixCls}-input`;
-
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [focus, setFocus] = useState(false);
@@ -91,6 +99,8 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
   const [decimalValue, setDecimalValue] = useState<DecimalClass>(() =>
     getMiniDecimal(value ?? defaultValue)
   );
+
+  console.log('decimalValue', decimalValue);
 
   function setUncontrolledDecimalValue(newDecimal: DecimalClass) {
     if (value === undefined) {
@@ -509,17 +519,21 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
     }
   }, [inputValue]);
 
+  console.log('NaN', decimalValue.isInvalidate());
+
   // ============================ Render ============================
   return (
     <div
-      className={classNames(prefixCls, className, {
-        [`${prefixCls}-focused`]: focus,
-        [`${prefixCls}-disabled`]: disabled,
-        [`${prefixCls}-readonly`]: readOnly,
-        [`${prefixCls}-not-a-number`]: decimalValue.isNaN(),
-        [`${prefixCls}-out-of-range`]:
-          !decimalValue.isInvalidate() && !isInRange(decimalValue),
-      })}
+      css={[
+        styles.root,
+        focus && styles.rootFocused,
+        disabled && styles.rootDisabled,
+        readOnly && styles.rootReadonly,
+        decimalValue.isNaN() && styles.rootNaN,
+        !decimalValue.isInvalidate() &&
+          !isInRange(decimalValue) &&
+          styles.rootOutOfRange,
+      ]}
       style={style}
       onFocus={() => {
         setFocus(true);
@@ -530,20 +544,10 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
       onCompositionStart={onCompositionStart}
       onCompositionEnd={onCompositionEnd}
     >
-      {controls && (
-        <StepHandler
-          prefixCls={prefixCls}
-          upNode={upHandler}
-          downNode={downHandler}
-          upDisabled={upDisabled}
-          downDisabled={downDisabled}
-          onStep={onInternalStep}
-        />
-      )}
-      <div className={`${inputClassName}-wrap`}>
+      <div css={styles.wrap}>
         <input
           autoComplete="off"
-          role="spinbutton"
+          role="input"
           aria-valuemin={min as any}
           aria-valuemax={max as any}
           aria-valuenow={
@@ -553,8 +557,8 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
           }
           step={step}
           {...inputProps}
-          ref={composeRef(inputRef, ref as React.Ref<any>)}
-          className={inputClassName}
+          ref={composeRef(inputRef, ref as any)}
+          css={styles.input}
           value={inputValue}
           onChange={onInternalInput}
           disabled={disabled}

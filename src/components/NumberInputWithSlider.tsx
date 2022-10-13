@@ -2,7 +2,7 @@ import tw from 'twin.macro';
 import { FunctionalComponent, h } from 'preact';
 import { useState, useRef } from 'preact/hooks';
 import RcInputNumber from '../libs/rc-input-number';
-import ReactSlider from 'react-slider';
+import RcSlider from 'react-input-slider';
 
 export interface InputProps {
   invalid?: boolean;
@@ -36,10 +36,10 @@ function setNativeValue(
 
 const styles = {
   root: tw`relative my-6`,
-  slider: tw`relative mt-2 block h-10 border-0`,
+  slider: tw`mt-4 block border-0 mx-1`,
   thumb: tw`cursor-pointer rounded-full border-4 border-gray-800 bg-indigo-500 px-2.5`,
   invalidText: tw`mt-1 text-center text-red-500`,
-  minMax: tw`absolute top-0 right-0 mt-4 mr-8 text-lg font-bold hover:cursor-pointer dark:text-indigo-200`,
+  minMax: tw`absolute top-0 right-0 mt-4 mr-8 text-2xl font-bold hover:cursor-pointer text-indigo-200`,
 };
 
 export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
@@ -65,9 +65,9 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
     setStakeAmount(Number(max));
   };
 
-  const handleSliderChange = (value: number) => {
-    setStakeAmount(Number(value));
-    if (onChangeOfValue) onChangeOfValue(Number(value));
+  const handleSliderChange = (values: { x: number; y: number }) => {
+    setStakeAmount(Number(values.x));
+    if (onChangeOfValue) onChangeOfValue(Number(values.x));
   };
 
   const step = Math.round((Number(max) - Number(min)) / 100);
@@ -81,23 +81,35 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
         ref={inputRef}
         defaultValue={Number(stakeAmount)}
         value={Number(stakeAmount)}
-        formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+        formatter={(value: any) =>
+          `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+        }
         onChange={handleSliderChange}
       />
-      <ReactSlider
-        css={styles.slider}
-        min={Number(min)}
-        max={Number(max)}
-        step={step}
-        value={stakeAmount as number}
-        onChange={handleSliderChange}
-        trackClassName="react-slider-track"
-        renderThumb={(iprops: any) => (
-          <div {...iprops} css={styles.thumb}>
-            &nbsp;
-          </div>
-        )}
-      />
+      <div css={styles.slider}>
+        <RcSlider
+          xmin={Number(min)}
+          xmax={Number(max)}
+          xstep={step}
+          x={stakeAmount as number}
+          onChange={handleSliderChange}
+          styles={{
+            track: {
+              backgroundColor: 'rgba(17,24,39)',
+              width: '100%',
+            },
+            active: {
+              backgroundColor: '#749BFF',
+            },
+            thumb: {
+              width: 30,
+              height: 30,
+              backgroundColor: `#749BFF`,
+              border: '8px solid rgba(31,41,5)',
+            },
+          }}
+        />
+      </div>
       <div css={styles.minMax}>
         {stakeAmount === max && max && min && max > min ? (
           <span onClick={changeToMin}>Min</span>

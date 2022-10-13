@@ -147,6 +147,8 @@ export class BigIntDecimal implements DecimalClass {
 
     mergedValue = typeof mergedValue === 'string' ? mergedValue : num2str(mergedValue);
 
+    console.log("mergedValue", mergedValue);
+
     if (validateNumber(mergedValue)) {
       const trimRet = trimNumber(mergedValue);
       this.negative = trimRet.negative;
