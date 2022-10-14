@@ -36,7 +36,7 @@ import { ProgressStep } from '../components/ProgressStep';
 
 const styles = {
   cancel_link: tw`self-end cursor-pointer text-blue-400 no-underline`,
-  button: tw`w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-gray-700`,
+  button: tw`w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-gray-700 border-0`,
   title: tw`my-8 mt-16 text-white text-2xl text-center`,
   subtitle: tw`text-white text-center text-gray-400`,
   feesRoot: tw`mt-2 text-center text-xs text-gray-400`,
@@ -60,12 +60,21 @@ export const Stake = () => {
 
   const [working, setWorking] = useState('idle');
   const [balance, setBalance] = useState<BN | null>(null);
+  const [solBalance, setSolBalance] = useState<number>(0);
   const [stakedAccount, setStakedAccount] = useState<StakeAccount | null>(null);
   const [stakedPool, setStakedPool] = useState<StakePool | null>(null);
   const [stakeAmount, setStakeAmount] = useState<Number>(0);
   const [stakeModalOpen, setStakeModal] = useState<boolean>(false);
   const openStakeModal = () => setStakeModal(true);
   const closeStakeModal = () => setStakeModal(false);
+
+  useEffect(() => {
+    if (!publicKey || !connection) return;
+    (async () => {
+      const balance = await connection.getBalance(publicKey);
+      setSolBalance(balance / 10 ** 9);
+    })();
+  }, [publicKey, connection]);
 
   useEffect(() => {
     if (!publicKey || !connection) return;
@@ -224,8 +233,6 @@ export const Stake = () => {
   const feePercentage = 2;
   const feePercentageDecimal = feePercentage / 100;
 
-  console.log('Stake Amount: ', stakeAmount);
-
   const fee = useMemo(() => {
     return (
       Math.floor((Number(stakeAmount) / (100 + feePercentage)) * 100) / 100
@@ -243,11 +250,18 @@ export const Stake = () => {
     );
   }, [balance, minStakeAmount, feePercentageDecimal]);
 
+  const insufficientSolBalance = useMemo(
+    () => solBalance < 0.000005,
+    [solBalance]
+  );
+
   const invalidText = useMemo(() => {
     if (insufficientBalance && stakedAccount?.stakeAmount.gtn(0)) {
       return `Insufficient balance for staking. You need min. of ${
         minStakeAmount + minStakeAmount * feePercentageDecimal
       } ACS.`;
+    } else if (insufficientSolBalance) {
+      return `Insufficient ${solBalance} SOL balance. You need min. of ${0.000005} ACS.`;
     }
     return null;
   }, [insufficientBalance, minStakeAmount, feePercentageDecimal]);
@@ -328,16 +342,25 @@ export const Stake = () => {
                 max={balance?.toNumber() || 0}
                 value={stakeAmount}
                 disabled={insufficientBalance}
-                invalid={insufficientBalance}
+                invalid={insufficientBalance || insufficientSolBalance}
                 invalidText={invalidText}
                 onChangeOfValue={(value) => {
                   setStakeAmount(value);
                 }}
               />
 
-              <button css={[styles.button, hoverButtonStyles]} onClick={handle}>
-                Stake
-              </button>
+              {insufficientBalance || insufficientSolBalance ? (
+                <button css={[styles.button, styles.disabledButtonStyles]}>
+                  Stake
+                </button>
+              ) : (
+                <button
+                  css={[styles.button, hoverButtonStyles]}
+                  onClick={handle}
+                >
+                  Stake
+                </button>
+              )}
 
               <div css={styles.feesRoot}>
                 <div css={styles.feeWithTooltip}>

@@ -90,7 +90,6 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
           const formattedValue = value
             .toString()
             .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-          console.log('FV: ', formattedValue);
           return formattedValue;
         }}
         onChange={handleChange}
