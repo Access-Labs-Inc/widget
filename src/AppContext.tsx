@@ -16,7 +16,7 @@ interface Props {
   element?: HTMLElement;
 }
 export const AppContext = ({ children, config, element }: Props) => {
-  const [widgetOpen, setWidgetOpen] = useState(!config.minimized);
+  const [widgetOpen, setWidgetOpen] = useState(false);
   useEffect(() => {
     element?.addEventListener(
       'widget-event',

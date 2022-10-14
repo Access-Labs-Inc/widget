@@ -8,12 +8,6 @@ interface InfraConfigurations {
  * are passed around in application via Context.
  */
 export interface AppConfigurations {
-    debug: boolean;
-    minimized: boolean;
-    disableDarkMode: boolean;
-    styles: {
-        classNameContainer?: string;
-    };
     poolId: string | null;
     poolName: string | null;
 }

@@ -9,10 +9,6 @@ import { Configurations } from './models';
  * parameters in embedded script.
  */
 const defaultConfig: Configurations = {
-    debug: false,
-    minimized: false,
-    disableDarkMode: false,
-    styles: {},
     poolId: null,
     poolName: null,
 };

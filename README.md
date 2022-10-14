@@ -12,16 +12,9 @@ In order to embed the widget add the following snippet at any location on the ho
         w[o] = w[o] || function () { (w[o].q = w[o].q || []).push(arguments) };
         js = d.createElement(s), fjs = d.getElementsByTagName(s)[0];
         js.id = o; js.src = f; js.async = 1; fjs.parentNode.insertBefore(js, fjs);
-    }(window, document, 'script', '_hw', './widget.js'));
-    _hw('init');
+    }(window, document, 'script', '_acs', './widget.js'));
+    _acs('init', { poolId: 'your-id', poolName: 'Name' });
 </script>
-```
-
-During initialization you can pass additional configurations to widget like so:
-
-```diff
--_hw('init');
-+_hw('init', { minimized: true });
 ```
 
 You can find a full list of configurations in `AppConfigurations` interface.

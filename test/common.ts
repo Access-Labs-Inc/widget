@@ -1,12 +1,8 @@
 import { Configurations } from '../src/models';
 
 export const testConfig = (override?: {}): Configurations => Object.assign({
-    debug: false,
-    serviceBaseUrl: '',
-    minimized: false,
-    disableDarkMode: false,
-    text: {},
-    styles: {}
+    poolId: '',
+    poolName: '',
 }, override);
 
 /** This closely replicates what installation script does on page (e.g. /dev/index.html) */
