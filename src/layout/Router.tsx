@@ -44,12 +44,12 @@ export const RouteComponent = (props: { component: ComponentType<null> }) =>
  * We intentionally override final `href`, so links within widget won't lead to actual
  * pages on website.
  */
-export const RouteLink = ({ href, children, ...rest }: any) => (
+export const RouteLink = ({ href, children, disabled, ...rest }: any) => (
   <RouterContext.Consumer>
     {({ setRoute }) => (
       <a
         href="javascript:"
-        onClick={() => href && setRoute(href as string)}
+        onClick={() => href && !disabled && setRoute(href as string)}
         {...rest}
       >
         {children}

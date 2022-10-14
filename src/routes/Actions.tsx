@@ -1,5 +1,5 @@
 import tw, { css } from 'twin.macro';
-import { h } from 'preact';
+import { Fragment, h } from 'preact';
 import { RouteLink } from '../layout/Router';
 import { Header } from '../components/Header';
 import { useWallet } from '../components/wallet-adapter/useWallet';
@@ -17,6 +17,7 @@ import {
   StakePool,
 } from '../../access-protocol/smart-contract/js/src';
 import { PublicKey } from '@solana/web3.js';
+import Loading from '../components/Loading';
 
 const styles = {
   links_wrapper: tw`block my-4 mt-8 flex flex-col gap-3`,
@@ -26,6 +27,7 @@ const styles = {
   balance: tw`text-white text-center text-gray-400`,
   stakedAmount: tw`text-xl text-white text-center my-3`,
   disabledButtonStyles: tw`bg-gray-500 text-gray-300 cursor-not-allowed`,
+  loader: tw`flex justify-center content-center my-14`,
 };
 
 const hoverButtonStyles = css`
@@ -109,33 +111,33 @@ export const Actions = () => {
         </svg>
       </div>
 
-      {stakeAccount?.stakeAmount && (
-        <div css={styles.stakedAmount}>
-          {stakeAccount?.stakeAmount.toNumber().toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}{' '}
-          ACS staked
-        </div>
-      )}
-
-      {balance && (
-        <div css={styles.balance}>
-          {balance.toNumber().toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}{' '}
-          ACS available
-        </div>
-      )}
-
-      {claimableAmount && (
-        <div css={styles.balance}>
-          {claimableAmount.toNumber().toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}{' '}
-          ACS claimable
+      {stakeAccount?.stakeAmount && balance && claimableAmount ? (
+        <Fragment>
+          <div css={styles.stakedAmount}>
+            {stakeAccount?.stakeAmount.toNumber().toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}{' '}
+            ACS staked
+          </div>
+          <div css={styles.balance}>
+            {balance.toNumber().toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}{' '}
+            ACS available
+          </div>
+          <div css={styles.balance}>
+            {claimableAmount.toNumber().toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}{' '}
+            ACS claimable
+          </div>
+        </Fragment>
+      ) : (
+        <div css={styles.loader}>
+          <Loading />
         </div>
       )}
 

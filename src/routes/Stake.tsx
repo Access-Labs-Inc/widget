@@ -31,6 +31,8 @@ import { Tooltip } from '../components/Tooltip';
 import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
 import { PublicKey } from '@solana/web3.js';
 import { sendTx } from '../libs/transactions';
+import Loading from '../components/Loading';
+import { ProgressStep } from '../components/ProgressStep';
 
 const styles = {
   cancel_link: tw`self-end cursor-pointer text-blue-400 no-underline`,
@@ -39,6 +41,10 @@ const styles = {
   subtitle: tw`text-white text-center text-gray-400`,
   feesRoot: tw`mt-2 text-center text-xs text-gray-400`,
   feeWithTooltip: tw`flex justify-center`,
+  loader: tw`flex justify-center content-center my-48`,
+  steps: tw`flex flex-col justify-start my-4`,
+  stepsList: tw`space-y-4 list-none mb-10`,
+  disabledButtonStyles: tw`bg-gray-600 cursor-not-allowed`,
 };
 
 const hoverButtonStyles = css`
@@ -183,6 +189,8 @@ export const Stake = () => {
       await sendTx(connection, publicKey, txs, sendTransaction, {
         skipPreflight: true,
       });
+
+      setWorking('done');
     } catch (err) {
       if (err instanceof Error) {
         console.error(err);
@@ -207,7 +215,55 @@ export const Stake = () => {
 
   return (
     <Fragment>
-      {stakeModalOpen && <div>State: {working}</div>}
+      {stakeModalOpen && (
+        <div>
+          <div css={styles.title}>Steps to complete</div>
+          <div css={styles.subtitle}>
+            We need you to sign these
+            <br /> transactions to stake
+          </div>
+          <nav css={styles.steps} aria-label="Progress">
+            <ol css={styles.stepsList}>
+              <ProgressStep
+                name="Create staking account"
+                status={working === 'account' ? 'current' : 'complete'}
+              />
+              <ProgressStep
+                name="Claim rewards"
+                status={
+                  working === 'claim'
+                    ? 'current'
+                    : working === 'account'
+                    ? 'pending'
+                    : 'complete'
+                }
+              />
+              <ProgressStep
+                name="Stake"
+                status={
+                  working === 'stake'
+                    ? 'current'
+                    : working === 'claim' || working === 'account'
+                    ? 'pending'
+                    : 'complete'
+                }
+              />
+            </ol>
+            <RouteLink
+              href="/"
+              disabled={working !== 'done'}
+              css={[
+                styles.button,
+                working !== 'done'
+                  ? styles.disabledButtonStyles
+                  : hoverButtonStyles,
+              ]}
+            >
+              Close
+            </RouteLink>
+          </nav>
+        </div>
+      )}
       {!stakeModalOpen && (
         <div>
           <Header>
@@ -216,43 +272,49 @@ export const Stake = () => {
             </RouteLink>
           </Header>
 
-          <div css={styles.title}>Stake on &apos;{poolName}&apos;</div>
-          <div css={styles.subtitle}>
-            Both {poolName} and you will receive a ACS inflation rewards split
-            equally.
-          </div>
+          {stakedAmount && balance ? (
+            <Fragment>
+              <div css={styles.title}>Stake on &apos;{poolName}&apos;</div>
+              <div css={styles.subtitle}>
+                Both {poolName} and you will receive a ACS inflation rewards
+                split equally.
+              </div>
 
-          {stakedAmount && balance && (
-            <NumberInputWithSlider
-              min={
-                stakedAmount.toNumber() > 0
-                  ? 1
-                  : minStakeAmount + minStakeAmount * 0.01
-              }
-              max={balance?.toNumber() || 0}
-              value={stakeAmount}
-              disabled={insufficientBalance}
-              invalid={insufficientBalance}
-              invalidText={invalidText}
-              onChangeOfValue={(value) => {
-                setStakeAmount(value);
-              }}
-            />
-          )}
+              <NumberInputWithSlider
+                min={
+                  stakedAmount.toNumber() > 0
+                    ? 1
+                    : minStakeAmount + minStakeAmount * 0.01
+                }
+                max={balance?.toNumber() || 0}
+                value={stakeAmount}
+                disabled={insufficientBalance}
+                invalid={insufficientBalance}
+                invalidText={invalidText}
+                onChangeOfValue={(value) => {
+                  setStakeAmount(value);
+                }}
+              />
 
-          <button css={[styles.button, hoverButtonStyles]} onClick={handle}>
-            Stake
-          </button>
+              <button css={[styles.button, hoverButtonStyles]} onClick={handle}>
+                Stake
+              </button>
 
-          <div css={styles.feesRoot}>
-            <div css={styles.feeWithTooltip}>
-              <div>Protocol fee: {fee} ACS</div>
-              <Tooltip message="A 2% is fee deducted from your staked amount and is burned by the protocol.">
-                <Info size={16} />
-              </Tooltip>
+              <div css={styles.feesRoot}>
+                <div css={styles.feeWithTooltip}>
+                  <div>Protocol fee: {fee} ACS</div>
+                  <Tooltip message="A 2% is fee deducted from your staked amount and is burned by the protocol.">
+                    <Info size={16} />
+                  </Tooltip>
+                </div>
+                <div>Transaction fee: 0.000005 SOL ~ $0.00024</div>
+              </div>
+            </Fragment>
+          ) : (
+            <div css={styles.loader}>
+              <Loading />
             </div>
-            <div>Transaction fee: 0.000005 SOL ~ $0.00024</div>
-          </div>
+          )}
         </div>
       )}
     </Fragment>

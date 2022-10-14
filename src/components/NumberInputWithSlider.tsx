@@ -70,8 +70,6 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
     if (onChangeOfValue) onChangeOfValue(Number(values.x));
   };
 
-  const step = Math.round((Number(max) - Number(min)) / 100);
-
   return (
     <div css={styles.root}>
       <RcInputNumber
@@ -90,7 +88,7 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
         <RcSlider
           xmin={Number(min)}
           xmax={Number(max)}
-          xstep={step}
+          xstep={1}
           x={stakeAmount as number}
           onChange={handleSliderChange}
           styles={{
