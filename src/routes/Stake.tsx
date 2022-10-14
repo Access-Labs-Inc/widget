@@ -18,7 +18,7 @@ import {
 
 import { Header } from '../components/Header';
 import { RouteLink } from '../layout/Router';
-import { useContext, useEffect, useState } from 'preact/hooks';
+import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 import { ConfigContext } from '../AppContext';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import { useWallet } from '../components/wallet-adapter/useWallet';
@@ -60,29 +60,31 @@ export const Stake = () => {
 
   const [working, setWorking] = useState('idle');
   const [balance, setBalance] = useState<BN | null>(null);
-  const [stakedAmount, setStakedAmount] = useState<BN | null>(null);
-  const [stakeAmount, setStakeAmount] = useState<Number>(Number(balance));
+  const [stakedAccount, setStakedAccount] = useState<StakeAccount | null>(null);
+  const [stakedPool, setStakedPool] = useState<StakePool | null>(null);
+  const [stakeAmount, setStakeAmount] = useState<Number>(0);
   const [stakeModalOpen, setStakeModal] = useState<boolean>(false);
   const openStakeModal = () => setStakeModal(true);
   const closeStakeModal = () => setStakeModal(false);
 
   useEffect(() => {
-    if (!publicKey) return;
+    if (!publicKey || !connection) return;
     (async () => {
       const balance = await getUserACSBalance(connection, publicKey);
       setBalance(balance);
+      setStakeAmount(balance.toNumber());
     })();
   }, [publicKey, connection]);
 
   useEffect(() => {
-    if (!publicKey || !poolId) return;
+    if (!publicKey || !poolId || !connection) return;
     (async () => {
       const stakedAccounts = await getStakeAccounts(connection, publicKey);
       if (stakedAccounts != null && stakedAccounts.length > 0) {
         stakedAccounts.forEach((st) => {
           const stakedAccount = StakeAccount.deserialize(st.account.data);
           if (stakedAccount.stakePool.toBase58() === poolId) {
-            setStakedAmount(stakedAccount.stakeAmount as BN);
+            setStakedAccount(stakedAccount);
             return;
           }
         });
@@ -90,8 +92,26 @@ export const Stake = () => {
     })();
   }, [publicKey, connection, poolId]);
 
+  useEffect(() => {
+    if (!stakedAccount?.owner) return;
+    (async () => {
+      const stakedPool = await StakePool.retrieve(
+        connection,
+        stakedAccount.stakePool
+      );
+      setStakedPool(stakedPool);
+    })();
+  }, [stakedAccount?.owner]);
+
   const handle = async () => {
-    if (!publicKey || !poolId || !sendTransaction || !balance || !signMessage)
+    if (
+      !publicKey ||
+      !poolId ||
+      !connection ||
+      !sendTransaction ||
+      !balance ||
+      !signMessage
+    )
       return;
 
     try {
@@ -201,15 +221,32 @@ export const Stake = () => {
     }
   };
 
-  const fee = Math.floor((Number(stakeAmount) / 101) * 100) / 100;
-  const minStakeAmount = 10_000;
-  const insufficientBalance =
-    minStakeAmount + minStakeAmount * 0.01 > (balance?.toNumber() ?? 0);
+  const feePercentage = 2;
+  const feePercentageDecimal = feePercentage / 100;
+
+  console.log('Stake Amount: ', stakeAmount);
+
+  const fee = useMemo(() => {
+    return (
+      Math.floor((Number(stakeAmount) / (100 + feePercentage)) * 100) / 100
+    );
+  }, [stakeAmount, feePercentage]);
+
+  const minStakeAmount = useMemo(() => {
+    return (stakedPool?.minimumStakeAmount.toNumber() ?? 0) / 10 ** 6;
+  }, [stakedPool?.minimumStakeAmount]);
+
+  const insufficientBalance = useMemo(() => {
+    return (
+      minStakeAmount + minStakeAmount * feePercentageDecimal >
+      (balance?.toNumber() ?? 0)
+    );
+  }, [balance, minStakeAmount, feePercentageDecimal]);
 
   let invalidText;
-  if (insufficientBalance) {
+  if (insufficientBalance && stakedAccount?.stakeAmount.gtn(0)) {
     invalidText = `Insufficient balance for staking. You need min. of ${
-      minStakeAmount + minStakeAmount * 0.01
+      minStakeAmount + minStakeAmount * feePercentageDecimal
     } ACS.`;
   }
 
@@ -272,7 +309,7 @@ export const Stake = () => {
             </RouteLink>
           </Header>
 
-          {stakedAmount && balance ? (
+          {stakedAccount?.stakeAmount && stakedPool && balance ? (
             <Fragment>
               <div css={styles.title}>Stake on &apos;{poolName}&apos;</div>
               <div css={styles.subtitle}>
@@ -282,9 +319,9 @@ export const Stake = () => {
 
               <NumberInputWithSlider
                 min={
-                  stakedAmount.toNumber() > 0
+                  stakedAccount.stakeAmount.toNumber() > 0
                     ? 1
-                    : minStakeAmount + minStakeAmount * 0.01
+                    : minStakeAmount + minStakeAmount * feePercentageDecimal
                 }
                 max={balance?.toNumber() || 0}
                 value={stakeAmount}
@@ -303,7 +340,9 @@ export const Stake = () => {
               <div css={styles.feesRoot}>
                 <div css={styles.feeWithTooltip}>
                   <div>Protocol fee: {fee} ACS</div>
-                  <Tooltip message="A 2% is fee deducted from your staked amount and is burned by the protocol.">
+                  <Tooltip
+                    message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
+                  >
                     <Info size={16} />
                   </Tooltip>
                 </div>

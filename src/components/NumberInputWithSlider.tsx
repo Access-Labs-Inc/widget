@@ -55,6 +55,7 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
       inputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
     }
     setStakeAmount(Number(min));
+    if (onChangeOfValue) onChangeOfValue(Number(min));
   };
 
   const changeToMax = () => {
@@ -63,11 +64,17 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
       inputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
     }
     setStakeAmount(Number(max));
+    if (onChangeOfValue) onChangeOfValue(Number(max));
   };
 
   const handleSliderChange = (values: { x: number; y: number }) => {
     setStakeAmount(Number(values.x));
     if (onChangeOfValue) onChangeOfValue(Number(values.x));
+  };
+
+  const handleChange = (value: number) => {
+    setStakeAmount(Number(value));
+    if (onChangeOfValue) onChangeOfValue(Number(value));
   };
 
   return (
@@ -79,10 +86,14 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
         ref={inputRef}
         defaultValue={Number(stakeAmount)}
         value={Number(stakeAmount)}
-        formatter={(value: any) =>
-          `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-        }
-        onChange={handleSliderChange}
+        formatter={(value: any) => {
+          const formattedValue = value
+            .toString()
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+          console.log('FV: ', formattedValue);
+          return formattedValue;
+        }}
+        onChange={handleChange}
       />
       <div css={styles.slider}>
         <RcSlider

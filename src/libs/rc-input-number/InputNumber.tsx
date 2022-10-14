@@ -100,8 +100,6 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
     getMiniDecimal(value ?? defaultValue)
   );
 
-  console.log('decimalValue', decimalValue);
-
   function setUncontrolledDecimalValue(newDecimal: DecimalClass) {
     if (value === undefined) {
       setDecimalValue(newDecimal);
@@ -518,8 +516,6 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
       restoreCursor();
     }
   }, [inputValue]);
-
-  console.log('NaN', decimalValue.isInvalidate());
 
   // ============================ Render ============================
   return (
