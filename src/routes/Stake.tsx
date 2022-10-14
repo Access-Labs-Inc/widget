@@ -243,12 +243,14 @@ export const Stake = () => {
     );
   }, [balance, minStakeAmount, feePercentageDecimal]);
 
-  let invalidText;
-  if (insufficientBalance && stakedAccount?.stakeAmount.gtn(0)) {
-    invalidText = `Insufficient balance for staking. You need min. of ${
-      minStakeAmount + minStakeAmount * feePercentageDecimal
-    } ACS.`;
-  }
+  const invalidText = useMemo(() => {
+    if (insufficientBalance && stakedAccount?.stakeAmount.gtn(0)) {
+      return `Insufficient balance for staking. You need min. of ${
+        minStakeAmount + minStakeAmount * feePercentageDecimal
+      } ACS.`;
+    }
+    return null;
+  }, [insufficientBalance, minStakeAmount, feePercentageDecimal]);
 
   return (
     <Fragment>

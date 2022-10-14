@@ -6,7 +6,7 @@ import RcSlider from 'react-input-slider';
 
 export interface InputProps {
   invalid?: boolean;
-  invalidText?: string;
+  invalidText?: string | null;
   onChangeOfValue: (value: Number) => void;
   value: Number;
   disabled: boolean;
@@ -127,9 +127,7 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
           <span onClick={changeToMax}>Max</span>
         ) : null}
       </div>
-      {invalidText && (
-        <p css={styles.invalidText}>{invalidText ?? <>&nbsp;</>}</p>
-      )}
+      {invalidText && <p css={styles.invalidText}>{invalidText}</p>}
     </div>
   );
 };
