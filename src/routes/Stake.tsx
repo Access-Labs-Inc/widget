@@ -1,7 +1,7 @@
-import tw, { css } from "twin.macro";
-import { Fragment, h } from "preact";
-import BN from "bn.js";
-import { Info } from "phosphor-react";
+import tw, { css } from 'twin.macro';
+import { Fragment, h } from 'preact';
+import BN from 'bn.js';
+import { Info } from 'phosphor-react';
 import {
   CentralState,
   claimRewards,
@@ -9,30 +9,36 @@ import {
   stake,
   StakeAccount,
   StakePool,
-} from "../../access-protocol/smart-contract/js/src";
+} from '../../access-protocol/smart-contract/js/src';
 import {
   Token,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
+} from '@solana/spl-token';
 
-import { Header } from "../components/Header";
-import { RouteLink } from "../layout/Router";
-import { useContext, useEffect, useMemo, useState } from "preact/hooks";
-import { ConfigContext } from "../AppContext";
-import { useConnection } from "../components/wallet-adapter/useConnection";
-import { useWallet } from "../components/wallet-adapter/useWallet";
+import { Header } from '../components/Header';
+import { RouteLink } from '../layout/Router';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'preact/hooks';
+import { ConfigContext } from '../AppContext';
+import { useConnection } from '../components/wallet-adapter/useConnection';
+import { useWallet } from '../components/wallet-adapter/useWallet';
 import {
   ACCESS_PROGRAM_ID,
   getStakeAccounts,
   getUserACSBalance,
-} from "../libs/program";
-import { Tooltip } from "../components/Tooltip";
-import { NumberInputWithSlider } from "../components/NumberInputWithSlider";
-import { PublicKey } from "@solana/web3.js";
-import { sendTx } from "../libs/transactions";
-import Loading from "../components/Loading";
-import { ProgressStep } from "../components/ProgressStep";
+} from '../libs/program';
+import { Tooltip } from '../components/Tooltip';
+import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
+import { PublicKey } from '@solana/web3.js';
+import { sendTx } from '../libs/transactions';
+import Loading from '../components/Loading';
+import { ProgressStep } from '../components/ProgressStep';
 
 const styles = {
   cancel_link: tw`self-end cursor-pointer text-blue-400 no-underline`,
@@ -60,7 +66,7 @@ export const Stake = () => {
   const { connection } = useConnection();
   const { publicKey, sendTransaction, signMessage } = useWallet();
 
-  const [working, setWorking] = useState("idle");
+  const [working, setWorking] = useState('idle');
   const [balance, setBalance] = useState<BN | null>(null);
   const [solBalance, setSolBalance] = useState<number>(0);
   const [stakedAccount, setStakedAccount] = useState<StakeAccount | null>(null);
@@ -71,6 +77,17 @@ export const Stake = () => {
 
   const openStakeModal = () => setStakeModal(true);
   const closeStakeModal = () => setStakeModal(false);
+
+  const feePercentage = 2;
+  const feePercentageFraction = feePercentage / 100;
+
+  console.log('Stake amount: ', stakeAmount);
+
+  const closeErrorModal = useCallback(() => {
+    setWorking('idle');
+    setError(null);
+    closeStakeModal();
+  }, []);
 
   useEffect(() => {
     if (!publicKey || !connection) {
@@ -89,7 +106,7 @@ export const Stake = () => {
     (async () => {
       const b = await getUserACSBalance(connection, publicKey);
       setBalance(b);
-      setStakeAmount(b.toNumber());
+      setStakeAmount(b.toNumber() / (1 + feePercentageFraction));
     })();
   }, [publicKey, connection]);
 
@@ -121,11 +138,8 @@ export const Stake = () => {
     })();
   }, [stakedAccount?.owner]);
 
-  const feePercentage = 2;
-  const feePercentageDecimal = feePercentage / 100;
-
   const fee = useMemo(() => {
-    return Number(stakeAmount) * feePercentageDecimal;
+    return Number(stakeAmount) * feePercentageFraction;
   }, [stakeAmount, feePercentage]);
 
   const handle = async () => {
@@ -143,7 +157,6 @@ export const Stake = () => {
 
     try {
       openStakeModal();
-      setWorking("account");
 
       const [centralKey] = await CentralState.getKey(ACCESS_PROGRAM_ID);
       const centralState = await CentralState.retrieve(connection, centralKey);
@@ -160,7 +173,7 @@ export const Stake = () => {
       try {
         stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
       } catch {
-        setWorking("account");
+        setWorking('account');
         const ixAccount = await createStakeAccount(
           new PublicKey(poolId),
           publicKey,
@@ -198,7 +211,7 @@ export const Stake = () => {
         stakeAccount.stakeAmount.toNumber() > 0 &&
         stakeAccount.lastClaimedTime < stakedPool.lastCrankTime
       ) {
-        setWorking("claim");
+        setWorking('claim');
         const ix = await claimRewards(
           connection,
           stakeKey,
@@ -208,47 +221,53 @@ export const Stake = () => {
         );
 
         await sendTx(connection, publicKey, [ix], sendTransaction, {
-          skipPreflight: true,
+          preflightCommitment: 'confirmed',
         });
       }
 
-      setWorking("stake");
-      console.log("Stake amount", stakeAmount);
-      console.log("Stake sending: ", Number(stakeAmount) - fee);
+      setWorking('stake');
       const ixStake = await stake(
         connection,
         stakeKey,
         stakerAta,
-        (Number(stakeAmount) - fee) * 10 ** 6,
+        Number(stakeAmount) * 10 ** 6,
         ACCESS_PROGRAM_ID
       );
       txs.push(ixStake);
 
       await sendTx(connection, publicKey, txs, sendTransaction, {
-        skipPreflight: true,
+        preflightCommitment: 'confirmed',
       });
 
-      setWorking("done");
+      setWorking('done');
     } catch (err) {
       if (err instanceof Error) {
         console.error(err);
         setError(err.message);
       }
     } finally {
-      setWorking("done");
+      setWorking('done');
     }
   };
 
-  const minStakeAmount = useMemo(() => {
+  const minPoolStakeAmount = useMemo(() => {
     return (stakedPool?.minimumStakeAmount.toNumber() ?? 0) / 10 ** 6;
   }, [stakedPool?.minimumStakeAmount]);
 
+  const minStakeAmount = useMemo(() => {
+    return Math.max(minPoolStakeAmount - Number(stakedAccount?.stakeAmount), 1);
+  }, [stakedAccount?.stakeAmount, minPoolStakeAmount]);
+
+  const maxStakeAmount = useMemo(() => {
+    return Number(balance) / (1 + feePercentageFraction);
+  }, [balance, feePercentageFraction]);
+
   const insufficientBalance = useMemo(() => {
     return (
-      minStakeAmount + minStakeAmount * feePercentageDecimal >
+      minStakeAmount + minStakeAmount * feePercentageFraction >
       (balance?.toNumber() ?? 0)
     );
-  }, [balance, minStakeAmount, feePercentageDecimal]);
+  }, [balance, minStakeAmount, feePercentageFraction]);
 
   const insufficientSolBalance = useMemo(
     () => solBalance < 0.000005,
@@ -258,13 +277,13 @@ export const Stake = () => {
   const invalidText = useMemo(() => {
     if (insufficientBalance && stakedAccount?.stakeAmount.gtn(0)) {
       return `Insufficient balance for staking. You need min. of ${
-        minStakeAmount + minStakeAmount * feePercentageDecimal
+        minStakeAmount + minStakeAmount * feePercentageFraction
       } ACS.`;
     } else if (insufficientSolBalance) {
       return `Insufficient ${solBalance} SOL balance. You need min. of ${0.000005} ACS.`;
     }
     return null;
-  }, [insufficientBalance, minStakeAmount, feePercentageDecimal]);
+  }, [insufficientBalance, minStakeAmount, feePercentageFraction]);
 
   return (
     <Fragment>
@@ -274,7 +293,7 @@ export const Stake = () => {
           <div css={styles.subtitleError}>{error}</div>
           <button
             css={[styles.button, hoverButtonStyles]}
-            onClick={closeStakeModal}
+            onClick={closeErrorModal}
           >
             Close
           </button>
@@ -291,41 +310,43 @@ export const Stake = () => {
             <ol css={styles.stepsList}>
               <ProgressStep
                 name="Create staking account"
-                status={working === "account" ? "current" : "complete"}
+                status={working === 'account' ? 'current' : 'complete'}
               />
               <ProgressStep
                 name="Claim rewards"
                 status={
-                  working === "claim"
-                    ? "current"
-                    : working === "account"
-                    ? "pending"
-                    : "complete"
+                  working === 'claim'
+                    ? 'current'
+                    : working === 'account'
+                    ? 'pending'
+                    : 'complete'
                 }
               />
               <ProgressStep
                 name="Stake"
                 status={
-                  working === "stake"
-                    ? "current"
-                    : working === "claim" || working === "account"
-                    ? "pending"
-                    : "complete"
+                  working === 'stake'
+                    ? 'current'
+                    : working === 'claim' ||
+                      working === 'account' ||
+                      working === 'idle'
+                    ? 'pending'
+                    : 'complete'
                 }
               />
             </ol>
-            <button
-              disabled={working !== "done"}
-              onClick={closeStakeModal}
+            <RouteLink
+              disabled={working !== 'done'}
+              href="/"
               css={[
                 styles.button,
-                working !== "done"
+                working !== 'done'
                   ? styles.disabledButtonStyles
                   : hoverButtonStyles,
               ]}
             >
               Close
-            </button>
+            </RouteLink>
           </nav>
         </div>
       )}
@@ -346,12 +367,8 @@ export const Stake = () => {
               </div>
 
               <NumberInputWithSlider
-                min={
-                  stakedAccount.stakeAmount.toNumber() > 0
-                    ? 1
-                    : minStakeAmount + minStakeAmount * feePercentageDecimal
-                }
-                max={balance?.toNumber() - fee || 0}
+                min={minStakeAmount}
+                max={maxStakeAmount}
                 value={stakeAmount}
                 disabled={insufficientBalance}
                 invalid={insufficientBalance || insufficientSolBalance}

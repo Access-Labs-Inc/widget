@@ -1,8 +1,8 @@
-import tw from "twin.macro";
-import { FunctionalComponent, h } from "preact";
-import { useState, useRef } from "preact/hooks";
-import RcInputNumber from "../libs/rc-input-number";
-import RcSlider from "react-input-slider";
+import tw from 'twin.macro';
+import { FunctionalComponent, h } from 'preact';
+import { useRef } from 'preact/hooks';
+import RcInputNumber from '../libs/rc-input-number';
+import RcSlider from 'react-input-slider';
 
 export interface InputProps {
   invalid?: boolean;
@@ -19,11 +19,11 @@ function setNativeValue(
   value: string | number | undefined
 ) {
   if (element) {
-    const valueSetter = Object.getOwnPropertyDescriptor(element, "value")?.set;
+    const valueSetter = Object.getOwnPropertyDescriptor(element, 'value')?.set;
     const prototype = Object.getPrototypeOf(element);
     const prototypeValueSetter = Object.getOwnPropertyDescriptor(
       prototype,
-      "value"
+      'value'
     )?.set;
 
     if (valueSetter && valueSetter !== prototypeValueSetter) {
@@ -45,16 +45,14 @@ const styles = {
 export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
   props
 ) => {
-  const { min, max, onChangeOfValue, invalidText } = props;
-  const [stakeAmount, setStakeAmount] = useState<number>(Number(max));
+  const { min, max, onChangeOfValue, value, invalidText } = props;
   const inputRef = useRef<HTMLInputElement>(null);
 
   const changeToMin = () => {
     if (inputRef.current) {
       setNativeValue(inputRef.current, min);
-      inputRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+      inputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
     }
-    setStakeAmount(Number(min));
     if (onChangeOfValue) {
       onChangeOfValue(Number(min));
     }
@@ -63,23 +61,20 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
   const changeToMax = () => {
     if (inputRef.current) {
       setNativeValue(inputRef.current, max);
-      inputRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+      inputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
     }
-    setStakeAmount(Number(max));
     if (onChangeOfValue) {
       onChangeOfValue(Number(max));
     }
   };
 
   const handleSliderChange = (values: { x: number; y: number }) => {
-    setStakeAmount(Number(values.x));
     if (onChangeOfValue) {
       onChangeOfValue(Number(values.x));
     }
   };
 
   const handleChange = (value: number) => {
-    setStakeAmount(Number(value));
     if (onChangeOfValue) {
       onChangeOfValue(Number(value));
     }
@@ -92,12 +87,14 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
         max={Number(max)}
         step={1}
         ref={inputRef}
-        defaultValue={Number(stakeAmount)}
-        value={Number(stakeAmount)}
+        defaultValue={Number(value)}
+        value={Number(value)}
         formatter={(value: any) => {
-          const formattedValue = value
-            .toString()
-            .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+          const formattedValue = parseFloat(
+            parseFloat(value).toFixed(2)
+          ).toLocaleString('en-US', {
+            useGrouping: true,
+          });
           return formattedValue;
         }}
         onChange={handleChange}
@@ -107,30 +104,30 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
           xmin={Number(min)}
           xmax={Number(max)}
           xstep={1}
-          x={stakeAmount as number}
+          x={value as number}
           onChange={handleSliderChange}
           styles={{
             track: {
-              backgroundColor: "rgba(17,24,39)",
-              width: "100%",
+              backgroundColor: 'rgba(17,24,39)',
+              width: '100%',
             },
             active: {
-              backgroundColor: "#749BFF",
+              backgroundColor: '#749BFF',
             },
             thumb: {
               width: 30,
               height: 30,
               backgroundColor: `#749BFF`,
-              border: "8px solid rgba(31,41,5)",
+              border: '8px solid rgba(31,41,5)',
             },
           }}
         />
       </div>
       <div css={styles.minMax}>
-        {stakeAmount === max && max && min && max > min ? (
+        {value === max && max && min && max > min ? (
           <span onClick={changeToMin}>Min</span>
         ) : null}
-        {stakeAmount !== max && max && min && min < max ? (
+        {value !== max && max && min && min < max ? (
           <span onClick={changeToMax}>Max</span>
         ) : null}
       </div>

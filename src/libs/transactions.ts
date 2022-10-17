@@ -17,12 +17,12 @@ export const sendTx = async (
   ) => Promise<string>,
   options?: SendTransactionOptions,
 ) => {
+  const latestBlockHash = await connection.getLatestBlockhash();
+
   const tx = new Transaction().add(...instructions);
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+  tx.recentBlockhash = latestBlockHash.blockhash;
   tx.feePayer = feePayer;
+
   const signature = await sendTransaction(tx, connection, options);
   console.log('Signature: ', signature);
-  return connection.confirmTransaction(signature, 'finalized');
 };
