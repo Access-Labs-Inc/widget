@@ -3,6 +3,7 @@ import { FunctionalComponent, h } from 'preact';
 import { useRef } from 'preact/hooks';
 import RcInputNumber from '../libs/rc-input-number';
 import RcSlider from 'react-input-slider';
+import { formatACSCurrency } from '../libs/utils';
 
 export interface InputProps {
   invalid?: boolean;
@@ -89,14 +90,7 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
         ref={inputRef}
         defaultValue={Number(value)}
         value={Number(value)}
-        formatter={(value: any) => {
-          const formattedValue = parseFloat(
-            parseFloat(value).toFixed(2)
-          ).toLocaleString('en-US', {
-            useGrouping: true,
-          });
-          return formattedValue;
-        }}
+        formatter={(value: any) => formatACSCurrency(value)}
         onChange={handleChange}
       />
       <div css={styles.slider}>

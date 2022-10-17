@@ -18,13 +18,7 @@ import {
 
 import { Header } from '../components/Header';
 import { RouteLink } from '../layout/Router';
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'preact/hooks';
+import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 import { ConfigContext } from '../AppContext';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import { useWallet } from '../components/wallet-adapter/useWallet';
@@ -41,12 +35,13 @@ import Loading from '../components/Loading';
 import { ProgressStep } from '../components/ProgressStep';
 
 const styles = {
+  root: tw`h-[31em] flex flex-col justify-between`,
   cancel_link: tw`self-end cursor-pointer text-blue-400 no-underline`,
   button: tw`w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0`,
   title: tw`my-8 mt-16 text-white text-2xl text-center`,
-  titleError: tw`my-8 mt-16 text-red-500 text-2xl text-center`,
+  titleError: tw`mt-8 text-red-500 text-2xl text-center`,
   subtitle: tw`text-white text-center text-stone-400`,
-  subtitleError: tw`mb-10 text-red-500 text-center`,
+  subtitleError: tw`text-red-500 text-center`,
   feesRoot: tw`mt-2 text-center text-xs text-stone-400`,
   feeWithTooltip: tw`flex justify-center`,
   loader: tw`flex justify-center content-center my-48`,
@@ -277,18 +272,18 @@ export const Stake = () => {
   }, [insufficientBalance, minStakeAmount, feePercentageFraction]);
 
   return (
-    <Fragment>
+    <div css={styles.root}>
       {stakeModalOpen && error && (
-        <div>
+        <Fragment>
           <div css={styles.titleError}>Error occured:</div>
           <div css={styles.subtitleError}>{error}</div>
           <RouteLink css={[styles.button, hoverButtonStyles]} href="/">
             Close
           </RouteLink>
-        </div>
+        </Fragment>
       )}
       {stakeModalOpen && !error && (
-        <div>
+        <Fragment>
           <div css={styles.title}>Steps to complete</div>
           <div css={styles.subtitle}>
             We need you to sign these
@@ -336,10 +331,10 @@ export const Stake = () => {
               Close
             </RouteLink>
           </nav>
-        </div>
+        </Fragment>
       )}
       {!stakeModalOpen && (
-        <div>
+        <Fragment>
           <Header>
             <RouteLink href="/" css={styles.cancel_link}>
               Cancel
@@ -354,41 +349,43 @@ export const Stake = () => {
                 split equally.
               </div>
 
-              <NumberInputWithSlider
-                min={minStakeAmount}
-                max={maxStakeAmount}
-                value={stakeAmount}
-                disabled={insufficientBalance}
-                invalid={insufficientBalance || insufficientSolBalance}
-                invalidText={invalidText}
-                onChangeOfValue={(value) => {
-                  setStakeAmount(value);
-                }}
-              />
+              <div>
+                <NumberInputWithSlider
+                  min={minStakeAmount}
+                  max={maxStakeAmount}
+                  value={stakeAmount}
+                  disabled={insufficientBalance}
+                  invalid={insufficientBalance || insufficientSolBalance}
+                  invalidText={invalidText}
+                  onChangeOfValue={(value) => {
+                    setStakeAmount(value);
+                  }}
+                />
 
-              {insufficientBalance || insufficientSolBalance ? (
-                <button css={[styles.button, styles.disabledButtonStyles]}>
-                  Stake
-                </button>
-              ) : (
-                <button
-                  css={[styles.button, hoverButtonStyles]}
-                  onClick={handle}
-                >
-                  Stake
-                </button>
-              )}
-
-              <div css={styles.feesRoot}>
-                <div css={styles.feeWithTooltip}>
-                  <div>Protocol fee: {fee} ACS</div>
-                  <Tooltip
-                    message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
+                {insufficientBalance || insufficientSolBalance ? (
+                  <button css={[styles.button, styles.disabledButtonStyles]}>
+                    Stake
+                  </button>
+                ) : (
+                  <button
+                    css={[styles.button, hoverButtonStyles]}
+                    onClick={handle}
                   >
-                    <Info size={16} />
-                  </Tooltip>
+                    Stake
+                  </button>
+                )}
+
+                <div css={styles.feesRoot}>
+                  <div css={styles.feeWithTooltip}>
+                    <div>Protocol fee: {fee} ACS</div>
+                    <Tooltip
+                      message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
+                    >
+                      <Info size={16} />
+                    </Tooltip>
+                  </div>
+                  <div>Transaction fee: 0.000005 SOL ~ $0.00024</div>
                 </div>
-                <div>Transaction fee: 0.000005 SOL ~ $0.00024</div>
               </div>
             </Fragment>
           ) : (
@@ -396,8 +393,8 @@ export const Stake = () => {
               <Loading />
             </div>
           )}
-        </div>
+        </Fragment>
       )}
-    </Fragment>
+    </div>
   );
 };

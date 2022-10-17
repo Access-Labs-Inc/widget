@@ -18,16 +18,18 @@ import {
 } from '../../access-protocol/smart-contract/js/src';
 import { PublicKey } from '@solana/web3.js';
 import Loading from '../components/Loading';
+import { formatACSCurrency } from '../libs/utils';
 
 const styles = {
+  root: tw`h-[31em] flex flex-col justify-between`,
   links_wrapper: tw`block my-4 mt-8 flex flex-col gap-3`,
   actions_disconnect: tw`self-end cursor-pointer text-red-400 no-underline`,
-  logo: tw`my-8 mt-16 flex items-center justify-center`,
+  logo: tw`mt-8 flex items-center justify-center`,
   button: tw`rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center text-indigo-500 bg-stone-700`,
   balance: tw`text-white text-center text-stone-400`,
   stakedAmount: tw`text-xl text-white text-center my-3`,
   disabledButtonStyles: tw`bg-stone-500 text-stone-300 cursor-not-allowed`,
-  loader: tw`flex justify-center content-center my-14`,
+  loader: tw`flex justify-center content-center`,
 };
 
 const hoverButtonStyles = css`
@@ -94,7 +96,7 @@ export const Actions = () => {
   }, [stakeAccount, stakePool]);
 
   return (
-    <div>
+    <div css={styles.root}>
       <Header>
         <div onClick={disconnect} css={styles.actions_disconnect}>
           Disconnect
@@ -116,35 +118,18 @@ export const Actions = () => {
         </svg>
       </div>
 
-      {stakeAccount?.stakeAmount && balance && claimableAmount ? (
-        <Fragment>
-          <div css={styles.stakedAmount}>
-            {stakeAccount?.stakeAmount.toNumber().toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}{' '}
-            ACS staked
-          </div>
-          <div css={styles.balance}>
-            {balance.toNumber().toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}{' '}
-            ACS available
-          </div>
-          <div css={styles.balance}>
-            {claimableAmount.toNumber().toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}{' '}
-            ACS claimable
-          </div>
-        </Fragment>
-      ) : (
-        <div css={styles.loader}>
-          <Loading />
+      <div>
+        <div css={styles.stakedAmount}>
+          {formatACSCurrency(stakeAccount?.stakeAmount.toNumber() ?? 0)} ACS
+          staked
         </div>
-      )}
+        <div css={styles.balance}>
+          {formatACSCurrency(balance?.toNumber() ?? 0)} ACS available
+        </div>
+        <div css={styles.balance}>
+          {formatACSCurrency(claimableAmount.toNumber() ?? 0)} ACS claimable
+        </div>
+      </div>
 
       <div css={styles.links_wrapper}>
         <RouteLink css={[styles.button, hoverButtonStyles]} href="/stake">
