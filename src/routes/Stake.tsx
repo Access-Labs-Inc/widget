@@ -76,18 +76,9 @@ export const Stake = () => {
   const [error, setError] = useState<string | null>(null);
 
   const openStakeModal = () => setStakeModal(true);
-  const closeStakeModal = () => setStakeModal(false);
 
   const feePercentage = 2;
   const feePercentageFraction = feePercentage / 100;
-
-  console.log('Stake amount: ', stakeAmount);
-
-  const closeErrorModal = useCallback(() => {
-    setWorking('idle');
-    setError(null);
-    closeStakeModal();
-  }, []);
 
   useEffect(() => {
     if (!publicKey || !connection) {
@@ -291,12 +282,9 @@ export const Stake = () => {
         <div>
           <div css={styles.titleError}>Error occured:</div>
           <div css={styles.subtitleError}>{error}</div>
-          <button
-            css={[styles.button, hoverButtonStyles]}
-            onClick={closeErrorModal}
-          >
+          <RouteLink css={[styles.button, hoverButtonStyles]} href="/">
             Close
-          </button>
+          </RouteLink>
         </div>
       )}
       {stakeModalOpen && !error && (
