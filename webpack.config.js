@@ -6,9 +6,9 @@ const bundleOutputDir = './dist';
 
 module.exports = (env) => {
   const isDevBuild = !(env && env.prod);
-
   return [{
     entry: './src/index.ts',
+    devtool: isDevBuild ? 'inline-source-map' : false,
     output: {
       filename: 'widget.js',
       path: path.resolve(bundleOutputDir),
@@ -22,7 +22,6 @@ module.exports = (env) => {
           process: 'process/browser',
           Buffer: ['buffer', 'Buffer'],
         }),
-        new webpack.SourceMapDevToolPlugin(),
         new copyWebpackPlugin([{ from: 'dev/' }]),
       ]
       : [
