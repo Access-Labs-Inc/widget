@@ -14,7 +14,7 @@ export interface WalletListItemProps {
 }
 
 const styles = {
-  wallet_list_item: tw`text-white w-full text-left mt-4 text-xl bg-gray-700 rounded-full font-normal py-3 px-6`,
+  wallet_list_item: tw`text-white w-full text-left mt-4 text-xl bg-stone-700 rounded-full font-normal py-3 px-6`,
 };
 
 export const WalletListItem: FunctionalComponent<WalletListItemProps> = ({

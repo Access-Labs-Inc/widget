@@ -1,17 +1,17 @@
-import tw from "twin.macro";
-import { h } from "preact";
-import { Check, Circle } from "phosphor-react";
+import tw from 'twin.macro';
+import { h } from 'preact';
+import { Check, Circle } from 'phosphor-react';
 
 const styles = {
   stepRoot: tw`flex items-center`,
   completedIconWrap: tw`relative ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500`,
-  completedIcon: tw`h-full w-full text-gray-600 font-bold`,
+  completedIcon: tw`h-full w-full text-stone-600 font-bold`,
   completedText: tw`ml-3 text-xl font-medium text-green-500  text-green-500`,
   currentIcon: tw`ml-1 h-6 w-6 animate-spin text-indigo-500`,
   currentText: tw`ml-3 text-xl font-medium text-indigo-600`,
-  pendingIconWrap: tw`relative ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-500`,
-  pendingIcon: tw`h-full w-full text-gray-800`,
-  pendingText: tw`ml-3 text-xl font-bold text-gray-600`,
+  pendingIconWrap: tw`relative ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-stone-500`,
+  pendingIcon: tw`h-full w-full text-stone-800`,
+  pendingText: tw`ml-3 text-xl font-bold text-stone-600`,
 };
 
 const Completed = ({ name }: { name: string }) => (
@@ -71,13 +71,13 @@ export const ProgressStep = ({
 }) => {
   let component = null;
   switch (status) {
-    case "complete":
+    case 'complete':
       component = <Completed name={name} />;
       break;
-    case "current":
+    case 'current':
       component = <Current name={name} />;
       break;
-    case "pending":
+    case 'pending':
     default:
       component = <Pending name={name} />;
       break;

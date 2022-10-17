@@ -42,22 +42,22 @@ import { ProgressStep } from '../components/ProgressStep';
 
 const styles = {
   cancel_link: tw`self-end cursor-pointer text-blue-400 no-underline`,
-  button: tw`w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-gray-700 border-0`,
+  button: tw`w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0`,
   title: tw`my-8 mt-16 text-white text-2xl text-center`,
   titleError: tw`my-8 mt-16 text-red-500 text-2xl text-center`,
-  subtitle: tw`text-white text-center text-gray-400`,
+  subtitle: tw`text-white text-center text-stone-400`,
   subtitleError: tw`mb-10 text-red-500 text-center`,
-  feesRoot: tw`mt-2 text-center text-xs text-gray-400`,
+  feesRoot: tw`mt-2 text-center text-xs text-stone-400`,
   feeWithTooltip: tw`flex justify-center`,
   loader: tw`flex justify-center content-center my-48`,
   steps: tw`flex flex-col justify-start my-4`,
   stepsList: tw`space-y-4 list-none mb-10`,
-  disabledButtonStyles: tw`bg-gray-600 cursor-not-allowed`,
+  disabledButtonStyles: tw`bg-stone-600 cursor-not-allowed`,
 };
 
 const hoverButtonStyles = css`
   &:hover {
-    ${tw`bg-indigo-300 text-gray-800`}
+    ${tw`bg-indigo-300 text-stone-800`}
   }
 `;
 

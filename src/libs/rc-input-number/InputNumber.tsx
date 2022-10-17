@@ -33,14 +33,14 @@ import useFrame from './hooks/useFrame';
  */
 
 const styles = {
-  root: tw`text-xl w-auto pl-8 py-4 border-0 rounded-[0.5rem] bg-gray-900 text-gray-200 outline-none`,
-  rootFocused: tw`block text-xl pl-8 py-4 border-0 rounded-[0.5rem] bg-gray-900 text-gray-200 outline-none ring-gray-900`,
-  rootDisabled: tw`block bg-gray-500`,
+  root: tw`text-xl w-auto pl-8 py-4 border-0 rounded-[0.5rem] bg-stone-900 text-stone-200 outline-none`,
+  rootFocused: tw`block text-xl pl-8 py-4 border-0 rounded-[0.5rem] bg-stone-900 text-stone-200 outline-none ring-stone-900`,
+  rootDisabled: tw`block bg-stone-500`,
   rootReadonly: tw`border-2 border-indigo-500`,
   rootNaN: tw`border-2 border-red-500`,
   rootOutOfRange: tw`border-2 border-red-500`,
   wrap: tw`w-auto overflow-hidden`,
-  input: tw`text-gray-200 bg-gray-900 outline-none ring-gray-800 border-0 text-3xl`,
+  input: tw`text-stone-200 bg-stone-900 outline-none ring-stone-800 border-0 text-3xl`,
 };
 
 const getDecimalValue = (stringMode: boolean, decimalValue: DecimalClass) => {

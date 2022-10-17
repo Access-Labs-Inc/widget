@@ -19,9 +19,9 @@ import { Claim } from '../../../routes/Claim';
 
 const styles = {
   wallet_adapter_dropdown_wrapper: tw`relative inline-block text-left font-sans`,
-  wallet_adapter_button_trigger: tw`bg-gray-400 text-gray-800 border-0 py-3 px-5 text-xl rounded-full`,
+  wallet_adapter_button_trigger: tw`bg-stone-400 text-stone-800 border-0 py-3 px-5 text-xl rounded-full`,
   wallet_adapter_button_trigger_active: tw`bg-indigo-400`,
-  wallet_adapter_dropdown: tw`absolute mt-2 w-80 px-6 py-4 top-[100%] bg-gray-800 text-white rounded-[1rem] opacity-0`,
+  wallet_adapter_dropdown: tw`absolute mt-2 w-80 px-6 py-4 top-[100%] bg-stone-800 text-white rounded-[1rem] opacity-0`,
   wallet_adapter_dropdown_active: tw`visible opacity-100`,
 };
 

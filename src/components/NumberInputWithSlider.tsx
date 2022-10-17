@@ -37,7 +37,7 @@ function setNativeValue(
 const styles = {
   root: tw`relative my-6`,
   slider: tw`mt-4 block border-0 mx-1`,
-  thumb: tw`cursor-pointer rounded-full border-4 border-gray-800 bg-indigo-500 px-2.5`,
+  thumb: tw`cursor-pointer rounded-full border-4 border-stone-800 bg-indigo-500 px-2.5`,
   invalidText: tw`mt-1 text-center text-red-500`,
   minMax: tw`absolute top-0 right-0 mt-4 mr-8 text-2xl font-bold hover:cursor-pointer text-indigo-200`,
 };

@@ -27,14 +27,14 @@ const styles = {
   wallet_adapter_modal_title_para: tw`text-sm font-sans w-80 py-0 text-center`,
   wallet_adapter_modal: tw`absolute left-0 top-12 text-white`,
   wallet_adapter_modal_wrapper: tw`relative flex flex-col items-center justify-center pb-2`,
-  wallet_adapter_modal_container: tw`rounded-[1rem] bg-gray-800 p-3 content-center items-center z-10`,
-  wallet_adapter_modal_button_close: tw`absolute top-4 right-4 p-3 cursor-pointer bg-gray-800 border-0 fill-[#fff]`,
+  wallet_adapter_modal_container: tw`rounded-[1rem] bg-stone-800 p-3 content-center items-center z-10`,
+  wallet_adapter_modal_button_close: tw`absolute top-4 right-4 p-3 cursor-pointer bg-stone-800 border-0 fill-[#fff]`,
   wallet_adapter_modal_list: tw`list-none m-0 p-0 w-full`,
   wallet_adapter_modal_list_more: tw`cursor-pointer text-white bg-transparent border-0 px-4 py-2 mt-2 text-sm text-center self-center`,
   wallet_adapter_modal_list_more_icon_rotate: tw`transform rotate-0 pl-2`,
   wallet_adapter_modal_list_more_icon_rotate_expanded: tw`pl-2 transform rotate-180`,
   wallet_adapter_modal_middle: tw`flex flex-col align-middle justify-center`,
-  wallet_adapter_modal_middle_button: tw`w-full block rounded-full mt-2 px-6 py-3 bg-gray-700 border-0 text-white cursor-pointer`,
+  wallet_adapter_modal_middle_button: tw`w-full block rounded-full mt-2 px-6 py-3 bg-stone-700 border-0 text-white cursor-pointer`,
 };
 
 export const WalletModal: FunctionalComponent<WalletModalProps> = ({

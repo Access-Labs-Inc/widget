@@ -1,38 +1,38 @@
-import tw, { css } from "twin.macro";
-import { Fragment, h } from "preact";
-import { RouteLink } from "../layout/Router";
-import { Header } from "../components/Header";
-import { useWallet } from "../components/wallet-adapter/useWallet";
-import { useContext, useEffect, useMemo, useState } from "preact/hooks";
-import { useConnection } from "../components/wallet-adapter/useConnection";
+import tw, { css } from 'twin.macro';
+import { Fragment, h } from 'preact';
+import { RouteLink } from '../layout/Router';
+import { Header } from '../components/Header';
+import { useWallet } from '../components/wallet-adapter/useWallet';
+import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
+import { useConnection } from '../components/wallet-adapter/useConnection';
 import {
   calculateRewardForStaker,
   getStakeAccounts,
   getUserACSBalance,
-} from "../libs/program";
-import BN from "bn.js";
-import { ConfigContext } from "../AppContext";
+} from '../libs/program';
+import BN from 'bn.js';
+import { ConfigContext } from '../AppContext';
 import {
   StakeAccount,
   StakePool,
-} from "../../access-protocol/smart-contract/js/src";
-import { PublicKey } from "@solana/web3.js";
-import Loading from "../components/Loading";
+} from '../../access-protocol/smart-contract/js/src';
+import { PublicKey } from '@solana/web3.js';
+import Loading from '../components/Loading';
 
 const styles = {
   links_wrapper: tw`block my-4 mt-8 flex flex-col gap-3`,
   actions_disconnect: tw`self-end cursor-pointer text-red-400 no-underline`,
   logo: tw`my-8 mt-16 flex items-center justify-center`,
-  button: tw`rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center text-indigo-500 bg-gray-700`,
-  balance: tw`text-white text-center text-gray-400`,
+  button: tw`rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center text-indigo-500 bg-stone-700`,
+  balance: tw`text-white text-center text-stone-400`,
   stakedAmount: tw`text-xl text-white text-center my-3`,
-  disabledButtonStyles: tw`bg-gray-500 text-gray-300 cursor-not-allowed`,
+  disabledButtonStyles: tw`bg-stone-500 text-stone-300 cursor-not-allowed`,
   loader: tw`flex justify-center content-center my-14`,
 };
 
 const hoverButtonStyles = css`
   &:hover {
-    ${tw`bg-indigo-500 text-gray-800`}
+    ${tw`bg-indigo-500 text-stone-800`}
   }
 `;
 
@@ -122,21 +122,21 @@ export const Actions = () => {
             {stakeAccount?.stakeAmount.toNumber().toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
-            })}{" "}
+            })}{' '}
             ACS staked
           </div>
           <div css={styles.balance}>
             {balance.toNumber().toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
-            })}{" "}
+            })}{' '}
             ACS available
           </div>
           <div css={styles.balance}>
             {claimableAmount.toNumber().toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
-            })}{" "}
+            })}{' '}
             ACS claimable
           </div>
         </Fragment>
