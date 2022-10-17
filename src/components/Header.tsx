@@ -1,9 +1,9 @@
-import tw from 'twin.macro';
-import { h, ComponentChildren } from 'preact';
-import { useState, useMemo, useCallback } from 'preact/hooks';
-import { Copy, ArrowUpRight } from 'phosphor-react';
+import tw from "twin.macro";
+import { h, ComponentChildren } from "preact";
+import { useState, useMemo, useCallback } from "preact/hooks";
+import { Copy, ArrowUpRight } from "phosphor-react";
 
-import { useWallet } from './wallet-adapter/useWallet';
+import { useWallet } from "./wallet-adapter/useWallet";
 
 const styles = {
   header_dropdown_copy: tw`flex items-center cursor-pointer`,
@@ -20,8 +20,8 @@ export const Header = ({ children }: { children: ComponentChildren }) => {
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey]);
   const shortBase58 = useMemo(() => {
-    if (!base58) return null;
-    return base58.slice(0, 4) + '..' + base58.slice(-4);
+    if (!base58) { return null; }
+    return base58.slice(0, 4) + ".." + base58.slice(-4);
   }, [base58]);
   const copyAddress = useCallback(async () => {
     if (base58) {

@@ -1,10 +1,10 @@
-import tw, { css } from 'twin.macro';
-import { h } from 'preact';
+import tw, { css } from "twin.macro";
+import { h } from "preact";
 
-import { Header } from '../components/Header';
-import { RouteLink } from '../layout/Router';
-import { useContext } from 'preact/hooks';
-import { ConfigContext } from '../AppContext';
+import { Header } from "../components/Header";
+import { RouteLink } from "../layout/Router";
+import { useContext } from "preact/hooks";
+import { ConfigContext } from "../AppContext";
 
 const styles = {
   cancel_link: tw`self-end cursor-pointer text-blue-400 no-underline`,

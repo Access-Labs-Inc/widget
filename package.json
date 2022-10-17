@@ -4,7 +4,8 @@
     "build": "webpack --config webpack.config.js",
     "build-release": "webpack --config webpack.config.js --env.prod --display-modules",
     "start": "NODE_ENV=development webpack serve",
-    "lint": "tslint --project tsconfig.json",
+    "lint": "tslint --project tsconfig.json ./src/**/*.tsx",
+    "lint-fix": "tslint --project tsconfig.json ./src/**/*.tsx --fix",
     "test": "jest"
   },
   "license": "MIT",

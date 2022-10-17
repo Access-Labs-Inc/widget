@@ -1,5 +1,5 @@
-import tw, { TwStyle } from 'twin.macro';
-import { Fragment, h } from 'preact';
+import tw, { TwStyle } from "twin.macro";
+import { Fragment, h } from "preact";
 
 const Loading = () => {
   return (
