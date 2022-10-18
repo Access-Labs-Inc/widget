@@ -207,7 +207,7 @@ export const Stake = () => {
         );
 
         await sendTx(connection, publicKey, [ix], sendTransaction, {
-          preflightCommitment: 'confirmed',
+          skipPreflight: true,
         });
       }
 
@@ -222,7 +222,7 @@ export const Stake = () => {
       txs.push(ixStake);
 
       await sendTx(connection, publicKey, txs, sendTransaction, {
-        preflightCommitment: 'confirmed',
+        skipPreflight: true,
       });
 
       setWorking('done');

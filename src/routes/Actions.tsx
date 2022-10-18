@@ -17,7 +17,6 @@ import {
   StakePool,
 } from '../../access-protocol/smart-contract/js/src';
 import { PublicKey } from '@solana/web3.js';
-import Loading from '../components/Loading';
 import { formatACSCurrency } from '../libs/utils';
 
 const styles = {
