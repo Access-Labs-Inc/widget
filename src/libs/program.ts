@@ -323,8 +323,8 @@ export const getUserACSBalance = async (
     centralState.tokenMint,
     publicKey,
     true,
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID
+    TOKEN_PROGRAM_ID,
+    ASSOCIATED_TOKEN_PROGRAM_ID
   );
   const userAccount: AccountInfo<Buffer> | null =
     await connection.getAccountInfo(userAta);

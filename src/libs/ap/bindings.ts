@@ -27,7 +27,7 @@ export const stake = async (
   const feesAta = await getAssociatedTokenAddress(
     centralState.tokenMint,
     centralState.authority,
-    false,
+    true,
     TOKEN_PROGRAM_ID,
     ASSOCIATED_TOKEN_PROGRAM_ID
   );

@@ -177,20 +177,20 @@ export const Stake = () => {
       const stakerAta = await getAssociatedTokenAddress(
         centralState.tokenMint,
         publicKey,
-        false,
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID
+        true,
+        TOKEN_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID
       );
 
       const stakerAtaAccount = await connection.getAccountInfo(stakerAta);
       if (stakerAtaAccount == null) {
         const ataix = createAssociatedTokenAccountInstruction(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          centralState.tokenMint,
+          publicKey,
           stakerAta,
           publicKey,
-          publicKey
+          centralState.tokenMint,
+          TOKEN_PROGRAM_ID,
+          ASSOCIATED_TOKEN_PROGRAM_ID
         );
         txs.push(ataix);
       }
