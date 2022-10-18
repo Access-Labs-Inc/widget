@@ -1,4 +1,5 @@
 {
+  "extends": "@tsconfig/recommended/tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
     "target": "es6",
@@ -20,12 +21,12 @@
     "jsx": "preserve",
     "jsxFactory": "h",
     "jsxFragmentFactory": "Fragment",
-    "jsxImportSource": "preact",
+    "skipLibCheck": true,
     "paths": {
       "react": ["./node_modules/preact/compat/"],
       "react-dom": ["./node_modules/preact/compat/"]
     }
   },
-  "exclude": ["node_modules"],
+  "exclude": ["**/node_modules", "access-protocol"],
   "types": ["typePatches"]
 }

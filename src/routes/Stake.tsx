@@ -9,11 +9,12 @@ import {
   stake,
   StakeAccount,
   StakePool,
-} from '../../access-protocol/smart-contract/js/src';
+} from '../libs/ap';
 import {
-  Token,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token';
 
 import { Header } from '../components/Header';
@@ -173,16 +174,17 @@ export const Stake = () => {
       }
 
       // Check if stake ata account exists
-      const stakerAta = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
+      const stakerAta = await getAssociatedTokenAddress(
         centralState.tokenMint,
-        publicKey
+        publicKey,
+        false,
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID
       );
 
       const stakerAtaAccount = await connection.getAccountInfo(stakerAta);
       if (stakerAtaAccount == null) {
-        const ataix = Token.createAssociatedTokenAccountInstruction(
+        const ataix = createAssociatedTokenAccountInstruction(
           ASSOCIATED_TOKEN_PROGRAM_ID,
           TOKEN_PROGRAM_ID,
           centralState.tokenMint,

@@ -1,7 +1,7 @@
 {
   "editor.tabSize": 2,
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-  "editor.formatOnSave": false,
+  "editor.formatOnSave": true,
   "editor.codeActionsOnSave": [
     "source.addMissingImports",
     "source.fixAll.eslint"
@@ -11,9 +11,10 @@
     "**/.DS_Store": true,
     "**/*.js": { "when": "$(basename).ts" },
     "**/*.js.map": true,
-    "dist/**": true
+    "dist/**": true,
+    "access-protocol/**": true
   },
-  "typescript.preferences.quoteStyle": "single",
+  "typescript.preferences.quoteStyle": "double",
   "typescript.tsdk": "node_modules/typescript/lib",
   // Multiple language settings for json and jsonc files
   "[json][jsonc]": {

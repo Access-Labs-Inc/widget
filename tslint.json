@@ -23,5 +23,10 @@
   "rulesDirectory": [],
   "linterOptions": {
     "exclude": ["export/**/*"]
+  },
+  "settings": {
+    "react": {
+      "pragma": "h"
+    }
   }
 }

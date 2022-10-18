@@ -1,5 +1,5 @@
 import tw, { css } from 'twin.macro';
-import { Fragment, h } from 'preact';
+import { h } from 'preact';
 import { RouteLink } from '../layout/Router';
 import { Header } from '../components/Header';
 import { useWallet } from '../components/wallet-adapter/useWallet';
@@ -12,10 +12,7 @@ import {
 } from '../libs/program';
 import BN from 'bn.js';
 import { ConfigContext } from '../AppContext';
-import {
-  StakeAccount,
-  StakePool,
-} from '../../access-protocol/smart-contract/js/src';
+import { StakeAccount, StakePool } from '../libs/ap';
 import { PublicKey } from '@solana/web3.js';
 import { formatACSCurrency } from '../libs/utils';
 

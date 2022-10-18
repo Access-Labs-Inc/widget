@@ -1,7 +1,7 @@
-import { CentralState, StakePool } from '@ap';
+import { CentralState, StakePool } from './ap';
 import {
-  Token,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import {
@@ -15,7 +15,9 @@ import {
 import BN from 'bn.js';
 
 // Hard-coded values.
-export const ACCESS_PROGRAM_ID = new PublicKey('acp1VPqNoMs5KC5aEH3MzxnyPZNyKQF1TCPouCoNRuX');
+export const ACCESS_PROGRAM_ID = new PublicKey(
+  'acp1VPqNoMs5KC5aEH3MzxnyPZNyKQF1TCPouCoNRuX'
+);
 const SECONDS_IN_DAY = 86400;
 
 /**
@@ -26,7 +28,7 @@ const SECONDS_IN_DAY = 86400;
  */
 export const getStakeAccounts = async (
   connection: Connection,
-  owner: PublicKey,
+  owner: PublicKey
 ) => {
   const filters: MemcmpFilter[] = [
     {
@@ -55,7 +57,7 @@ export const getStakeAccounts = async (
  */
 export const getStakePools = async (
   connection: Connection,
-  owner: PublicKey,
+  owner: PublicKey
 ) => {
   const filters = [
     {
@@ -84,7 +86,7 @@ export const getStakePools = async (
  */
 export const getInactiveStakePools = async (
   connection: Connection,
-  owner: PublicKey,
+  owner: PublicKey
 ) => {
   const filters = [
     {
@@ -113,7 +115,7 @@ export const getInactiveStakePools = async (
  */
 export const getBondAccounts = async (
   connection: Connection,
-  owner: PublicKey,
+  owner: PublicKey
 ) => {
   const filters = [
     {
@@ -198,7 +200,7 @@ export const getAllInactiveBonds = async (connection: Connection) => {
  */
 export const getAllInactiveBondAccounts = async (
   connection: Connection,
-  owner: PublicKey,
+  owner: PublicKey
 ) => {
   const filters = [
     {
@@ -246,7 +248,7 @@ export const getAllActiveBonds = async (connection: Connection) => {
  */
 export const getAllActiveBondAccounts = async (
   connection: Connection,
-  owner: PublicKey,
+  owner: PublicKey
 ) => {
   const filters = [
     {
@@ -270,13 +272,11 @@ export const getAllActiveBondAccounts = async (
 const calculateReward = (
   lastClaimedTime: BN,
   stakePool: StakePool,
-  staker: boolean,
+  staker: boolean
 ) => {
   const BUFF_LEN = 274;
   let nbDaysBehind = new Date().getTime() - Number(lastClaimedTime) * 1000;
-  nbDaysBehind = Math.round(
-    nbDaysBehind / 1000 / Number(SECONDS_IN_DAY),
-  );
+  nbDaysBehind = Math.round(nbDaysBehind / 1000 / Number(SECONDS_IN_DAY));
   nbDaysBehind = nbDaysBehind > BUFF_LEN - 1 ? BUFF_LEN - 1 : nbDaysBehind;
 
   const idx = stakePool.currentDayIdx + 1;
@@ -296,15 +296,18 @@ const calculateReward = (
 export const calculateRewardForStaker = (
   lastClaimedTime: BN,
   stakePool: StakePool,
-  stakeAmount: BN,
+  stakeAmount: BN
 ) => {
   const reward = calculateReward(lastClaimedTime, stakePool, true);
-  return reward.mul(new BN(stakeAmount.toNumber())).iushrn(32).divn(10 ** 6);
+  return reward
+    .mul(new BN(stakeAmount.toNumber()))
+    .iushrn(32)
+    .divn(10 ** 6);
 };
 
 export const calculateRewardForPool = (
   lastClaimedTime: BN,
-  stakePool: StakePool,
+  stakePool: StakePool
 ) => {
   const reward = calculateReward(lastClaimedTime, stakePool, false);
   return reward.iushrn(32).toNumber();
@@ -312,15 +315,16 @@ export const calculateRewardForPool = (
 
 export const getUserACSBalance = async (
   connection: Connection,
-  publicKey: PublicKey,
+  publicKey: PublicKey
 ): Promise<BN> => {
   const [centralKey] = await CentralState.getKey(ACCESS_PROGRAM_ID);
   const centralState = await CentralState.retrieve(connection, centralKey);
-  const userAta: PublicKey = await Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
+  const userAta: PublicKey = await getAssociatedTokenAddress(
     centralState.tokenMint,
     publicKey,
+    true,
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID
   );
   const userAccount: AccountInfo<Buffer> | null =
     await connection.getAccountInfo(userAta);
