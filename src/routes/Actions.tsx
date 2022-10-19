@@ -26,6 +26,7 @@ const styles = {
   stakedAmount: tw`text-xl text-white text-center my-3`,
   disabledButtonStyles: tw`bg-stone-500 text-stone-300 cursor-not-allowed`,
   loader: tw`flex justify-center content-center`,
+  blink: tw`animate-pulse`,
 };
 
 const hoverButtonStyles = css`
@@ -82,7 +83,7 @@ export const Actions = () => {
 
   const claimableAmount = useMemo(() => {
     if (!stakeAccount || !stakePool) {
-      return new BN(0);
+      return null;
     }
     return calculateRewardForStaker(
       stakeAccount.lastClaimedTime as BN,
@@ -115,15 +116,15 @@ export const Actions = () => {
       </div>
 
       <div>
-        <div css={styles.stakedAmount}>
+        <div css={[styles.stakedAmount, !stakeAccount && styles.blink]}>
           {formatACSCurrency(stakeAccount?.stakeAmount.toNumber() ?? 0)} ACS
           staked
         </div>
-        <div css={styles.balance}>
+        <div css={[styles.balance, !balance && styles.blink]}>
           {formatACSCurrency(balance?.toNumber() ?? 0)} ACS available
         </div>
-        <div css={styles.balance}>
-          {formatACSCurrency(claimableAmount.toNumber() ?? 0)} ACS claimable
+        <div css={[styles.balance, !claimableAmount && styles.blink]}>
+          {formatACSCurrency(claimableAmount?.toNumber() ?? 0)} ACS claimable
         </div>
       </div>
 
