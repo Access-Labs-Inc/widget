@@ -1,6 +1,5 @@
 const path = require("path");
-const webpack = require("webpack");
-var copyWebpackPlugin = require("copy-webpack-plugin");
+var CopyPlugin = require("copy-webpack-plugin");
 const StatoscopeWebpackPlugin = require("@statoscope/webpack-plugin").default;
 const { DuplicatesPlugin } = require("inspectpack/plugin");
 
@@ -22,11 +21,7 @@ module.exports = (env) => {
       plugins: isDevBuild
         ? [
             new StatoscopeWebpackPlugin(),
-            new webpack.ProvidePlugin({
-              process: "process/browser",
-              Buffer: ["buffer", "Buffer"],
-            }),
-            new copyWebpackPlugin([{ from: "dev/" }]),
+            new CopyPlugin([{ from: "dev/" }]),
             new DuplicatesPlugin({
               // Emit compilation warning or error? (Default: `false`)
               emitErrors: false,
@@ -44,12 +39,7 @@ module.exports = (env) => {
               verbose: true,
             }),
           ]
-        : [
-            new webpack.ProvidePlugin({
-              process: "process/browser",
-              Buffer: ["buffer", "Buffer"],
-            }),
-          ],
+        : [],
       optimization: {
         minimize: !isDevBuild,
       },
