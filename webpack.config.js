@@ -1,9 +1,8 @@
 const path = require("path");
 const webpack = require("webpack");
 var copyWebpackPlugin = require("copy-webpack-plugin");
-const BundleAnalyzerPlugin =
-  require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 const StatoscopeWebpackPlugin = require("@statoscope/webpack-plugin").default;
+const { DuplicatesPlugin } = require("inspectpack/plugin");
 
 const bundleOutputDir = "./dist";
 
@@ -23,12 +22,27 @@ module.exports = (env) => {
       plugins: isDevBuild
         ? [
             new StatoscopeWebpackPlugin(),
-            new BundleAnalyzerPlugin(),
             new webpack.ProvidePlugin({
               process: "process/browser",
               Buffer: ["buffer", "Buffer"],
             }),
             new copyWebpackPlugin([{ from: "dev/" }]),
+            new DuplicatesPlugin({
+              // Emit compilation warning or error? (Default: `false`)
+              emitErrors: false,
+              // Handle all messages with handler function (`(report: string)`)
+              // Overrides `emitErrors` output.
+              emitHandler: undefined,
+              // List of packages that can be ignored. (Default: `[]`)
+              // - If a string, then a prefix match of `{$name}/` for each module.
+              // - If a regex, then `.test(pattern)` which means you should add slashes
+              //   where appropriate.
+              //
+              // **Note**: Uses posix paths for all matching (e.g., on windows `/` not `\`).
+              ignoredPackages: undefined,
+              // Display full duplicates information? (Default: `false`)
+              verbose: true,
+            }),
           ]
         : [
             new webpack.ProvidePlugin({
