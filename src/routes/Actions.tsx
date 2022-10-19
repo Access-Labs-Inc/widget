@@ -12,7 +12,7 @@ import {
 } from '../libs/program';
 import BN from 'bn.js';
 import { ConfigContext } from '../AppContext';
-import { StakeAccount, StakePool } from '../libs/ap';
+import { StakeAccount, StakePool } from '../libs/ap/state';
 import { PublicKey } from '@solana/web3.js';
 import { formatACSCurrency } from '../libs/utils';
 

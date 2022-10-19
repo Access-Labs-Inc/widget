@@ -2,14 +2,8 @@ import tw, { css } from 'twin.macro';
 import { Fragment, h } from 'preact';
 import BN from 'bn.js';
 import { Info } from 'phosphor-react';
-import {
-  CentralState,
-  claimRewards,
-  createStakeAccount,
-  stake,
-  StakeAccount,
-  StakePool,
-} from '../libs/ap';
+import { CentralState, StakeAccount, StakePool } from '../libs/ap/state';
+import { claimRewards, createStakeAccount, stake } from '../libs/ap/bindings';
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,

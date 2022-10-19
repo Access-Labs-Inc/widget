@@ -1,5 +1,5 @@
 interface InfraConfigurations {
-    element?: HTMLElement;
+  element?: HTMLElement;
 }
 
 /**
@@ -8,13 +8,8 @@ interface InfraConfigurations {
  * are passed around in application via Context.
  */
 export interface AppConfigurations {
-    poolId: string | null;
-    poolName: string | null;
+  poolId: string | null;
+  poolName: string | null;
 }
 
 export type Configurations = InfraConfigurations & AppConfigurations;
-
-export interface Globals {
-    widgetOpen: boolean;
-    setWidgetOpen: (open: boolean) => void;
-}
