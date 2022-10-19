@@ -1,9 +1,9 @@
 import tw, { css } from 'twin.macro';
+import { useContext } from 'preact/hooks';
 import { h } from 'preact';
 
 import { Header } from '../components/Header';
 import { RouteLink } from '../layout/Router';
-import { useContext } from 'preact/hooks';
 import { ConfigContext } from '../AppContext';
 
 const styles = {
