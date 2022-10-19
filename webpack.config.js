@@ -1,6 +1,9 @@
 const path = require("path");
 const webpack = require("webpack");
 var copyWebpackPlugin = require("copy-webpack-plugin");
+const BundleAnalyzerPlugin =
+  require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+const StatoscopeWebpackPlugin = require("@statoscope/webpack-plugin").default;
 
 const bundleOutputDir = "./dist";
 
@@ -19,6 +22,8 @@ module.exports = (env) => {
       },
       plugins: isDevBuild
         ? [
+            new StatoscopeWebpackPlugin(),
+            new BundleAnalyzerPlugin(),
             new webpack.ProvidePlugin({
               process: "process/browser",
               Buffer: ["buffer", "Buffer"],
