@@ -3,15 +3,6 @@ import { Fragment, h } from 'preact';
 import BN from 'bn.js';
 import { Info } from 'phosphor-react';
 import {
-  TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddress,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccountInstruction,
-} from '@solana/spl-token';
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
-import { PublicKey } from '@solana/web3.js';
-
-import {
   CentralState,
   claimRewards,
   createStakeAccount,
@@ -19,9 +10,16 @@ import {
   StakeAccount,
   StakePool,
 } from '../libs/ap';
+import {
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+} from '@solana/spl-token';
 
 import { Header } from '../components/Header';
 import { RouteLink } from '../layout/Router';
+import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 import { ConfigContext } from '../AppContext';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import { useWallet } from '../components/wallet-adapter/useWallet';
@@ -32,10 +30,10 @@ import {
 } from '../libs/program';
 import { Tooltip } from '../components/Tooltip';
 import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
+import { PublicKey } from '@solana/web3.js';
 import { sendTx } from '../libs/transactions';
 import Loading from '../components/Loading';
 import { ProgressStep } from '../components/ProgressStep';
-import { formatACSCurrency } from '../libs/utils';
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -260,7 +258,7 @@ export const Stake = () => {
   }, [balance, minStakeAmount, feePercentageFraction]);
 
   const insufficientSolBalance = useMemo(
-    () => solBalance < 0.005,
+    () => solBalance < 0.000005,
     [solBalance]
   );
 
@@ -270,7 +268,7 @@ export const Stake = () => {
         minStakeAmount + minStakeAmount * feePercentageFraction
       } ACS.`;
     } else if (insufficientSolBalance) {
-      return `Insufficient ${solBalance} SOL balance. You need min. of ${0.005} SOL.`;
+      return `Insufficient ${solBalance} SOL balance. You need min. of ${0.000005} ACS.`;
     }
     return null;
   }, [insufficientBalance, minStakeAmount, feePercentageFraction]);
@@ -381,7 +379,7 @@ export const Stake = () => {
 
                 <div css={styles.feesRoot}>
                   <div css={styles.feeWithTooltip}>
-                    <div>Protocol fee: {formatACSCurrency(fee)} ACS</div>
+                    <div>Protocol fee: {fee} ACS</div>
                     <Tooltip
                       message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
                     >
