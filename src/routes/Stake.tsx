@@ -40,7 +40,7 @@ const styles = {
   subtitleError: tw`text-red-500 text-center`,
   feesRoot: tw`mt-2 text-center text-xs text-stone-400`,
   feeWithTooltip: tw`flex justify-center`,
-  loader: tw`flex justify-center content-center my-48`,
+  loader: tw`flex justify-center content-center mb-56`,
   steps: tw`flex flex-col justify-start my-4`,
   stepsList: tw`space-y-4 list-none mb-10`,
   disabledButtonStyles: tw`bg-stone-600 cursor-not-allowed`,
