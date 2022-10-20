@@ -1,34 +1,34 @@
-import tw, { css } from 'twin.macro';
-import { Fragment, h } from 'preact';
-import BN from 'bn.js';
-import { Info } from 'phosphor-react';
-import { CentralState, StakeAccount, StakePool } from '../libs/ap/state';
-import { claimRewards, createStakeAccount, stake } from '../libs/ap/bindings';
+import tw, { css } from "twin.macro";
+import { Fragment, h } from "preact";
+import BN from "bn.js";
+import { Info } from "phosphor-react";
+import { CentralState, StakeAccount, StakePool } from "../libs/ap/state";
+import { claimRewards, createStakeAccount, stake } from "../libs/ap/bindings";
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
-} from '@solana/spl-token';
-import { PublicKey } from '@solana/web3.js';
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
+} from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
-import { Header } from '../components/Header';
-import { RouteLink } from '../layout/Router';
-import { ConfigContext } from '../AppContext';
-import { useConnection } from '../components/wallet-adapter/useConnection';
-import { useWallet } from '../components/wallet-adapter/useWallet';
+import { Header } from "../components/Header";
+import { RouteLink } from "../layout/Router";
+import { ConfigContext } from "../AppContext";
+import { useConnection } from "../components/wallet-adapter/useConnection";
+import { useWallet } from "../components/wallet-adapter/useWallet";
 import {
   ACCESS_PROGRAM_ID,
   getStakeAccounts,
   getUserACSBalance,
-} from '../libs/program';
-import { Tooltip } from '../components/Tooltip';
-import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
-import { sendTx } from '../libs/transactions';
-import Loading from '../components/Loading';
-import { ProgressStep } from '../components/ProgressStep';
-import { formatACSCurrency } from '../libs/utils';
+} from "../libs/program";
+import { Tooltip } from "../components/Tooltip";
+import { NumberInputWithSlider } from "../components/NumberInputWithSlider";
+import { sendTx } from "../libs/transactions";
+import Loading from "../components/Loading";
+import { ProgressStep } from "../components/ProgressStep";
+import { formatACSCurrency } from "../libs/utils";
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -58,7 +58,7 @@ export const Stake = () => {
   const { connection } = useConnection();
   const { publicKey, sendTransaction, signMessage } = useWallet();
 
-  const [working, setWorking] = useState('idle');
+  const [working, setWorking] = useState("idle");
   const [balance, setBalance] = useState<BN | null>(null);
   const [solBalance, setSolBalance] = useState<number>(0);
   const [stakedAccount, setStakedAccount] = useState<StakeAccount | null>(null);
@@ -156,7 +156,7 @@ export const Stake = () => {
       try {
         stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
       } catch {
-        setWorking('account');
+        setWorking("account");
         const ixAccount = await createStakeAccount(
           new PublicKey(poolId),
           publicKey,
@@ -195,7 +195,7 @@ export const Stake = () => {
         stakeAccount.stakeAmount.toNumber() > 0 &&
         stakeAccount.lastClaimedTime < stakedPool.lastCrankTime
       ) {
-        setWorking('claim');
+        setWorking("claim");
         const ix = await claimRewards(
           connection,
           stakeKey,
@@ -209,7 +209,7 @@ export const Stake = () => {
         });
       }
 
-      setWorking('stake');
+      setWorking("stake");
       const ixStake = await stake(
         connection,
         stakeKey,
@@ -223,14 +223,14 @@ export const Stake = () => {
         skipPreflight: true,
       });
 
-      setWorking('done');
+      setWorking("done");
     } catch (err) {
       if (err instanceof Error) {
         console.error(err);
         setError(err.message);
       }
     } finally {
-      setWorking('done');
+      setWorking("done");
     }
   };
 
@@ -291,37 +291,37 @@ export const Stake = () => {
             <ol css={styles.stepsList}>
               <ProgressStep
                 name="Create staking account"
-                status={working === 'account' ? 'current' : 'complete'}
+                status={working === "account" ? "current" : "complete"}
               />
               <ProgressStep
                 name="Claim rewards"
                 status={
-                  working === 'claim'
-                    ? 'current'
-                    : working === 'account'
-                    ? 'pending'
-                    : 'complete'
+                  working === "claim"
+                    ? "current"
+                    : working === "account"
+                    ? "pending"
+                    : "complete"
                 }
               />
               <ProgressStep
                 name="Stake"
                 status={
-                  working === 'stake'
-                    ? 'current'
-                    : working === 'claim' ||
-                      working === 'account' ||
-                      working === 'idle'
-                    ? 'pending'
-                    : 'complete'
+                  working === "stake"
+                    ? "current"
+                    : working === "claim" ||
+                      working === "account" ||
+                      working === "idle"
+                    ? "pending"
+                    : "complete"
                 }
               />
             </ol>
             <RouteLink
-              disabled={working !== 'done'}
+              disabled={working !== "done"}
               href="/"
               css={[
                 styles.button,
-                working !== 'done'
+                working !== "done"
                   ? styles.disabledButtonStyles
                   : hoverButtonStyles,
               ]}

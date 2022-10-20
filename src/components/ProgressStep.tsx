@@ -1,6 +1,6 @@
-import tw from 'twin.macro';
-import { h } from 'preact';
-import { Check, Circle } from 'phosphor-react';
+import tw from "twin.macro";
+import { h } from "preact";
+import { Check, Circle } from "phosphor-react";
 
 const styles = {
   stepRoot: tw`flex items-center`,
@@ -71,13 +71,13 @@ export const ProgressStep = ({
 }) => {
   let component = null;
   switch (status) {
-    case 'complete':
+    case "complete":
       component = <Completed name={name} />;
       break;
-    case 'current':
+    case "current":
       component = <Current name={name} />;
       break;
-    case 'pending':
+    case "pending":
     default:
       component = <Pending name={name} />;
       break;
