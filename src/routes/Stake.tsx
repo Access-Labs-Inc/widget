@@ -10,10 +10,11 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token';
+import { PublicKey } from '@solana/web3.js';
+import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 
 import { Header } from '../components/Header';
 import { RouteLink } from '../layout/Router';
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 import { ConfigContext } from '../AppContext';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import { useWallet } from '../components/wallet-adapter/useWallet';
@@ -24,7 +25,6 @@ import {
 } from '../libs/program';
 import { Tooltip } from '../components/Tooltip';
 import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
-import { PublicKey } from '@solana/web3.js';
 import { sendTx } from '../libs/transactions';
 import Loading from '../components/Loading';
 import { ProgressStep } from '../components/ProgressStep';
@@ -44,6 +44,7 @@ const styles = {
   steps: tw`flex flex-col justify-start my-4`,
   stepsList: tw`space-y-4 list-none mb-10`,
   disabledButtonStyles: tw`bg-stone-600 cursor-not-allowed`,
+  invalid: tw`bg-red-400`,
 };
 
 const hoverButtonStyles = css`
@@ -261,7 +262,7 @@ export const Stake = () => {
     if (insufficientBalance && stakedAccount?.stakeAmount.gtn(0)) {
       return `Insufficient balance for staking. You need min. of ${
         minStakeAmount + minStakeAmount * feePercentageFraction
-      } ACS.`;
+      } ACS + ${fee} Protocol Fee.`;
     } else if (insufficientSolBalance) {
       return `Insufficient ${solBalance} SOL balance. You need min. of ${0.005} SOL.`;
     }
@@ -359,11 +360,17 @@ export const Stake = () => {
                   }}
                 />
 
-                {insufficientBalance || insufficientSolBalance ? (
-                  <button css={[styles.button, styles.disabledButtonStyles]}>
-                    Stake
-                  </button>
-                ) : (
+                {(insufficientBalance || insufficientSolBalance) && (
+                  <a
+                    href="https://st-app.accessprotocol.co/get-acs"
+                    target="_blank"
+                    rel="noopener"
+                    css={[styles.button, styles.invalid]}
+                  >
+                    Get ACS/SOL on access
+                  </a>
+                )}
+                {!insufficientBalance && !insufficientSolBalance && (
                   <button
                     css={[styles.button, hoverButtonStyles]}
                     onClick={handle}
