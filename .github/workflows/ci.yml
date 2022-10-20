@@ -2,25 +2,27 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches:
+      - main
   pull_request:
-    branches: [master]
+    branches:
+      - master
 
 jobs:
   build-ci:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [10.x]
+        node-version: [16.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run build
-      - run: npm run test
+      - run: yarn install --immutable --immutable-cache --check-cache
+      - run: yarn run lint
+      - run: yarn run build
+      - run: yarn run test
