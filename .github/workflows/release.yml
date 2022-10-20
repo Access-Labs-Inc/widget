@@ -41,11 +41,11 @@ jobs:
 
       - name: Publish Release
         uses: octokit/request-action@v2.x
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           route: PATCH /repos/:repository/releases/:release
           repository: ${{ github.repository }}
           release: ${{ steps.create_release.outputs.id }}
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
