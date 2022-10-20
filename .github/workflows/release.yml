@@ -3,20 +3,21 @@ name: Release
 on:
   push:
     tags:
-      - "v*"
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   release:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: "10.x"
-      - run: npm install
-      - run: npm run build-release
+          node-version: "16.x"
+      - run: yarn install
+      - run: yarn run build-release
       - run: zip -j widget dist/* README.md
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -27,6 +28,7 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: true
           prerelease: true
+
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
@@ -37,8 +39,8 @@ jobs:
           asset_name: widget.zip
           asset_content_type: application/zip
 
-      - uses: octokit/request-action@v2.x
-        name: Publish Release
+      - name: Publish Release
+        uses: octokit/request-action@v2.x
         with:
           route: PATCH /repos/:repository/releases/:release
           repository: ${{ github.repository }}
