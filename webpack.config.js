@@ -5,8 +5,9 @@ const { DuplicatesPlugin } = require("inspectpack/plugin");
 
 const bundleOutputDir = "./dist";
 
-module.exports = (env) => {
-  const isDevBuild = !(env && env.prod);
+module.exports = (env, argv) => {
+  const isDevBuild = argv.mode !== "production";
+  console.log("Production build: " + !isDevBuild);
   return [
     {
       entry: "./src/index.ts",
@@ -39,7 +40,7 @@ module.exports = (env) => {
               verbose: true,
             }),
           ]
-        : [],
+        : [new StatoscopeWebpackPlugin()],
       optimization: {
         minimize: !isDevBuild,
       },
