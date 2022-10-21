@@ -1,34 +1,34 @@
 <!DOCTYPE html>
-<html>
-
-<head>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ACS Widget dev page</title>
-</head>
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+  </head>
 
-<body>
-  <h1>ACS Widget dev page</h1>
-  <h2>The shown widget is for demonstration purpose only</h2>
+  <body>
+    <h1>ACS Widget dev page</h1>
+    <h2>The shown widget is for demonstration purpose only</h2>
 
-  <p>
-    To fire an event that handled inside widget, click <a href="javascript:;" onclick="_acs('event', 'open')">here to open</a>.
-  </p>
+    <p>
+      To fire an event that handled inside widget, click <a href="javascript:;" onclick="_acs('event', 'open')">here to open</a>.
+    </p>
 
-  <div id="acs" style="position: relative"></div>
+    <div id="acs" style="position: relative"></div>
 
-  <script>
-    (function (w, d, s, o, f, js, fjs) {
-        w[o] = w[o] || function () { (w[o].q = w[o].q || []).push(arguments) };
-        js = d.createElement(s), fjs = d.getElementsByTagName(s)[0];
-        js.id = o; js.src = f; js.async = 1; fjs.parentNode.insertBefore(js, fjs);
-    }(window, document, 'script', '_acs', './widget.js'));
-    _acs('init', {
-      element: document.getElementById('acs'),
-      debug: true,
-      poolId: 'B1PciBp1hnhRYtE1rQyHFZBiGfZXTYDg7h6M6pAzY3Hd',
-      poolName: "The Block"
-    });
-  </script>
-</body>
-
+    <script>
+      (function (w, d, s, o, f, js, fjs) {
+          w[o] = w[o] || function () { (w[o].q = w[o].q || []).push(arguments) };
+          js = d.createElement(s), fjs = d.getElementsByTagName(s)[0];
+          js.id = o; js.src = f; js.async = 1; fjs.parentNode.insertBefore(js, fjs);
+      }(window, document, 'script', '_acs', './widget.js'));
+      _acs('init', {
+        element: document.getElementById('acs'),
+        debug: true,
+        poolId: 'B1PciBp1hnhRYtE1rQyHFZBiGfZXTYDg7h6M6pAzY3Hd',
+        poolName: "The Block"
+      });
+    </script>
+  </body>
 </html>
