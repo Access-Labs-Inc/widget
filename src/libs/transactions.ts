@@ -28,31 +28,31 @@ export const sendTx = async (
 
   const signature = await sendTransaction(transaction, connection, sendOptions);
 
-  // TODO: https://github.com/solana-labs/solana/pull/28290
-  const status =
-    transaction.recentBlockhash != null &&
-    transaction.lastValidBlockHeight != null
-      ? (
-          await connection.confirmTransaction(
-            {
-              signature: signature,
-              ...latestBlockHash,
-            },
-            options && options.commitment
-          )
-        ).value
-      : (
-          await connection.confirmTransaction(
-            signature,
-            options && options.commitment
-          )
-        ).value;
+  // TODO: Return back after this resolves: https://github.com/solana-labs/solana/pull/28290
+  // const status =
+  //   transaction.recentBlockhash != null &&
+  //   transaction.lastValidBlockHeight != null
+  //     ? (
+  //         await connection.confirmTransaction(
+  //           {
+  //             signature: signature,
+  //             ...latestBlockHash,
+  //           },
+  //           options && options.commitment
+  //         )
+  //       ).value
+  //     : (
+  //         await connection.confirmTransaction(
+  //           signature,
+  //           options && options.commitment
+  //         )
+  //       ).value;
 
-  if (status.err) {
-    throw new Error(
-      `Transaction ${signature} failed (${JSON.stringify(status)})`
-    );
-  }
+  // if (status.err) {
+  //   throw new Error(
+  //     `Transaction ${signature} failed (${JSON.stringify(status)})`
+  //   );
+  // }
 
   console.log('Signature: ', signature);
   return signature;
