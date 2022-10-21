@@ -1,21 +1,21 @@
-import tw from "twin.macro";
-import { h } from "preact";
+import tw from 'twin.macro';
+import { h } from 'preact';
 import {
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
-} from "preact/hooks";
-import { Router, RouteComponent } from "../layout/Router";
-import { Actions } from "../routes/Actions";
-import { Stake } from "../routes/Stake";
-import { Unstake } from "../routes/Unstake";
-import { Claim } from "../routes/Claim";
-import { Button } from "../components/wallet-adapter/ui/Button";
-import { WalletConnectButton } from "../components/wallet-adapter/ui/WalletConnectButton";
-import { WalletModalButton } from "../components/wallet-adapter/ui/WalletModalButton";
-import { useWallet } from "../components/wallet-adapter/useWallet";
+} from 'preact/hooks';
+import { Router, RouteComponent } from '../layout/Router';
+import { Actions } from '../routes/Actions';
+import { Stake } from '../routes/Stake';
+import { Unstake } from '../routes/Unstake';
+import { Claim } from '../routes/Claim';
+import { Button } from '../components/wallet-adapter/ui/Button';
+import { WalletConnectButton } from '../components/wallet-adapter/ui/WalletConnectButton';
+import { WalletModalButton } from '../components/wallet-adapter/ui/WalletModalButton';
+import { useWallet } from '../components/wallet-adapter/useWallet';
 
 const styles = {
   wallet_adapter_dropdown_wrapper: tw`relative inline-block text-left font-sans`,
@@ -32,8 +32,10 @@ const Main = () => {
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey]);
   const content = useMemo(() => {
-    if (!wallet || !base58) { return null; }
-    return base58.slice(0, 4) + ".." + base58.slice(-4);
+    if (!wallet || !base58) {
+      return null;
+    }
+    return base58.slice(0, 4) + '..' + base58.slice(-4);
   }, [wallet, base58]);
 
   const toggleDropdown = useCallback(() => {
@@ -49,22 +51,36 @@ const Main = () => {
       const node = ref.current;
 
       // Do nothing if clicking dropdown or its descendants
-      if (!node || node.contains(event.target as Node)) { return; }
+      if (!node || node.contains(event.target as Node)) {
+        return;
+      }
 
       closeDropdown();
     };
 
-    document.addEventListener("mousedown", listener);
-    document.addEventListener("touchstart", listener);
+    document.addEventListener('mousedown', listener);
+    document.addEventListener('touchstart', listener);
 
     return () => {
-      document.removeEventListener("mousedown", listener);
-      document.removeEventListener("touchstart", listener);
+      document.removeEventListener('mousedown', listener);
+      document.removeEventListener('touchstart', listener);
     };
   }, [ref, closeDropdown]);
 
-  if (!wallet) { return <WalletModalButton />; }
-  if (!base58) { return <WalletConnectButton />; }
+  if (!wallet) {
+    return (
+      <div css={styles.wallet_adapter_dropdown_wrapper}>
+        <WalletModalButton />
+      </div>
+    );
+  }
+  if (!base58) {
+    return (
+      <div css={styles.wallet_adapter_dropdown_wrapper}>
+        <WalletConnectButton />
+      </div>
+    );
+  }
 
   return (
     <div css={styles.wallet_adapter_dropdown_wrapper}>
@@ -74,7 +90,7 @@ const Main = () => {
           styles.wallet_adapter_button_trigger,
           publicKey && styles.wallet_adapter_button_trigger_active,
         ]}
-        style={{ pointerEvents: active ? "none" : "auto" }}
+        style={{ pointerEvents: active ? 'none' : 'auto' }}
         onClick={toggleDropdown}
       >
         {content}
@@ -88,10 +104,10 @@ const Main = () => {
       >
         <Router
           routes={{
-            "/": <RouteComponent component={Actions} />,
-            "/stake": <RouteComponent component={Stake} />,
-            "/unstake": <RouteComponent component={Unstake} />,
-            "/claim": <RouteComponent component={Claim} />,
+            '/': <RouteComponent component={Actions} />,
+            '/stake': <RouteComponent component={Stake} />,
+            '/unstake': <RouteComponent component={Unstake} />,
+            '/claim': <RouteComponent component={Claim} />,
           }}
         />
       </div>
