@@ -1,5 +1,6 @@
 interface InfraConfigurations {
   element?: HTMLElement;
+  debug?: boolean;
 }
 
 /**
