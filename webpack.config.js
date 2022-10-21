@@ -51,6 +51,7 @@ module.exports = (env, argv) => {
               Buffer: ["buffer", "Buffer"],
             }),
             new StatoscopeWebpackPlugin(),
+            new CopyPlugin([{ from: "dev/" }]),
           ],
       optimization: {
         minimize: !isDevBuild,
