@@ -4,6 +4,7 @@ import {
   PublicKey,
   TransactionInstruction,
   Transaction,
+  ConfirmOptions,
 } from '@solana/web3.js';
 
 export const sendTx = async (
@@ -13,16 +14,46 @@ export const sendTx = async (
   sendTransaction: (
     tx: Transaction,
     connection: Connection,
-    options?: SendTransactionOptions,
+    sendOptions?: SendTransactionOptions
   ) => Promise<string>,
-  options?: SendTransactionOptions,
+  sendOptions?: SendTransactionOptions,
+  options?: ConfirmOptions
 ) => {
   const latestBlockHash = await connection.getLatestBlockhash();
 
-  const tx = new Transaction().add(...instructions);
-  tx.recentBlockhash = latestBlockHash.blockhash;
-  tx.feePayer = feePayer;
+  const transaction = new Transaction({ ...latestBlockHash }).add(
+    ...instructions
+  );
+  transaction.feePayer = feePayer;
 
-  const signature = await sendTransaction(tx, connection, options);
+  const signature = await sendTransaction(transaction, connection, sendOptions);
+
+  // TODO: https://github.com/solana-labs/solana/pull/28290
+  const status =
+    transaction.recentBlockhash != null &&
+    transaction.lastValidBlockHeight != null
+      ? (
+          await connection.confirmTransaction(
+            {
+              signature: signature,
+              ...latestBlockHash,
+            },
+            options && options.commitment
+          )
+        ).value
+      : (
+          await connection.confirmTransaction(
+            signature,
+            options && options.commitment
+          )
+        ).value;
+
+  if (status.err) {
+    throw new Error(
+      `Transaction ${signature} failed (${JSON.stringify(status)})`
+    );
+  }
+
   console.log('Signature: ', signature);
+  return signature;
 };
