@@ -1,21 +1,21 @@
-import tw, { css } from 'twin.macro';
-import { h } from 'preact';
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
-import { PublicKey } from '@solana/web3.js';
-import BN from 'bn.js';
+import tw, { css } from "twin.macro";
+import { h } from "preact";
+import { useContext, useEffect, useMemo, useState } from "preact/hooks";
+import { PublicKey } from "@solana/web3.js";
+import BN from "bn.js";
 
 import {
   calculateRewardForStaker,
   getStakeAccounts,
   getUserACSBalance,
-} from '../libs/program';
-import { ConfigContext } from '../AppContext';
-import { StakeAccount, StakePool } from '../libs/ap/state';
-import { formatACSCurrency } from '../libs/utils';
-import { RouteLink } from '../layout/Router';
-import { Header } from '../components/Header';
-import { useWallet } from '../components/wallet-adapter/useWallet';
-import { useConnection } from '../components/wallet-adapter/useConnection';
+} from "../libs/program";
+import { ConfigContext } from "../AppContext";
+import { StakeAccount, StakePool } from "../libs/ap/state";
+import { formatACSCurrency } from "../libs/utils";
+import { RouteLink } from "../layout/Router";
+import { Header } from "../components/Header";
+import { useWallet } from "../components/wallet-adapter/useWallet";
+import { useConnection } from "../components/wallet-adapter/useConnection";
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,

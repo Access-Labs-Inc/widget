@@ -9,7 +9,7 @@ indent_style = space
 indent_size = 2
 
 [*.{ts,tsx}]
-quote_type = single
+quote_type = double
 
 [*.{css,json,yml}]
 indent_size = 2
