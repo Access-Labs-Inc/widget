@@ -45,6 +45,7 @@ const styles = {
   stepsList: tw`space-y-4 list-none mb-10`,
   disabledButtonStyles: tw`bg-stone-600 cursor-not-allowed`,
   invalid: tw`bg-red-400`,
+  invalidText: tw`mt-1 text-center text-red-500`,
 };
 
 const hoverButtonStyles = css`
@@ -59,9 +60,11 @@ export const Stake = () => {
   const { publicKey, sendTransaction, signMessage } = useWallet();
 
   const [working, setWorking] = useState("idle");
-  const [balance, setBalance] = useState<BN | null>(null);
+  const [balance, setBalance] = useState<BN | null | undefined>(undefined);
   const [solBalance, setSolBalance] = useState<number>(0);
-  const [stakedAccount, setStakedAccount] = useState<StakeAccount | null>(null);
+  const [stakedAccount, setStakedAccount] = useState<
+    StakeAccount | undefined | null
+  >(undefined);
   const [stakedPool, setStakedPool] = useState<StakePool | null>(null);
   const [stakeAmount, setStakeAmount] = useState<number>(0);
   const [stakeModalOpen, setStakeModal] = useState<boolean>(false);
@@ -89,9 +92,11 @@ export const Stake = () => {
     (async () => {
       const b = await getUserACSBalance(connection, publicKey);
       setBalance(b);
-      setStakeAmount(b.toNumber() / (1 + feePercentageFraction));
+      setStakeAmount(
+        b != null ? b.toNumber() / (1 + feePercentageFraction) : 0
+      );
     })();
-  }, [publicKey, connection]);
+  }, [publicKey, connection, getUserACSBalance]);
 
   useEffect(() => {
     if (!publicKey || !poolId || !connection) {
@@ -100,26 +105,31 @@ export const Stake = () => {
     (async () => {
       const stakedAccounts = await getStakeAccounts(connection, publicKey);
       if (stakedAccounts != null && stakedAccounts.length > 0) {
-        stakedAccounts.forEach((st) => {
+        const sAccount = stakedAccounts.find((st) => {
           const sa = StakeAccount.deserialize(st.account.data);
-          if (sa.stakePool.toBase58() === poolId) {
-            setStakedAccount(sa);
-            return;
-          }
+          return sa.stakePool.toBase58() === poolId;
         });
+        if (sAccount) {
+          const sa = StakeAccount.deserialize(sAccount.account.data);
+          setStakedAccount(sa);
+        } else {
+          setStakedAccount(null);
+        }
+        return;
       }
+      setStakedAccount(null);
     })();
   }, [publicKey, connection, poolId]);
 
   useEffect(() => {
-    if (!stakedAccount?.owner) {
+    if (!poolId) {
       return;
     }
     (async () => {
-      const sp = await StakePool.retrieve(connection, stakedAccount.stakePool);
+      const sp = await StakePool.retrieve(connection, new PublicKey(poolId));
       setStakedPool(sp);
     })();
-  }, [stakedAccount?.owner]);
+  }, [poolId]);
 
   const fee = useMemo(() => {
     return Number(stakeAmount) * feePercentageFraction;
@@ -239,7 +249,10 @@ export const Stake = () => {
   }, [stakedPool?.minimumStakeAmount]);
 
   const minStakeAmount = useMemo(() => {
-    return Math.max(minPoolStakeAmount - Number(stakedAccount?.stakeAmount), 1);
+    return Math.max(
+      minPoolStakeAmount - Number(stakedAccount?.stakeAmount ?? 0),
+      1
+    );
   }, [stakedAccount?.stakeAmount, minPoolStakeAmount]);
 
   const maxStakeAmount = useMemo(() => {
@@ -259,15 +272,31 @@ export const Stake = () => {
   );
 
   const invalidText = useMemo(() => {
-    if (insufficientBalance && stakedAccount?.stakeAmount.gtn(0)) {
-      return `Insufficient balance for staking. You need min. of ${
-        minStakeAmount + minStakeAmount * feePercentageFraction
-      } ACS + ${fee} Protocol Fee.`;
+    if (insufficientBalance) {
+      return `Insufficient balance for staking. You need min. of ${minStakeAmount} ACS + ${
+        minStakeAmount * feePercentageFraction
+      } Protocol Fee.`;
     } else if (insufficientSolBalance) {
       return `Insufficient ${solBalance} SOL balance. You need min. of ${0.005} SOL.`;
     }
     return null;
-  }, [insufficientBalance, minStakeAmount, feePercentageFraction]);
+  }, [
+    insufficientBalance,
+    insufficientSolBalance,
+    solBalance,
+    minStakeAmount,
+    feePercentageFraction,
+    stakedAccount?.stakeAmount,
+  ]);
+
+  console.log("Balance: ", balance);
+  console.log("Stake account: ", stakedAccount);
+  console.log("Stake pool: ", stakedPool);
+  console.log("Min pool stake amount: ", minPoolStakeAmount);
+  console.log("Min stake amount: ", minStakeAmount);
+  console.log("Max stake amount: ", maxStakeAmount);
+  console.log("Insufficient balance: ", insufficientBalance);
+  console.log("Insufficient SOL balance: ", insufficientSolBalance);
 
   return (
     <div css={styles.root}>
@@ -339,26 +368,32 @@ export const Stake = () => {
             </RouteLink>
           </Header>
 
-          {stakedAccount?.stakeAmount && stakedPool && balance ? (
+          {stakedAccount !== undefined && balance !== undefined && (
             <Fragment>
               <div css={styles.title}>Stake on &apos;{poolName}&apos;</div>
-              <div css={styles.subtitle}>
-                Both {poolName} and you will receive a ACS inflation rewards
-                split equally.
-              </div>
+              {!insufficientBalance && !insufficientSolBalance ? (
+                <div css={styles.subtitle}>
+                  Both {poolName} and you will receive a ACS inflation rewards
+                  split equally.
+                </div>
+              ) : (
+                <p css={styles.invalidText}>{invalidText}</p>
+              )}
 
               <div>
-                <NumberInputWithSlider
-                  min={minStakeAmount}
-                  max={maxStakeAmount}
-                  value={stakeAmount}
-                  disabled={insufficientBalance}
-                  invalid={insufficientBalance || insufficientSolBalance}
-                  invalidText={invalidText}
-                  onChangeOfValue={(value) => {
-                    setStakeAmount(value);
-                  }}
-                />
+                {!insufficientBalance && !insufficientSolBalance && (
+                  <NumberInputWithSlider
+                    min={minStakeAmount}
+                    max={maxStakeAmount}
+                    value={stakeAmount}
+                    disabled={insufficientBalance}
+                    invalid={insufficientBalance || insufficientSolBalance}
+                    invalidText={invalidText}
+                    onChangeOfValue={(value) => {
+                      setStakeAmount(value);
+                    }}
+                  />
+                )}
 
                 {(insufficientBalance || insufficientSolBalance) && (
                   <a
@@ -392,11 +427,14 @@ export const Stake = () => {
                 </div>
               </div>
             </Fragment>
-          ) : (
-            <div css={styles.loader}>
-              <Loading />
-            </div>
           )}
+          {stakedAccount === undefined &&
+            stakedPool == null &&
+            balance == undefined && (
+              <div css={styles.loader}>
+                <Loading />
+              </div>
+            )}
         </Fragment>
       )}
     </div>

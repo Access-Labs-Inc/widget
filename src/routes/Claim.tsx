@@ -68,14 +68,19 @@ export const Claim = () => {
     (async () => {
       const stakedAccounts = await getStakeAccounts(connection, publicKey);
       if (stakedAccounts != null && stakedAccounts.length > 0) {
-        stakedAccounts.forEach((st) => {
+        const sAccount = stakedAccounts.find((st) => {
           const sa = StakeAccount.deserialize(st.account.data);
-          if (sa.stakePool.toBase58() === poolId) {
-            setStakedAccount(sa);
-            return;
-          }
+          return sa.stakePool.toBase58() === poolId;
         });
+        if (sAccount) {
+          const sa = StakeAccount.deserialize(sAccount.account.data);
+          setStakedAccount(sa);
+        } else {
+          setStakedAccount(null);
+        }
+        return;
       }
+      setStakedAccount(null);
     })();
   }, [publicKey, connection, poolId]);
 

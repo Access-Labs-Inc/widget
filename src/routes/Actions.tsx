@@ -41,8 +41,10 @@ export const Actions = () => {
   const { connection } = useConnection();
   const { publicKey, disconnect } = useWallet();
   const [balance, setBalance] = useState<BN | null>(null);
-  const [stakeAccount, setStakeAccount] = useState<StakeAccount | null>(null);
-  const [stakePool, setStakePool] = useState<StakePool | null>(null);
+  const [stakedAccount, setStakedAccount] = useState<
+    StakeAccount | null | undefined
+  >(undefined);
+  const [stakePool, setStakePool] = useState<StakePool | undefined>(undefined);
 
   useEffect(() => {
     if (!publicKey) {
@@ -55,14 +57,14 @@ export const Actions = () => {
   }, [publicKey, connection]);
 
   useEffect(() => {
-    if (!stakeAccount || !poolId || stakePool) {
+    if (!stakedAccount || !poolId || !stakePool) {
       return;
     }
     (async () => {
       const sp = await StakePool.retrieve(connection, new PublicKey(poolId));
       setStakePool(sp);
     })();
-  }, [poolId, stakeAccount, stakePool, connection]);
+  }, [poolId, stakedAccount, stakePool, connection]);
 
   useEffect(() => {
     if (!publicKey || !poolId) {
@@ -71,27 +73,32 @@ export const Actions = () => {
     (async () => {
       const stakedAccounts = await getStakeAccounts(connection, publicKey);
       if (stakedAccounts != null && stakedAccounts.length > 0) {
-        stakedAccounts.forEach((st) => {
+        const sAccount = stakedAccounts.find((st) => {
           const sa = StakeAccount.deserialize(st.account.data);
-          if (sa.stakePool.toBase58() === poolId) {
-            setStakeAccount(sa);
-            return;
-          }
+          return sa.stakePool.toBase58() === poolId;
         });
+        if (sAccount) {
+          const sa = StakeAccount.deserialize(sAccount.account.data);
+          setStakedAccount(sa);
+        } else {
+          setStakedAccount(null);
+        }
+        return;
       }
+      setStakedAccount(null);
     })();
   }, [publicKey, connection, poolId]);
 
   const claimableAmount = useMemo(() => {
-    if (!stakeAccount || !stakePool) {
+    if (!stakedAccount || !stakePool) {
       return null;
     }
     return calculateRewardForStaker(
-      stakeAccount.lastClaimedTime as BN,
+      stakedAccount.lastClaimedTime as BN,
       stakePool,
-      stakeAccount.stakeAmount as BN
+      stakedAccount.stakeAmount as BN
     );
-  }, [stakeAccount, stakePool]);
+  }, [stakedAccount, stakePool]);
 
   return (
     <div css={styles.root}>
@@ -117,14 +124,21 @@ export const Actions = () => {
       </div>
 
       <div>
-        <div css={[styles.stakedAmount, !stakeAccount && styles.blink]}>
-          {formatACSCurrency(stakeAccount?.stakeAmount.toNumber() ?? 0)} ACS
+        <div
+          css={[
+            styles.stakedAmount,
+            setStakedAccount === undefined && styles.blink,
+          ]}
+        >
+          {formatACSCurrency(stakedAccount?.stakeAmount.toNumber() ?? 0)} ACS
           staked
         </div>
-        <div css={[styles.balance, !balance && styles.blink]}>
+        <div css={[styles.balance, balance === undefined && styles.blink]}>
           {formatACSCurrency(balance?.toNumber() ?? 0)} ACS available
         </div>
-        <div css={[styles.balance, !claimableAmount && styles.blink]}>
+        <div
+          css={[styles.balance, claimableAmount === undefined && styles.blink]}
+        >
           {formatACSCurrency(claimableAmount?.toNumber() ?? 0)} ACS claimable
         </div>
       </div>
@@ -133,7 +147,7 @@ export const Actions = () => {
         <RouteLink css={[styles.button, hoverButtonStyles]} href="/stake">
           Stake
         </RouteLink>
-        {stakeAccount && stakeAccount.stakeAmount.toNumber() > 0 ? (
+        {stakedAccount && stakedAccount.stakeAmount.toNumber() > 0 ? (
           <RouteLink css={[styles.button, hoverButtonStyles]} href="/unstake">
             Unstake
           </RouteLink>
