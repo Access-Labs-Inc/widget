@@ -430,7 +430,7 @@ export const Stake = () => {
           )}
           {stakedAccount === undefined &&
             stakedPool == null &&
-            balance == undefined && (
+            balance === undefined && (
               <div css={styles.loader}>
                 <Loading />
               </div>
