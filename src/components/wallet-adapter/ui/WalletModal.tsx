@@ -1,4 +1,4 @@
-import { FunctionalComponent, h } from 'preact';
+import { FunctionalComponent, h } from "preact";
 import {
   useCallback,
   useEffect,
@@ -6,17 +6,17 @@ import {
   useMemo,
   useRef,
   useState,
-} from 'preact/hooks';
-import { createPortal, Fragment } from 'preact/compat';
+} from "preact/hooks";
+import { createPortal, Fragment } from "preact/compat";
 
-import type { WalletName } from '@solana/wallet-adapter-base';
-import { WalletReadyState } from '@solana/wallet-adapter-base';
-import { useWallet, type Wallet } from '../useWallet';
+import type { WalletName } from "@solana/wallet-adapter-base";
+import { WalletReadyState } from "@solana/wallet-adapter-base";
+import { useWallet, type Wallet } from "../useWallet";
 
-import { Collapse } from './Collapse';
-import { useWalletModal } from './useWalletModal';
-import { WalletListItem } from './WalletListItem';
-import tw from 'twin.macro';
+import { Collapse } from "./Collapse";
+import { useWalletModal } from "./useWalletModal";
+import { WalletListItem } from "./WalletListItem";
+import tw from "twin.macro";
 
 export interface WalletModalProps {
   className?: string;
@@ -39,8 +39,8 @@ const styles = {
 };
 
 export const WalletModal: FunctionalComponent<WalletModalProps> = ({
-  className = '',
-  container = '#acs',
+  className = "",
+  container = "#wallet-modal-button",
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const { wallets, select } = useWallet();
@@ -72,11 +72,11 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
         installedWallets[0]!
       : wallets.find(
           (wallet: { adapter: { name: WalletName } }) =>
-            wallet.adapter.name === 'Torus'
+            wallet.adapter.name === "Torus"
         ) ||
           wallets.find(
             (wallet: { adapter: { name: WalletName } }) =>
-              wallet.adapter.name === 'Phantom'
+              wallet.adapter.name === "Phantom"
           ) ||
           wallets.find(
             (wallet: { readyState: any }) =>
@@ -117,7 +117,7 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
       if (!node) return;
 
       // here we query all focusable elements
-      const focusableElements = node.querySelectorAll('button');
+      const focusableElements = node.querySelectorAll("button");
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const firstElement = focusableElements[0]!;
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -150,20 +150,20 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
       hideModal();
     };
 
-    document.addEventListener('mousedown', listener);
-    document.addEventListener('touchstart', listener);
+    document.addEventListener("mousedown", listener);
+    document.addEventListener("touchstart", listener);
 
     return () => {
-      document.removeEventListener('mousedown', listener);
-      document.removeEventListener('touchstart', listener);
+      document.removeEventListener("mousedown", listener);
+      document.removeEventListener("touchstart", listener);
     };
   }, [ref, hideModal]);
 
   useLayoutEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         hideModal();
-      } else if (event.key === 'Tab') {
+      } else if (event.key === "Tab") {
         handleTabKey(event);
       }
     };
@@ -171,21 +171,27 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
     // Get original overflow
     const { overflow } = window.getComputedStyle(document.body);
     // Prevent scrolling on mount
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     // Listen for keydown events
-    window.addEventListener('keydown', handleKeyDown, false);
+    window.addEventListener("keydown", handleKeyDown, false);
 
     return () => {
       // Re-enable scrolling when component unmounts
       document.body.style.overflow = overflow;
-      window.removeEventListener('keydown', handleKeyDown, false);
+      window.removeEventListener("keydown", handleKeyDown, false);
     };
   }, [hideModal, handleTabKey]);
 
-  useLayoutEffect(
-    () => setPortal(document.querySelector(container)),
-    [container]
-  );
+  useLayoutEffect(() => {
+    const containerEl = document.querySelector(container);
+    const portalEl = document.createElement("div");
+    if (containerEl && containerEl.parentNode && portalEl)
+      containerEl.parentNode.insertBefore(
+        portalEl,
+        containerEl.nextElementSibling
+      );
+    setPortal(portalEl);
+  }, [container]);
 
   return (
     portal &&
@@ -242,7 +248,7 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
                     onClick={handleCollapseClick}
                     tabIndex={0}
                   >
-                    <span>{expanded ? 'Less ' : 'More '}options</span>
+                    <span>{expanded ? "Less " : "More "}options</span>
                     <svg
                       width="13"
                       height="7"
@@ -284,7 +290,7 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
                       tabIndex={0}
                     >
                       <span>
-                        {expanded ? 'Hide ' : 'Already have a wallet? View '}
+                        {expanded ? "Hide " : "Already have a wallet? View "}
                         options
                       </span>
                       <svg

@@ -1,8 +1,9 @@
-import { ComponentChildren, FunctionalComponent, h } from 'preact';
-import { CSSProperties } from 'preact/compat';
-import tw, { TwStyle } from 'twin.macro';
+import { ComponentChildren, FunctionalComponent, h } from "preact";
+import { CSSProperties } from "preact/compat";
+import tw, { TwStyle } from "twin.macro";
 
 export type ButtonProps = {
+  id?: string;
   className?: string;
   disabled?: boolean;
   endIcon?: ComponentChildren;
@@ -28,6 +29,7 @@ export const Button: FunctionalComponent<ButtonProps> = (props) => {
       onClick={props.onClick}
       tabIndex={props.tabIndex || 0}
       type="button"
+      id={props.id}
     >
       {props.startIcon && (
         <i css={styles.wallet_adapter_button_start_icon}>{props.startIcon}</i>
