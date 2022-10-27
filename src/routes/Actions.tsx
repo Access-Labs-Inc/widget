@@ -51,18 +51,16 @@ export const Actions = () => {
       return;
     }
     (async () => {
-      const b = await getUserACSBalance(connection, publicKey);
-      setBalance(b);
+      setBalance(await getUserACSBalance(connection, publicKey));
     })();
   }, [publicKey, connection]);
 
   useEffect(() => {
-    if (!stakedAccount || !poolId || !stakePool) {
+    if (!stakedAccount || !poolId || stakePool) {
       return;
     }
     (async () => {
-      const sp = await StakePool.retrieve(connection, new PublicKey(poolId));
-      setStakePool(sp);
+      setStakePool(await StakePool.retrieve(connection, new PublicKey(poolId)));
     })();
   }, [poolId, stakedAccount, stakePool, connection]);
 
@@ -83,9 +81,9 @@ export const Actions = () => {
         } else {
           setStakedAccount(null);
         }
-        return;
+      } else {
+        setStakedAccount(null);
       }
-      setStakedAccount(null);
     })();
   }, [publicKey, connection, poolId]);
 
