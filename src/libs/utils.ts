@@ -1,8 +1,8 @@
-
 export const formatACSCurrency = (amount: number) => {
+  const amountAsACS = amount / 10 ** 6;
   return parseFloat(
-    parseFloat(amount.toString()).toFixed(2)
-  ).toLocaleString('en-US', {
+    parseFloat(amountAsACS.toString()).toFixed(2)
+  ).toLocaleString("en-US", {
     useGrouping: true,
   });
-}
+};

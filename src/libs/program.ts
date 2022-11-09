@@ -1,9 +1,9 @@
-import { CentralState, StakePool } from './ap/state';
+import { CentralState, StakePool } from "./ap/state";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
+} from "@solana/spl-token";
 import {
   Connection,
   PublicKey,
@@ -11,12 +11,12 @@ import {
   AccountInfo,
   RpcResponseAndContext,
   TokenAmount,
-} from '@solana/web3.js';
-import BN from 'bn.js';
+} from "@solana/web3.js";
+import BN from "bn.js";
 
 // Hard-coded values.
 export const ACCESS_PROGRAM_ID = new PublicKey(
-  'acp1VPqNoMs5KC5aEH3MzxnyPZNyKQF1TCPouCoNRuX'
+  "acp1VPqNoMs5KC5aEH3MzxnyPZNyKQF1TCPouCoNRuX"
 );
 const SECONDS_IN_DAY = 86400;
 
@@ -34,7 +34,7 @@ export const getStakeAccounts = async (
     {
       memcmp: {
         offset: 0,
-        bytes: '4',
+        bytes: "4",
       },
     },
     {
@@ -79,10 +79,7 @@ export const calculateRewardForStaker = (
   stakeAmount: BN
 ) => {
   const reward = calculateReward(lastClaimedTime, stakePool, true);
-  return reward
-    .mul(new BN(stakeAmount.toNumber()))
-    .iushrn(32)
-    .divn(10 ** 6);
+  return reward.mul(new BN(stakeAmount.toNumber())).iushrn(32);
 };
 
 export const getUserACSBalance = async (
@@ -103,7 +100,7 @@ export const getUserACSBalance = async (
   if (userAccount) {
     const accTokensBalance: RpcResponseAndContext<TokenAmount> =
       await connection.getTokenAccountBalance(userAta);
-    return new BN(accTokensBalance.value.amount).divn(10 ** 6);
+    return new BN(accTokensBalance.value.amount);
   }
   return new BN(0);
 };

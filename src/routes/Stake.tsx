@@ -289,15 +289,6 @@ export const Stake = () => {
     stakedAccount?.stakeAmount,
   ]);
 
-  console.log("Balance: ", balance);
-  console.log("Stake account: ", stakedAccount);
-  console.log("Stake pool: ", stakedPool);
-  console.log("Min pool stake amount: ", minPoolStakeAmount);
-  console.log("Min stake amount: ", minStakeAmount);
-  console.log("Max stake amount: ", maxStakeAmount);
-  console.log("Insufficient balance: ", insufficientBalance);
-  console.log("Insufficient SOL balance: ", insufficientSolBalance);
-
   return (
     <div css={styles.root}>
       {stakeModalOpen && error && (
