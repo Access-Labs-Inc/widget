@@ -14,8 +14,8 @@ import { StakeAccount, StakePool } from "../libs/ap/state";
 import { formatACSCurrency } from "../libs/utils";
 import { RouteLink } from "../layout/Router";
 import { Header } from "../components/Header";
-import { useWallet } from "../components/wallet-adapter/useWallet";
-import { useConnection } from "../components/wallet-adapter/useConnection";
+import { useConnection } from "../components/useConnection";
+import { useWeb3Auth } from "../components/web3auth/useWeb3Auth";
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -39,7 +39,7 @@ const hoverButtonStyles = css`
 export const Actions = () => {
   const { poolId } = useContext(ConfigContext);
   const { connection } = useConnection();
-  const { publicKey, disconnect } = useWallet();
+  const { publicKey, logout } = useWeb3Auth();
   const [balance, setBalance] = useState<BN | null>(null);
   const [stakedAccount, setStakedAccount] = useState<
     StakeAccount | null | undefined
@@ -101,8 +101,8 @@ export const Actions = () => {
   return (
     <div css={styles.root}>
       <Header>
-        <div onClick={disconnect} css={styles.actions_disconnect}>
-          Disconnect
+        <div onClick={logout} css={styles.actions_disconnect}>
+          Logout
         </div>
       </Header>
 

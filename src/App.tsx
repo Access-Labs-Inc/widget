@@ -1,43 +1,32 @@
-import { h } from 'preact';
-import { useMemo } from 'preact/hooks';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import {
-  PhantomWalletAdapter,
-  SolflareWalletAdapter,
-  TorusWalletAdapter,
-} from '@solana/wallet-adapter-wallets';
+import { h } from "preact";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 
-import { ConnectionProvider } from './components/wallet-adapter/ConnectionProvider';
-import { WalletProvider } from './components/wallet-adapter/WalletProvider';
-import { WalletModalProvider } from './components/wallet-adapter/ui/WalletModalProvider';
+import { ConnectionProvider } from "./components/ConnectionProvider";
 
-import { Configurations } from './models';
-import Main from './layout/Main';
-import { AppContext } from './AppContext';
+import { Configurations } from "./models";
+import Main from "./layout/Main";
+import { AppContext } from "./AppContext";
+import { Web3AuthProvider } from "./components/web3auth/useWeb3Auth";
 
 type Props = Configurations;
 export const App = ({ element, ...appSettings }: Props) => {
   const network = WalletAdapterNetwork.Devnet;
-  console.log('Connected to network: ', network);
+  console.log("Connected to network: ", network);
 
-  const endpoint = 'https://api.devnet.solana.com';
+  const endpoint = "https://api.devnet.solana.com";
+  const web3AuthClientId =
+    "BEo8QqCYdx-YliZjehx0As607shQunxkAt6UbQMXsbwWl9l5joiRC0rFidDG-sO6Qzu-GR1r38RbNWg561Nn1f8";
 
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter({ network }),
-      new TorusWalletAdapter({ params: { network } }),
-    ],
-    [network]
-  );
   return (
     <AppContext config={appSettings} element={element}>
       <ConnectionProvider endpoint={endpoint}>
-        <WalletProvider wallets={wallets} autoConnect>
-          <WalletModalProvider>
-            <Main />
-          </WalletModalProvider>
-        </WalletProvider>
+        <Web3AuthProvider
+          chain="solanaDevnet"
+          web3AuthNetwork="testnet"
+          clientId={web3AuthClientId}
+        >
+          <Main />
+        </Web3AuthProvider>
       </ConnectionProvider>
     </AppContext>
   );

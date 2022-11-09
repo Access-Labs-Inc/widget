@@ -3,7 +3,7 @@ import { h, ComponentChildren } from "preact";
 import { useState, useMemo, useCallback } from "preact/hooks";
 import { Copy, ArrowUpRight } from "phosphor-react";
 
-import { useWallet } from "./wallet-adapter/useWallet";
+import { useWeb3Auth } from "./web3auth/useWeb3Auth";
 
 const styles = {
   header_dropdown_copy: tw`flex items-center cursor-pointer`,
@@ -16,11 +16,13 @@ const styles = {
 
 export const Header = ({ children }: { children: ComponentChildren }) => {
   const [copied, setCopied] = useState(false);
-  const { publicKey } = useWallet();
+  const { publicKey } = useWeb3Auth();
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey]);
   const shortBase58 = useMemo(() => {
-    if (!base58) { return null; }
+    if (!base58) {
+      return null;
+    }
     return base58.slice(0, 4) + ".." + base58.slice(-4);
   }, [base58]);
   const copyAddress = useCallback(async () => {
