@@ -16,8 +16,7 @@ import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 import { Header } from "../components/Header";
 import { RouteLink } from "../layout/Router";
 import { ConfigContext } from "../AppContext";
-import { useConnection } from "../components/wallet-adapter/useConnection";
-import { useWallet } from "../components/wallet-adapter/useWallet";
+import { useConnection } from "../components/useConnection";
 import {
   ACCESS_PROGRAM_ID,
   getStakeAccounts,
@@ -29,6 +28,7 @@ import { sendTx } from "../libs/transactions";
 import Loading from "../components/Loading";
 import { ProgressStep } from "../components/ProgressStep";
 import { formatACSCurrency } from "../libs/utils";
+import { useWeb3Auth } from "../components/web3auth/useWeb3Auth";
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -57,7 +57,7 @@ const hoverButtonStyles = css`
 export const Stake = () => {
   const { poolId, poolName } = useContext(ConfigContext);
   const { connection } = useConnection();
-  const { publicKey, sendTransaction, signMessage } = useWallet();
+  const { publicKey, sendTransaction, signMessage } = useWeb3Auth();
 
   const [working, setWorking] = useState("idle");
   const [balance, setBalance] = useState<BN | null | undefined>(undefined);
@@ -173,9 +173,7 @@ export const Stake = () => {
           publicKey,
           ACCESS_PROGRAM_ID
         );
-        await sendTx(connection, publicKey, [ixAccount], sendTransaction, {
-          skipPreflight: true,
-        });
+        await sendTx(connection, publicKey, [ixAccount], sendTransaction);
         stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
       }
 
@@ -214,9 +212,7 @@ export const Stake = () => {
           true
         );
 
-        await sendTx(connection, publicKey, [ix], sendTransaction, {
-          skipPreflight: true,
-        });
+        await sendTx(connection, publicKey, [ix], sendTransaction);
       }
 
       setWorking("stake");
@@ -229,9 +225,7 @@ export const Stake = () => {
       );
       txs.push(ixStake);
 
-      await sendTx(connection, publicKey, txs, sendTransaction, {
-        skipPreflight: true,
-      });
+      await sendTx(connection, publicKey, txs, sendTransaction);
 
       setWorking("done");
     } catch (err) {

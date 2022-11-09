@@ -12,10 +12,8 @@ import { Actions } from "../routes/Actions";
 import { Stake } from "../routes/Stake";
 import { Unstake } from "../routes/Unstake";
 import { Claim } from "../routes/Claim";
-import { Button } from "../components/wallet-adapter/ui/Button";
-import { WalletConnectButton } from "../components/wallet-adapter/ui/WalletConnectButton";
-import { WalletModalButton } from "../components/wallet-adapter/ui/WalletModalButton";
-import { useWallet } from "../components/wallet-adapter/useWallet";
+import { Button } from "../components/Button";
+import { useWeb3Auth } from "../components/web3auth/useWeb3Auth";
 
 const styles = {
   wallet_adapter_dropdown_wrapper: tw`relative inline-block text-left font-sans`,
@@ -26,17 +24,17 @@ const styles = {
 };
 
 const Main = () => {
-  const { publicKey, wallet } = useWallet();
+  const { publicKey, login } = useWeb3Auth();
   const [active, setActive] = useState(false);
   const ref = useRef<HTMLUListElement>(null);
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey]);
   const content = useMemo(() => {
-    if (!wallet || !base58) {
+    if (!publicKey || !base58) {
       return null;
     }
     return base58.slice(0, 4) + ".." + base58.slice(-4);
-  }, [wallet, base58]);
+  }, [publicKey, base58]);
 
   const toggleDropdown = useCallback(() => {
     setActive(!active);
@@ -67,17 +65,18 @@ const Main = () => {
     };
   }, [ref, closeDropdown]);
 
-  if (!wallet) {
+  if (!publicKey) {
     return (
       <div css={styles.wallet_adapter_dropdown_wrapper}>
-        <WalletModalButton />
-      </div>
-    );
-  }
-  if (!base58) {
-    return (
-      <div css={styles.wallet_adapter_dropdown_wrapper}>
-        <WalletConnectButton />
+        <Button
+          cssClass={[
+            styles.wallet_adapter_button_trigger,
+            publicKey && styles.wallet_adapter_button_trigger_active,
+          ]}
+          onClick={login}
+        >
+          Login
+        </Button>
       </div>
     );
   }
