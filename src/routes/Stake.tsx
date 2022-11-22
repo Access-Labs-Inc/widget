@@ -29,6 +29,8 @@ import { sendTx } from "../libs/transactions";
 import Loading from "../components/Loading";
 import { ProgressStep } from "../components/ProgressStep";
 import { formatACSCurrency } from "../libs/utils";
+import {useFeePayer} from "../hooks/useFeePayer";
+import {WalletAdapterProps} from "@solana/wallet-adapter-base";
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -54,10 +56,28 @@ const hoverButtonStyles = css`
   }
 `;
 
+interface FeePaymentData {
+  feePayerPubKey: string;
+  sendTransaction: WalletAdapterProps["sendTransaction"];
+}
+
 export const Stake = () => {
   const { poolId, poolName } = useContext(ConfigContext);
   const { connection } = useConnection();
-  const { publicKey, sendTransaction, signMessage } = useWallet();
+  const { publicKey, sendTransaction: sendTransactionWithFeesUnpaid, signMessage } = useWallet();
+
+  const [feePaymentState, setFeePayer] =
+    useState<FeePaymentData | undefined>();
+
+  useEffect(() => {
+    (async () => {
+       const {feePayerPubKey: pubkey, sendTransaction} = await useFeePayer({
+          sendTransaction: sendTransactionWithFeesUnpaid,
+          signMessage,
+        });
+       setFeePayer({feePayerPubKey: pubkey, sendTransaction});
+      })();
+  }, [publicKey]);
 
   const [working, setWorking] = useState("idle");
   const [balance, setBalance] = useState<BN | null | undefined>(undefined);
@@ -136,10 +156,18 @@ export const Stake = () => {
   }, [stakeAmount, feePercentage]);
 
   const handle = async () => {
+    let feePayer = publicKey;
+    let sendTransaction = sendTransactionWithFeesUnpaid;
+    if (insufficientSolBalance && publicKey != null && feePaymentState != null) {
+      feePayer = new PublicKey(feePaymentState.feePayerPubKey);
+      sendTransaction = feePaymentState.sendTransaction;
+    }
+
     if (
       !publicKey ||
       !poolId ||
       !connection ||
+      !feePayer ||
       !sendTransaction ||
       !balance ||
       !signMessage ||
@@ -162,7 +190,7 @@ export const Stake = () => {
         new PublicKey(poolId)
       );
 
-      let stakeAccount = null;
+      let stakeAccount;
       try {
         stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
       } catch {
@@ -170,10 +198,10 @@ export const Stake = () => {
         const ixAccount = await createStakeAccount(
           new PublicKey(poolId),
           publicKey,
-          publicKey,
+          feePayer,
           ACCESS_PROGRAM_ID
         );
-        await sendTx(connection, publicKey, [ixAccount], sendTransaction, {
+        await sendTx(connection, feePayer, [ixAccount], sendTransaction, {
           skipPreflight: true,
         });
         stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
@@ -191,7 +219,7 @@ export const Stake = () => {
       const stakerAtaAccount = await connection.getAccountInfo(stakerAta);
       if (stakerAtaAccount == null) {
         const ataix = createAssociatedTokenAccountInstruction(
-          publicKey,
+          feePayer,
           stakerAta,
           publicKey,
           centralState.tokenMint,
@@ -214,7 +242,7 @@ export const Stake = () => {
           true
         );
 
-        await sendTx(connection, publicKey, [ix], sendTransaction, {
+        await sendTx(connection, feePayer, [ix], sendTransaction, {
           skipPreflight: true,
         });
       }
@@ -224,12 +252,12 @@ export const Stake = () => {
         connection,
         stakeKey,
         stakerAta,
-        Number(stakeAmount) * 10 ** 6,
+        stakeAmount,
         ACCESS_PROGRAM_ID
       );
       txs.push(ixStake);
 
-      await sendTx(connection, publicKey, txs, sendTransaction, {
+      await sendTx(connection, feePayer, txs, sendTransaction, {
         skipPreflight: true,
       });
 
@@ -245,13 +273,13 @@ export const Stake = () => {
   };
 
   const minPoolStakeAmount = useMemo(() => {
-    return (stakedPool?.minimumStakeAmount.toNumber() ?? 0) / 10 ** 6;
+    return stakedPool?.minimumStakeAmount.toNumber() || 0;
   }, [stakedPool?.minimumStakeAmount]);
 
   const minStakeAmount = useMemo(() => {
     return Math.max(
       minPoolStakeAmount - Number(stakedAccount?.stakeAmount ?? 0),
-      1
+      10 ** 6
     );
   }, [stakedAccount?.stakeAmount, minPoolStakeAmount]);
 
@@ -267,7 +295,7 @@ export const Stake = () => {
   }, [balance, minStakeAmount, feePercentageFraction]);
 
   const insufficientSolBalance = useMemo(
-    () => solBalance < 0.005,
+    () => solBalance === 0,
     [solBalance]
   );
 
@@ -276,14 +304,10 @@ export const Stake = () => {
       return `Insufficient balance for staking. You need min. of ${minStakeAmount} ACS + ${
         minStakeAmount * feePercentageFraction
       } Protocol Fee.`;
-    } else if (insufficientSolBalance) {
-      return `Insufficient ${solBalance} SOL balance. You need min. of ${0.005} SOL.`;
     }
     return null;
   }, [
     insufficientBalance,
-    insufficientSolBalance,
-    solBalance,
     minStakeAmount,
     feePercentageFraction,
     stakedAccount?.stakeAmount,
@@ -362,7 +386,7 @@ export const Stake = () => {
           {stakedAccount !== undefined && balance !== undefined && (
             <Fragment>
               <div css={styles.title}>Stake on &apos;{poolName}&apos;</div>
-              {!insufficientBalance && !insufficientSolBalance ? (
+              {!insufficientBalance ? (
                 <div css={styles.subtitle}>
                   Both {poolName} and you will receive a ACS inflation rewards
                   split equally.
@@ -372,13 +396,13 @@ export const Stake = () => {
               )}
 
               <div>
-                {!insufficientBalance && !insufficientSolBalance && (
+                {!insufficientBalance && (
                   <NumberInputWithSlider
                     min={minStakeAmount}
                     max={maxStakeAmount}
                     value={stakeAmount}
                     disabled={insufficientBalance}
-                    invalid={insufficientBalance || insufficientSolBalance}
+                    invalid={insufficientBalance}
                     invalidText={invalidText}
                     onChangeOfValue={(value) => {
                       setStakeAmount(value);
@@ -386,7 +410,7 @@ export const Stake = () => {
                   />
                 )}
 
-                {(insufficientBalance || insufficientSolBalance) && (
+                {(insufficientBalance) && (
                   <a
                     href="https://st-app.accessprotocol.co/get-acs"
                     target="_blank"
@@ -396,7 +420,7 @@ export const Stake = () => {
                     Get ACS/SOL on access
                   </a>
                 )}
-                {!insufficientBalance && !insufficientSolBalance && (
+                {!insufficientBalance && (
                   <button
                     css={[styles.button, hoverButtonStyles]}
                     onClick={handle}
