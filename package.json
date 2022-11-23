@@ -91,7 +91,8 @@
     "@stablelib/random": "1.0.2",
     "@ledgerhq/hw-transport": "6.27.6",
     "@emotion/memoize": "0.8.0",
-    "@solana/web3.js": "1.66.1"
+    "@solana/web3.js": "1.66.1",
+    "loader-utils": "2.0.4"
   },
   "knip": {
     "entryFiles": [
