@@ -17,7 +17,7 @@ In order to embed the widget add the following snippet at any location on the ho
       w[o] = w[o] || function () { (w[o].q = w[o].q || []).push(arguments) };
       js = d.createElement(s), fjs = d.getElementsByTagName(s)[0];
       js.id = o; js.src = f; js.async = 1; fjs.parentNode.insertBefore(js, fjs);
-  }(window, document, 'script', '_acs', './widget.js'));
+  }(window, document, 'script', '_acs', 'https://d3bgshfwq8wmv6.cloudfront.net/acs-widget/widget.js'));
   _acs('init', {
     element: document.getElementById('acs'),
     poolId: 'B1PciBp1hnhRYtE1rQyHFZBiGfZXTYDg7h6M6pAzY3Hd',
