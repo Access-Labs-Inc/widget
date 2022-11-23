@@ -1,7 +1,7 @@
-import {deserialize, Schema} from "borsh";
+import { deserialize, Schema } from "borsh";
 import BN from "bn.js";
-import {Connection, PublicKey} from "@solana/web3.js";
-import {u64} from "./u64";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { u64 } from "./u64";
 
 /**
  * Lenght of the stake pool circular buffer used to store balances and inflation
@@ -44,7 +44,6 @@ export class RewardsTuple {
  * Stake pool state
  */
 export class StakePool {
-
   public static schema: Schema = new Map<any, any>([
     [
       StakePool,
@@ -173,7 +172,6 @@ export class UnstakeRequest {
  * Stake account state
  */
 export class StakeAccount {
-
   public static schema: Schema = new Map<any, any>([
     [
       UnstakeRequest,
@@ -272,7 +270,6 @@ export class StakeAccount {
  * The bond account state
  */
 export class BondAccount {
-
   public static schema: Schema = new Map<any, any>([
     [
       BondAccount,
@@ -300,7 +297,7 @@ export class BondAccount {
     ],
   ]);
 
-  public static deserialize(data) {
+  public static deserialize(data: any) {
     return deserialize(this.schema, BondAccount, data);
   }
 
@@ -325,12 +322,19 @@ export class BondAccount {
    * @param totalAmountSold The total amount of ACCESS token sold in the bond
    * @returns
    */
-  public static async getKey(programId: PublicKey, owner: PublicKey, totalAmountSold: BN) {
-    return await PublicKey.findProgramAddress([
-      Buffer.from("bond_account"),
-      owner.toBuffer(),
-      new u64(totalAmountSold).toBuffer()
-    ], programId);
+  public static async getKey(
+    programId: PublicKey,
+    owner: PublicKey,
+    totalAmountSold: BN
+  ) {
+    return await PublicKey.findProgramAddress(
+      [
+        Buffer.from("bond_account"),
+        owner.toBuffer(),
+        new u64(totalAmountSold).toBuffer(),
+      ],
+      programId
+    );
   }
   public tag: Tag;
   public owner: PublicKey;
@@ -390,7 +394,6 @@ export class BondAccount {
  * The central state
  */
 export class CentralState {
-
   public static schema: Schema = new Map([
     [
       CentralState,
