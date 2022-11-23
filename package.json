@@ -9,8 +9,8 @@
     "build": "webpack --config webpack.config.js",
     "build-release": "webpack --config webpack.config.js --mode production",
     "start": "NODE_ENV=development webpack serve",
-    "lint": "tslint --project tsconfig.json ./src/**/*.tsx",
-    "lint-fix": "tslint --project tsconfig.json ./src/**/*.tsx --fix",
+    "lint": "tslint --project tsconfig.json ./src/**/*.tsx ./src/**/*.ts ./src/**/*.js",
+    "lint-fix": "tslint --project tsconfig.json ./src/**/*.tsx ./src/**/*.ts ./src/**/*.js --fix",
     "test": "jest",
     "stats": "webpack --mode production --profile --json > stats.json",
     "knip": "knip"

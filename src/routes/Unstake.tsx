@@ -1,10 +1,10 @@
-import tw, { css } from "twin.macro";
-import { h } from "preact";
+import tw, { css } from 'twin.macro';
+import { h } from 'preact';
 
-import { Header } from "../components/Header";
-import { RouteLink } from "../layout/Router";
-import { useContext } from "preact/hooks";
-import { ConfigContext } from "../AppContext";
+import { Header } from '../components/Header';
+import { RouteLink } from '../layout/Router';
+import { useContext } from 'preact/hooks';
+import { ConfigContext } from '../AppContext';
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -27,7 +27,7 @@ export const Unstake = () => {
   return (
     <div css={styles.root}>
       <Header>
-        <RouteLink href="/" css={styles.cancel_link}>
+        <RouteLink href='/' css={styles.cancel_link}>
           Cancel
         </RouteLink>
       </Header>
@@ -41,8 +41,8 @@ export const Unstake = () => {
         <a
           css={[styles.button, hoverButtonStyles]}
           href={`https://st-app.accessprotocol.co/creators/${poolId}`}
-          target="_blank"
-          rel="noopener"
+          target='_blank'
+          rel='noopener'
         >
           Unstake on access
         </a>

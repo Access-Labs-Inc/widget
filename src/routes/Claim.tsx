@@ -1,30 +1,30 @@
-import tw, { css } from "twin.macro";
-import { Fragment, h } from "preact";
-import BN from "bn.js";
-import { CentralState, StakeAccount, StakePool } from "../libs/ap/state";
-import { claimRewards } from "../libs/ap/bindings";
+import tw, { css } from 'twin.macro';
+import { Fragment, h } from 'preact';
+import BN from 'bn.js';
+import { CentralState, StakeAccount, StakePool } from '../libs/ap/state';
+import { claimRewards } from '../libs/ap/bindings';
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
-import { useContext, useEffect, useMemo, useState } from "preact/hooks";
+} from '@solana/spl-token';
+import { PublicKey } from '@solana/web3.js';
+import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 
-import { Header } from "../components/Header";
-import { RouteLink } from "../layout/Router";
-import { ConfigContext } from "../AppContext";
-import { useConnection } from "../components/wallet-adapter/useConnection";
-import { useWallet } from "../components/wallet-adapter/useWallet";
+import { Header } from '../components/Header';
+import { RouteLink } from '../layout/Router';
+import { ConfigContext } from '../AppContext';
+import { useConnection } from '../components/wallet-adapter/useConnection';
+import { useWallet } from '../components/wallet-adapter/useWallet';
 import {
   ACCESS_PROGRAM_ID,
   calculateRewardForStaker,
   getStakeAccounts,
-} from "../libs/program";
-import { sendTx } from "../libs/transactions";
-import Loading from "../components/Loading";
-import { ProgressStep } from "../components/ProgressStep";
-import { formatACSCurrency } from "../libs/utils";
+} from '../libs/program';
+import { sendTx } from '../libs/transactions';
+import Loading from '../components/Loading';
+import { ProgressStep } from '../components/ProgressStep';
+import { formatACSCurrency } from '../libs/utils';
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -53,7 +53,7 @@ export const Claim = () => {
   const { connection } = useConnection();
   const { publicKey, sendTransaction, signMessage } = useWallet();
 
-  const [working, setWorking] = useState("idle");
+  const [working, setWorking] = useState('idle');
   const [stakedAccount, setStakedAccount] = useState<StakeAccount | null>(null);
   const [stakedPool, setStakedPool] = useState<StakePool | null>(null);
   const [stakeModalOpen, setStakeModal] = useState<boolean>(false);
@@ -144,7 +144,7 @@ export const Claim = () => {
         stakedAccount.stakeAmount.toNumber() > 0 &&
         stakedAccount.lastClaimedTime < stakedPool.lastCrankTime
       ) {
-        setWorking("claim");
+        setWorking('claim');
         const ix = await claimRewards(
           connection,
           stakeKey,
@@ -158,14 +158,14 @@ export const Claim = () => {
         });
       }
 
-      setWorking("done");
+      setWorking('done');
     } catch (err) {
       if (err instanceof Error) {
         console.error(err);
         setError(err.message);
       }
     } finally {
-      setWorking("done");
+      setWorking('done');
     }
   };
 
@@ -175,7 +175,7 @@ export const Claim = () => {
         <Fragment>
           <div css={styles.titleError}>Error occured:</div>
           <div css={styles.subtitleError}>{error}</div>
-          <RouteLink css={[styles.button, hoverButtonStyles]} href="/">
+          <RouteLink css={[styles.button, hoverButtonStyles]} href='/'>
             Close
           </RouteLink>
         </Fragment>
@@ -187,25 +187,25 @@ export const Claim = () => {
             We need you to sign these
             <br /> transactions to claim rewards
           </div>
-          <nav css={styles.steps} aria-label="Progress">
+          <nav css={styles.steps} aria-label='Progress'>
             <ol css={styles.stepsList}>
               <ProgressStep
-                name="Claim rewards"
+                name='Claim rewards'
                 status={
-                  working === "claim"
-                    ? "current"
-                    : working === "idle"
-                    ? "pending"
-                    : "complete"
+                  working === 'claim'
+                    ? 'current'
+                    : working === 'idle'
+                    ? 'pending'
+                    : 'complete'
                 }
               />
             </ol>
             <RouteLink
-              disabled={working !== "done"}
-              href="/"
+              disabled={working !== 'done'}
+              href='/'
               css={[
                 styles.button,
-                working !== "done"
+                working !== 'done'
                   ? styles.disabledButtonStyles
                   : hoverButtonStyles,
               ]}
@@ -218,7 +218,7 @@ export const Claim = () => {
       {!stakeModalOpen && (
         <Fragment>
           <Header>
-            <RouteLink href="/" css={styles.cancel_link}>
+            <RouteLink href='/' css={styles.cancel_link}>
               Cancel
             </RouteLink>
           </Header>

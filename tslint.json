@@ -5,8 +5,9 @@
   "rules": {
     "eofline": false,
     "no-console": false,
-    "quotemark": [true, "double", "avoid-escape"],
+    "quotemark": [true, "single", "avoid-escape"],
     "semicolon": [true, "always", "ignore-bound-class-methods"],
+    "whitespace": [true, "check-module"],
     "variable-name": [
       true,
       "ban-keywords",

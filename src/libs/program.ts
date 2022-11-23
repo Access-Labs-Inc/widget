@@ -1,9 +1,9 @@
-import { CentralState, StakePool } from "./ap/state";
+import { CentralState, StakePool } from './ap/state';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
+} from '@solana/spl-token';
 import {
   Connection,
   PublicKey,
@@ -11,12 +11,12 @@ import {
   AccountInfo,
   RpcResponseAndContext,
   TokenAmount,
-} from "@solana/web3.js";
-import BN from "bn.js";
+} from '@solana/web3.js';
+import BN from 'bn.js';
 
 // Hard-coded values.
 export const ACCESS_PROGRAM_ID = new PublicKey(
-  "acp1VPqNoMs5KC5aEH3MzxnyPZNyKQF1TCPouCoNRuX"
+  'acp1VPqNoMs5KC5aEH3MzxnyPZNyKQF1TCPouCoNRuX'
 );
 const SECONDS_IN_DAY = 86400;
 
@@ -34,7 +34,36 @@ export const getStakeAccounts = async (
     {
       memcmp: {
         offset: 0,
-        bytes: "4",
+        bytes: '4',
+      },
+    },
+    {
+      memcmp: {
+        offset: 1,
+        bytes: owner.toBase58(),
+      },
+    },
+  ];
+  return connection.getProgramAccounts(ACCESS_PROGRAM_ID, {
+    filters,
+  });
+};
+
+/**
+ * This function can be used to find all bonds of a user
+ * @param connection The Solana RPC connection
+ * @param owner The owner of the bonds to retrieve
+ * @returns
+ */
+export const getBondAccounts = async (
+  connection: Connection,
+  owner: PublicKey,
+) => {
+  const filters = [
+    {
+      memcmp: {
+        offset: 0,
+        bytes: '6',
       },
     },
     {
