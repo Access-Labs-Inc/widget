@@ -1,4 +1,4 @@
-import { CentralState, StakePool } from "./ap/state";
+import {CentralState, StakePool} from "./ap/state";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
@@ -35,6 +35,35 @@ export const getStakeAccounts = async (
       memcmp: {
         offset: 0,
         bytes: "4",
+      },
+    },
+    {
+      memcmp: {
+        offset: 1,
+        bytes: owner.toBase58(),
+      },
+    },
+  ];
+  return connection.getProgramAccounts(ACCESS_PROGRAM_ID, {
+    filters,
+  });
+};
+
+/**
+ * This function can be used to find all bonds of a user
+ * @param connection The Solana RPC connection
+ * @param owner The owner of the bonds to retrieve
+ * @returns
+ */
+export const getBondAccounts = async (
+  connection: Connection,
+  owner: PublicKey,
+) => {
+  const filters = [
+    {
+      memcmp: {
+        offset: 0,
+        bytes: '6',
       },
     },
     {

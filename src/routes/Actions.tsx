@@ -1,21 +1,17 @@
-import tw, { css } from "twin.macro";
-import { h } from "preact";
-import { useContext, useEffect, useMemo, useState } from "preact/hooks";
-import { PublicKey } from "@solana/web3.js";
+import tw, {css} from "twin.macro";
+import {h} from "preact";
+import {useContext, useEffect, useMemo, useState} from "preact/hooks";
+import {PublicKey} from "@solana/web3.js";
 import BN from "bn.js";
 
-import {
-  calculateRewardForStaker,
-  getStakeAccounts,
-  getUserACSBalance,
-} from "../libs/program";
-import { ConfigContext } from "../AppContext";
-import { StakeAccount, StakePool } from "../libs/ap/state";
-import { formatACSCurrency } from "../libs/utils";
-import { RouteLink } from "../layout/Router";
-import { Header } from "../components/Header";
-import { useWallet } from "../components/wallet-adapter/useWallet";
-import { useConnection } from "../components/wallet-adapter/useConnection";
+import {calculateRewardForStaker, getBondAccounts, getStakeAccounts, getUserACSBalance} from "../libs/program";
+import {ConfigContext} from "../AppContext";
+import {BondAccount, StakeAccount, StakePool} from "../libs/ap/state";
+import {formatACSCurrency} from "../libs/utils";
+import {RouteLink} from "../layout/Router";
+import {Header} from "../components/Header";
+import {useWallet} from "../components/wallet-adapter/useWallet";
+import {useConnection} from "../components/wallet-adapter/useConnection";
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -37,13 +33,12 @@ const hoverButtonStyles = css`
 `;
 
 export const Actions = () => {
-  const { poolId } = useContext(ConfigContext);
-  const { connection } = useConnection();
-  const { publicKey, disconnect } = useWallet();
+  const {poolId} = useContext(ConfigContext);
+  const {connection} = useConnection();
+  const {publicKey, disconnect} = useWallet();
   const [balance, setBalance] = useState<BN | null>(null);
-  const [stakedAccount, setStakedAccount] = useState<
-    StakeAccount | null | undefined
-  >(undefined);
+  const [stakedAccount, setStakedAccount] = useState<StakeAccount | null | undefined>(undefined);
+  const [bondAccount, setBondAccount] = useState<BondAccount | null | undefined>(undefined);
   const [stakePool, setStakePool] = useState<StakePool | undefined>(undefined);
 
   useEffect(() => {
@@ -83,6 +78,29 @@ export const Actions = () => {
         }
       } else {
         setStakedAccount(null);
+      }
+    })();
+  }, [publicKey, connection, poolId]);
+
+  useEffect(() => {
+    if (!publicKey || !poolId) {
+      return;
+    }
+    (async () => {
+      const bondAccounts = await getBondAccounts(connection, publicKey);
+      if (bondAccounts != null && bondAccounts.length > 0) {
+        const bAccount = bondAccounts.find((st) => {
+          const sa = BondAccount.deserialize(st.account.data);
+          return sa.stakePool.toBase58() === poolId;
+        });
+        if (bAccount) {
+          const ba = BondAccount.deserialize(bAccount.account.data);
+          setBondAccount(ba);
+        } else {
+          setBondAccount(null);
+        }
+      } else {
+        setBondAccount(null);
       }
     })();
   }, [publicKey, connection, poolId]);
@@ -128,7 +146,8 @@ export const Actions = () => {
             setStakedAccount === undefined && styles.blink,
           ]}
         >
-          {formatACSCurrency(stakedAccount?.stakeAmount.toNumber() ?? 0)} ACS
+          {formatACSCurrency(
+            (stakedAccount?.stakeAmount.toNumber() ?? 0) + (bondAccount?.totalStaked.toNumber() ?? 0))} ACS
           staked
         </div>
         <div css={[styles.balance, balance === undefined && styles.blink]}>
