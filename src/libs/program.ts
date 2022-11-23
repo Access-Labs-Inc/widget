@@ -63,7 +63,7 @@ export const getBondAccounts = async (
     {
       memcmp: {
         offset: 0,
-        bytes: '6',
+        bytes: "6",
       },
     },
     {
