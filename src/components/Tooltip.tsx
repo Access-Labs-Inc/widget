@@ -1,5 +1,5 @@
-import tw from "twin.macro";
-import { ComponentChildren, h } from "preact";
+import tw from 'twin.macro';
+import { ComponentChildren, h } from 'preact';
 
 const styles = {
   tooltipRoot: tw`relative flex flex-row items-center justify-center`,
@@ -16,7 +16,7 @@ export const Tooltip = ({
   children: ComponentChildren;
 }) => {
   return (
-    <div className="group" css={styles.tooltipRoot}>
+    <div className='group' css={styles.tooltipRoot}>
       {children}
       <div css={styles.wrapper}>
         <span css={styles.message}>{message}</span>

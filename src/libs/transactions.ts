@@ -1,11 +1,11 @@
-import { SendTransactionOptions } from "@solana/wallet-adapter-base";
+import { SendTransactionOptions } from '@solana/wallet-adapter-base';
 import {
   Connection,
   PublicKey,
   TransactionInstruction,
   Transaction,
   ConfirmOptions,
-} from "@solana/web3.js";
+} from '@solana/web3.js';
 
 export const sendTx = async (
   connection: Connection,
@@ -54,6 +54,6 @@ export const sendTx = async (
   //   );
   // }
 
-  console.log("Signature: ", signature);
+  console.log('Signature: ', signature);
   return signature;
 };

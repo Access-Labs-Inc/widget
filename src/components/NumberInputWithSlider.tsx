@@ -1,9 +1,9 @@
-import tw from "twin.macro";
-import { FunctionalComponent, h } from "preact";
-import { useRef } from "preact/hooks";
-import RcInputNumber from "../libs/rc-input-number";
-import RcSlider from "react-input-slider";
-import { formatACSCurrency } from "../libs/utils";
+import tw from 'twin.macro';
+import { FunctionalComponent, h } from 'preact';
+import { useRef } from 'preact/hooks';
+import RcInputNumber from '../libs/rc-input-number';
+import RcSlider from 'react-input-slider';
+import { formatACSCurrency } from '../libs/utils';
 
 export interface InputProps {
   invalid?: boolean;
@@ -20,11 +20,11 @@ function setNativeValue(
   value: string | number | undefined
 ) {
   if (element) {
-    const valueSetter = Object.getOwnPropertyDescriptor(element, "value")?.set;
+    const valueSetter = Object.getOwnPropertyDescriptor(element, 'value')?.set;
     const prototype = Object.getPrototypeOf(element);
     const prototypeValueSetter = Object.getOwnPropertyDescriptor(
       prototype,
-      "value"
+      'value'
     )?.set;
 
     if (valueSetter && valueSetter !== prototypeValueSetter) {
@@ -51,7 +51,7 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
   const changeToMin = () => {
     if (inputRef.current) {
       setNativeValue(inputRef.current, min);
-      inputRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+      inputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
     }
     if (onChangeOfValue) {
       onChangeOfValue(Number(min));
@@ -61,7 +61,7 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
   const changeToMax = () => {
     if (inputRef.current) {
       setNativeValue(inputRef.current, max);
-      inputRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+      inputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
     }
     if (onChangeOfValue) {
       onChangeOfValue(Number(max));
@@ -101,17 +101,17 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
           onChange={handleSliderChange}
           styles={{
             track: {
-              backgroundColor: "rgba(17,24,39)",
-              width: "100%",
+              backgroundColor: 'rgba(17,24,39)',
+              width: '100%',
             },
             active: {
-              backgroundColor: "#749BFF",
+              backgroundColor: '#749BFF',
             },
             thumb: {
               width: 30,
               height: 30,
               backgroundColor: `#749BFF`,
-              border: "8px solid rgba(31,41,5)",
+              border: '8px solid rgba(31,41,5)',
             },
           }}
         />

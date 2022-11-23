@@ -1,7 +1,7 @@
-import { h, createContext, VNode, ComponentType, createElement } from "preact";
-import { useState, useEffect } from "preact/hooks";
+import { h, createContext, VNode, ComponentType, createElement } from 'preact';
+import { useState, useEffect } from 'preact/hooks';
 
-const DEFAULT_ROUTE = "/";
+const DEFAULT_ROUTE = '/';
 
 interface Props {
   /**
@@ -48,7 +48,7 @@ export const RouteLink = ({ href, children, disabled, ...rest }: any) => (
   <RouterContext.Consumer>
     {({ setRoute }) => (
       <a
-        href="javascript:"
+        href='javascript:'
         onClick={() => href && !disabled && setRoute(href as string)}
         {...rest}
       >

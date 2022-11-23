@@ -1,6 +1,6 @@
-import tw from "twin.macro";
-import { h } from "preact";
-import { Check, Circle } from "phosphor-react";
+import tw from 'twin.macro';
+import { h } from 'preact';
+import { Check, Circle } from 'phosphor-react';
 
 const styles = {
   stepRoot: tw`flex items-center`,
@@ -15,10 +15,10 @@ const styles = {
 };
 
 const Completed = ({ name }: { name: string }) => (
-  <span className="group">
+  <span className='group'>
     <span css={styles.stepRoot}>
       <span css={styles.completedIconWrap}>
-        <Check css={styles.completedIcon} aria-hidden="true" />
+        <Check css={styles.completedIcon} aria-hidden='true' />
       </span>
       <span css={styles.completedText}>{name}</span>
     </span>
@@ -26,25 +26,25 @@ const Completed = ({ name }: { name: string }) => (
 );
 
 const Current = ({ name }: { name: string }) => (
-  <span css={styles.stepRoot} aria-current="step">
+  <span css={styles.stepRoot} aria-current='step'>
     <svg
       css={styles.currentIcon}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
+      xmlns='http://www.w3.org/2000/svg'
+      fill='none'
+      viewBox='0 0 24 24'
     >
       <circle
         css={tw`opacity-25`}
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
+        cx='12'
+        cy='12'
+        r='10'
+        stroke='currentColor'
+        strokeWidth='4'
       />
       <path
         css={tw`opacity-75`}
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        fill='currentColor'
+        d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
       />
     </svg>
     <span css={styles.currentText}>{name}</span>
@@ -52,10 +52,10 @@ const Current = ({ name }: { name: string }) => (
 );
 
 const Pending = ({ name }: { name: string }) => (
-  <span className="group">
+  <span className='group'>
     <span css={styles.stepRoot}>
       <span css={styles.pendingIconWrap}>
-        <Circle css={styles.pendingIcon} aria-hidden="true" />
+        <Circle css={styles.pendingIcon} aria-hidden='true' />
       </span>
       <span css={styles.pendingText}>{name}</span>
     </span>
@@ -71,13 +71,13 @@ export const ProgressStep = ({
 }) => {
   let component = null;
   switch (status) {
-    case "complete":
+    case 'complete':
       component = <Completed name={name} />;
       break;
-    case "current":
+    case 'current':
       component = <Current name={name} />;
       break;
-    case "pending":
+    case 'pending':
     default:
       component = <Pending name={name} />;
       break;
