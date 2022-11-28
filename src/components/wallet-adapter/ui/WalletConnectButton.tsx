@@ -1,9 +1,9 @@
-import { useWallet } from '../useWallet';
-import { type FunctionalComponent, h } from 'preact';
-import { useCallback, useMemo } from 'preact/hooks';
-import type { ButtonProps } from './Button';
-import { Button } from './Button';
-import tw from 'twin.macro';
+import { useWallet } from "../useWallet";
+import { type FunctionalComponent, h } from "preact";
+import { useCallback, useMemo } from "preact/hooks";
+import type { ButtonProps } from "./Button";
+import { Button } from "./Button";
+import tw from "twin.macro";
 
 const styles = {
   wallet_adapter_button_trigger: tw`bg-yellow-600 text-stone-800 border-0 py-3 px-5 text-xl rounded-full`,
@@ -28,10 +28,10 @@ export const WalletConnectButton: FunctionalComponent<ButtonProps> = ({
 
   const content = useMemo(() => {
     if (children) return children;
-    if (connecting) return 'Connecting ...';
-    if (connected) return 'Connected';
-    if (wallet) return 'Connect';
-    return 'Connect Wallet';
+    if (connecting) return "Connecting ...";
+    if (connected) return "Connected";
+    if (wallet) return "Connect";
+    return "Connect Wallet";
   }, [children, connecting, connected, wallet]);
 
   return (

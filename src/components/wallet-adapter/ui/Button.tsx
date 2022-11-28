@@ -10,6 +10,7 @@ export type ButtonProps = {
   onClick?: (e: any) => void;
   startIcon?: ComponentChildren;
   cssClass?: TwStyle | (TwStyle | null)[];
+  externalButtonClass?: string | null;
   style?: CSSProperties;
   tabIndex?: number;
 };
@@ -21,9 +22,13 @@ const styles = {
 };
 
 export const Button: FunctionalComponent<ButtonProps> = (props) => {
+  const css = props.externalButtonClass
+    ? []
+    : [styles.wallet_adapter_button, props.cssClass];
   return (
     <button
-      css={[styles.wallet_adapter_button, props.cssClass]}
+      css={css}
+      className={props.externalButtonClass}
       disabled={props.disabled}
       style={props.style}
       onClick={props.onClick}

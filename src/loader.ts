@@ -1,7 +1,7 @@
-import { Configurations } from './models';
+import { Configurations } from "./models";
 
-type MethodNames = 'init' | 'event';
-export const DEFAULT_NAME = '_acs';
+type MethodNames = "init" | "event";
+export const DEFAULT_NAME = "_acs";
 
 /**
  * Represents a model that is created in embedded script
@@ -32,7 +32,7 @@ export default (
   // get a hold of script tag instance, which has an
   // attribute `id` with unique identifier of the widget instance
   const instanceName =
-    scriptElement?.attributes.getNamedItem('id')?.value ?? DEFAULT_NAME;
+    scriptElement?.attributes.getNamedItem("id")?.value ?? DEFAULT_NAME;
   const loaderObject: LoaderObject = win[instanceName];
   if (!loaderObject || !loaderObject.q) {
     throw new Error(
@@ -57,16 +57,16 @@ export default (
   for (let i = 0; i < loaderObject.q.length; i++) {
     const item = loaderObject.q[i];
     const methodName = item[0];
-    if (i === 0 && methodName !== 'init') {
+    if (i === 0 && methodName !== "init") {
       throw new Error(
         `Failed to start Widget [${instanceName}]. 'init' must be called before other methods.`
       );
-    } else if (i !== 0 && methodName === 'init') {
+    } else if (i !== 0 && methodName === "init") {
       continue;
     }
 
     switch (methodName) {
-      case 'init':
+      case "init":
         const loadedObject = Object.assign(defaultConfig, item[1]);
         if (loadedObject.debug) {
           console.log(`Starting widget [${instanceName}]`, loadedObject);
@@ -83,9 +83,9 @@ export default (
         // the actual rendering of the widget
         const wrappingElement = loadedObject.element ?? win.document.body;
         targetElement = wrappingElement.appendChild(
-          win.document.createElement('div')
+          win.document.createElement("div")
         );
-        targetElement.setAttribute('id', `widget-${instanceName}`);
+        targetElement.setAttribute("id", `widget-${instanceName}`);
         render(targetElement, loadedObject);
 
         // store indication that widget instance was initialized
@@ -102,9 +102,9 @@ export default (
   // to convert LoaderObject into sync calls to methods
   win[instanceName] = (method: MethodNames, ...args: any[]) => {
     switch (method) {
-      case 'event': {
+      case "event": {
         targetElement?.dispatchEvent(
-          new CustomEvent('widget-event', { detail: { name: args?.[0] } })
+          new CustomEvent("widget-event", { detail: { name: args?.[0] } })
         );
         break;
       }
