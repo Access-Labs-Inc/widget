@@ -11,6 +11,8 @@ interface InfraConfigurations {
 export interface AppConfigurations {
   poolId: string | null;
   poolName: string | null;
+  disconnectButtonClass?: string | null;
+  connectedButtonClass?: string | null;
 }
 
 export type Configurations = InfraConfigurations & AppConfigurations;

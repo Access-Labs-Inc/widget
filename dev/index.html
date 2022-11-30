@@ -5,6 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ACS Widget dev page</title>
     <link rel="icon" href="./favicon.ico" />
+    <style>
+      .disconnectButton {
+        background-color: #4CAF50; /* Green */
+        border: none;
+        color: white;
+        padding: 6px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+      }
+      .disconnectButton:hover {
+        background-color: red;
+      }
+      .connectedButton {
+        background-color: blue;
+        border: none;
+        color: white;
+        padding: 4px 10px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+      }
+    </style>
   </head>
 
   <body>
@@ -23,7 +52,9 @@
         element: document.getElementById('acs'),
         debug: true,
         poolId: 'B1PciBp1hnhRYtE1rQyHFZBiGfZXTYDg7h6M6pAzY3Hd',
-        poolName: "The Block"
+        poolName: "The Block",
+        disconnectButtonClass: "disconnectButton",
+        connectedButtonClass: "connectedButton"
       });
     </script>
   </body>
