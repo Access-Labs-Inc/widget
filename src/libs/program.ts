@@ -1,9 +1,9 @@
-import { CentralState, StakePool } from './ap/state';
+import { CentralState, StakePool } from "./ap/state";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
+} from "@solana/spl-token";
 import {
   Connection,
   PublicKey,
@@ -11,13 +11,9 @@ import {
   AccountInfo,
   RpcResponseAndContext,
   TokenAmount,
-} from '@solana/web3.js';
-import BN from 'bn.js';
+} from "@solana/web3.js";
+import BN from "bn.js";
 
-// Hard-coded values.
-export const ACCESS_PROGRAM_ID = new PublicKey(
-  'acp1VPqNoMs5KC5aEH3MzxnyPZNyKQF1TCPouCoNRuX'
-);
 const SECONDS_IN_DAY = 86400;
 
 /**
@@ -28,13 +24,14 @@ const SECONDS_IN_DAY = 86400;
  */
 export const getStakeAccounts = async (
   connection: Connection,
-  owner: PublicKey
+  owner: PublicKey,
+  programId: PublicKey
 ) => {
   const filters: MemcmpFilter[] = [
     {
       memcmp: {
         offset: 0,
-        bytes: '4',
+        bytes: "4",
       },
     },
     {
@@ -44,7 +41,7 @@ export const getStakeAccounts = async (
       },
     },
   ];
-  return connection.getProgramAccounts(ACCESS_PROGRAM_ID, {
+  return connection.getProgramAccounts(programId, {
     filters,
   });
 };
@@ -53,17 +50,19 @@ export const getStakeAccounts = async (
  * This function can be used to find all bonds of a user
  * @param connection The Solana RPC connection
  * @param owner The owner of the bonds to retrieve
+ * @param programId The program ID
  * @returns
  */
 export const getBondAccounts = async (
   connection: Connection,
   owner: PublicKey,
+  programId: PublicKey
 ) => {
   const filters = [
     {
       memcmp: {
         offset: 0,
-        bytes: '6',
+        bytes: "6",
       },
     },
     {
@@ -73,7 +72,7 @@ export const getBondAccounts = async (
       },
     },
   ];
-  return connection.getProgramAccounts(ACCESS_PROGRAM_ID, {
+  return await connection.getProgramAccounts(programId, {
     filters,
   });
 };
@@ -113,9 +112,10 @@ export const calculateRewardForStaker = (
 
 export const getUserACSBalance = async (
   connection: Connection,
-  publicKey: PublicKey
+  publicKey: PublicKey,
+  programId: PublicKey
 ): Promise<BN> => {
-  const [centralKey] = await CentralState.getKey(ACCESS_PROGRAM_ID);
+  const [centralKey] = await CentralState.getKey(programId);
   const centralState = await CentralState.retrieve(connection, centralKey);
   const userAta: PublicKey = await getAssociatedTokenAddress(
     centralState.tokenMint,

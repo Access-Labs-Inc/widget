@@ -2,15 +2,16 @@ import {
   claimRewardsInstruction,
   createStakeAccountInstruction,
   stakeInstruction,
-} from './raw_instructions';
-import { Connection, PublicKey, SystemProgram } from '@solana/web3.js';
-import { CentralState, StakePool, StakeAccount } from './state';
-import BN from 'bn.js';
+} from "./raw_instructions";
+import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
+import { CentralState, StakePool, StakeAccount } from "./state";
+import BN from "bn.js";
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
+} from "@solana/spl-token";
+import { getBondAccounts } from "../program";
 
 export const stake = async (
   connection: Connection,
@@ -23,6 +24,15 @@ export const stake = async (
   const stakePool = await StakePool.retrieve(connection, stake.stakePool);
   const [centralKey] = await CentralState.getKey(programId);
   const centralState = await CentralState.retrieve(connection, centralKey);
+  const bondAccounts = await getBondAccounts(
+    connection,
+    stake.owner,
+    programId
+  );
+  let bondAccountKey: PublicKey | undefined;
+  if (bondAccounts.length > 0) {
+    bondAccountKey = bondAccounts[0].pubkey;
+  }
 
   const feesAta = await getAssociatedTokenAddress(
     centralState.tokenMint,
@@ -32,7 +42,9 @@ export const stake = async (
     ASSOCIATED_TOKEN_PROGRAM_ID
   );
 
-  const ix = new stakeInstruction({ amount: new BN(amount) }).getInstruction(
+  const ix = new stakeInstruction({
+    amount: new BN(amount),
+  }).getInstruction(
     programId,
     centralKey,
     stakeAccount,
@@ -41,7 +53,8 @@ export const stake = async (
     sourceToken,
     TOKEN_PROGRAM_ID,
     stakePool.vault,
-    feesAta
+    feesAta,
+    bondAccountKey
   );
 
   return ix;

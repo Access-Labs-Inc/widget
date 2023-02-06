@@ -7,12 +7,11 @@ import { u64 } from "./u64";
  * Lenght of the stake pool circular buffer used to store balances and inflation
  */
 const STAKE_BUFFER_LEN = 274; // 9 Months
-const MAX_UNSTAKE_REQUEST = 10;
 
 /**
  * Account tags (used for deserialization on-chain)
  */
-enum Tag {
+export enum Tag {
   Uninitialized = 0,
   StakePool = 1,
   InactiveStakePool = 2,
@@ -31,8 +30,8 @@ enum Tag {
  * Stake pool state
  */
 export class RewardsTuple {
-  public poolReward: BN;
-  public stakersReward: BN;
+  poolReward: BN;
+  stakersReward: BN;
 
   constructor(obj: { poolReward: BN; stakersReward: BN }) {
     this.poolReward = obj.poolReward;
@@ -44,7 +43,21 @@ export class RewardsTuple {
  * Stake pool state
  */
 export class StakePool {
-  public static schema: Schema = new Map<any, any>([
+  tag: Tag;
+  nonce: number;
+  currentDayIdx: number;
+  _padding: Uint8Array;
+  minimumStakeAmount: BN;
+  totalStaked: BN;
+  lastClaimedOffset: BN;
+  stakersPart: BN;
+  owner: PublicKey;
+  vault: PublicKey;
+
+  balances: RewardsTuple[];
+
+  // rome-ignore lint/suspicious/noExplicitAny: <explanation>
+  static schema: Schema = new Map<any, any>([
     [
       StakePool,
       {
@@ -56,10 +69,8 @@ export class StakePool {
           ["_padding", [4]],
           ["minimumStakeAmount", "u64"],
           ["totalStaked", "u64"],
-          ["lastCrankTime", "u64"],
-          ["lastClaimedTime", "u64"],
+          ["lastClaimedOffset", "u64"],
           ["stakersPart", "u64"],
-          ["unstakePeriod", "u64"],
           ["owner", [32]],
           ["vault", [32]],
           ["balances", [RewardsTuple, STAKE_BUFFER_LEN]],
@@ -78,7 +89,34 @@ export class StakePool {
     ],
   ]);
 
-  public static deserialize(data: Buffer) {
+  constructor(obj: {
+    tag: number;
+    nonce: number;
+    currentDayIdx: number;
+    _padding: Uint8Array;
+    minimumStakeAmount: BN;
+    totalStaked: BN;
+    lastClaimedOffset: BN;
+    stakersPart: BN;
+    owner: Uint8Array;
+    vault: Uint8Array;
+
+    balances: RewardsTuple[];
+  }) {
+    this.tag = obj.tag as Tag;
+    this.nonce = obj.nonce;
+    this.currentDayIdx = obj.currentDayIdx;
+    this._padding = obj._padding;
+    this.minimumStakeAmount = obj.minimumStakeAmount;
+    this.totalStaked = obj.totalStaked;
+    this.lastClaimedOffset = obj.lastClaimedOffset.fromTwos(64);
+    this.stakersPart = obj.stakersPart;
+    this.owner = new PublicKey(obj.owner);
+    this.vault = new PublicKey(obj.vault);
+    this.balances = obj.balances;
+  }
+
+  static deserialize(data: Buffer) {
     return deserialize(this.schema, StakePool, data);
   }
 
@@ -88,9 +126,9 @@ export class StakePool {
    * @param key The key of the stake pool
    * @returns
    */
-  public static async retrieve(connection: Connection, key: PublicKey) {
+  static async retrieve(connection: Connection, key: PublicKey) {
     const accountInfo = await connection.getAccountInfo(key);
-    if (!accountInfo || !accountInfo.data) {
+    if (!accountInfo?.data) {
       throw new Error("Stake pool not found");
     }
     return this.deserialize(accountInfo.data);
@@ -102,69 +140,11 @@ export class StakePool {
    * @param owner The owner of the stake pool
    * @returns
    */
-  public static async getKey(programId: PublicKey, owner: PublicKey) {
+  static async getKey(programId: PublicKey, owner: PublicKey) {
     return await PublicKey.findProgramAddress(
       [Buffer.from("stake_pool"), owner.toBuffer()],
       programId
     );
-  }
-  public tag: Tag;
-  public nonce: number;
-  public currentDayIdx: number;
-  public _padding: Uint8Array;
-  public minimumStakeAmount: BN;
-  public totalStaked: BN;
-  public lastCrankTime: BN;
-  public lastClaimedTime: BN;
-  public stakersPart: BN;
-  public unstakePeriod: BN;
-  public owner: PublicKey;
-  public vault: PublicKey;
-
-  public balances: RewardsTuple[];
-
-  constructor(obj: {
-    tag: number;
-    nonce: number;
-    currentDayIdx: number;
-    _padding: Uint8Array;
-    minimumStakeAmount: BN;
-    totalStaked: BN;
-    totalStakedLastCrank: BN;
-    lastCrankTime: BN;
-    lastClaimedTime: BN;
-    stakersPart: BN;
-    unstakePeriod: BN;
-    owner: Uint8Array;
-    vault: Uint8Array;
-    balances: RewardsTuple[];
-  }) {
-    this.tag = obj.tag as Tag;
-    this.nonce = obj.nonce;
-    this.currentDayIdx = obj.currentDayIdx;
-    this._padding = obj._padding;
-    this.minimumStakeAmount = obj.minimumStakeAmount;
-    this.totalStaked = obj.totalStaked;
-    this.lastCrankTime = obj.lastCrankTime;
-    this.lastClaimedTime = obj.lastClaimedTime;
-    this.stakersPart = obj.stakersPart;
-    this.unstakePeriod = obj.unstakePeriod;
-    this.owner = new PublicKey(obj.owner);
-    this.vault = new PublicKey(obj.vault);
-    this.balances = obj.balances;
-  }
-}
-
-/**
- * Unstake request
- */
-export class UnstakeRequest {
-  public amount: BN;
-  public time: BN;
-
-  constructor(obj: { time: BN; amount: BN }) {
-    this.amount = obj.amount;
-    this.time = obj.time;
   }
 }
 
@@ -172,17 +152,15 @@ export class UnstakeRequest {
  * Stake account state
  */
 export class StakeAccount {
-  public static schema: Schema = new Map<any, any>([
-    [
-      UnstakeRequest,
-      {
-        kind: "struct",
-        fields: [
-          ["amount", "u64"],
-          ["time", "u64"],
-        ],
-      },
-    ],
+  tag: Tag;
+  owner: PublicKey;
+  stakeAmount: BN;
+  stakePool: PublicKey;
+  lastClaimedOffset: BN;
+  poolMinimumAtCreation: BN;
+
+  // rome-ignore lint/suspicious/noExplicitAny: <explanation>
+  static schema: Schema = new Map<any, any>([
     [
       StakeAccount,
       {
@@ -192,16 +170,30 @@ export class StakeAccount {
           ["owner", [32]],
           ["stakeAmount", "u64"],
           ["stakePool", [32]],
-          ["lastClaimedTime", "u64"],
+          ["lastClaimedOffset", "u64"],
           ["poolMinimumAtCreation", "u64"],
-          ["pendingUnstakeRequests", "u8"],
-          ["unstakeRequests", [UnstakeRequest, MAX_UNSTAKE_REQUEST]],
         ],
       },
     ],
   ]);
 
-  public static deserialize(data: Buffer) {
+  constructor(obj: {
+    tag: number;
+    owner: Uint8Array;
+    stakeAmount: BN;
+    stakePool: Uint8Array;
+    lastClaimedOffset: BN;
+    poolMinimumAtCreation: BN;
+  }) {
+    this.tag = obj.tag;
+    this.owner = new PublicKey(obj.owner);
+    this.stakeAmount = obj.stakeAmount;
+    this.stakePool = new PublicKey(obj.stakePool);
+    this.lastClaimedOffset = obj.lastClaimedOffset.fromTwos(64);
+    this.poolMinimumAtCreation = obj.poolMinimumAtCreation;
+  }
+
+  static deserialize(data: Buffer) {
     return deserialize(this.schema, StakeAccount, data);
   }
 
@@ -211,9 +203,9 @@ export class StakeAccount {
    * @param key The stake account key
    * @returns
    */
-  public static async retrieve(connection: Connection, key: PublicKey) {
+  static async retrieve(connection: Connection, key: PublicKey) {
     const accountInfo = await connection.getAccountInfo(key);
-    if (!accountInfo || !accountInfo.data) {
+    if (!accountInfo?.data) {
       throw new Error("Stake account not found");
     }
     return this.deserialize(accountInfo.data);
@@ -226,7 +218,7 @@ export class StakeAccount {
    * @param stakePool The key of the stake pool
    * @returns
    */
-  public static async getKey(
+  static async getKey(
     programId: PublicKey,
     owner: PublicKey,
     stakePool: PublicKey
@@ -236,41 +228,30 @@ export class StakeAccount {
       programId
     );
   }
-  public tag: Tag;
-  public owner: PublicKey;
-  public stakeAmount: BN;
-  public stakePool: PublicKey;
-  public lastClaimedTime: BN;
-  public poolMinimumAtCreation: BN;
-  public pendingUnstakeRequests: number;
-  public unstakeRequests: UnstakeRequest[];
-
-  constructor(obj: {
-    tag: number;
-    owner: Uint8Array;
-    stakeAmount: BN;
-    stakePool: Uint8Array;
-    lastClaimedTime: BN;
-    poolMinimumAtCreation: BN;
-    pendingUnstakeRequests: number;
-    unstakeRequests: UnstakeRequest[];
-  }) {
-    this.tag = obj.tag;
-    this.owner = new PublicKey(obj.owner);
-    this.stakeAmount = obj.stakeAmount;
-    this.stakePool = new PublicKey(obj.stakePool);
-    this.lastClaimedTime = obj.lastClaimedTime;
-    this.poolMinimumAtCreation = obj.poolMinimumAtCreation;
-    this.pendingUnstakeRequests = obj.pendingUnstakeRequests;
-    this.unstakeRequests = obj.unstakeRequests;
-  }
 }
 
 /**
  * The bond account state
  */
 export class BondAccount {
-  public static schema: Schema = new Map<any, any>([
+  tag: Tag;
+  owner: PublicKey;
+  totalAmountSold: BN;
+  totalStaked: BN;
+  totalQuoteAmount: BN;
+  quoteMint: PublicKey;
+  sellerTokenAccount: PublicKey;
+  unlockStartDate: BN;
+  unlockPeriod: BN;
+  unlockAmount: BN;
+  lastUnlockTime: BN;
+  totalUnlockedAmount: BN;
+  poolMinimumAtCreation: BN;
+  stakePool: PublicKey;
+  lastClaimedOffset: BN;
+  sellers: PublicKey[];
+
+  static schema: Schema = new Map([
     [
       BondAccount,
       {
@@ -290,68 +271,12 @@ export class BondAccount {
           ["totalUnlockedAmount", "u64"],
           ["poolMinimumAtCreation", "u64"],
           ["stakePool", [32]],
-          ["lastClaimedTime", "u64"],
+          ["lastClaimedOffset", "u64"],
           ["sellers", [[32]]],
         ],
       },
     ],
   ]);
-
-  public static deserialize(data: any) {
-    return deserialize(this.schema, BondAccount, data);
-  }
-
-  /**
-   * This method can be used to retrieve the state of the bond account
-   * @param connection The Solana RPC connection
-   * @param key The key of the bond account
-   * @returns
-   */
-  public static async retrieve(connection: Connection, key: PublicKey) {
-    const accountInfo = await connection.getAccountInfo(key);
-    if (!accountInfo || !accountInfo.data) {
-      throw new Error("Bond account not found");
-    }
-    return this.deserialize(accountInfo.data);
-  }
-
-  /**
-   * This method can be used to derive the bond account key
-   * @param programId The ACCESS program ID
-   * @param owner The owner of the bond
-   * @param totalAmountSold The total amount of ACCESS token sold in the bond
-   * @returns
-   */
-  public static async getKey(
-    programId: PublicKey,
-    owner: PublicKey,
-    totalAmountSold: BN
-  ) {
-    return await PublicKey.findProgramAddress(
-      [
-        Buffer.from("bond_account"),
-        owner.toBuffer(),
-        new u64(totalAmountSold).toBuffer(),
-      ],
-      programId
-    );
-  }
-  public tag: Tag;
-  public owner: PublicKey;
-  public totalAmountSold: BN;
-  public totalStaked: BN;
-  public totalQuoteAmount: BN;
-  public quoteMint: PublicKey;
-  public sellerTokenAccount: PublicKey;
-  public unlockStartDate: BN;
-  public unlockPeriod: BN;
-  public unlockAmount: BN;
-  public lastUnlockTime: BN;
-  public totalUnlockedAmount: BN;
-  public poolMinimumAtCreation: BN;
-  public stakePool: PublicKey;
-  public lastClaimedTime: BN;
-  public sellers: PublicKey[];
 
   constructor(obj: {
     tag: number;
@@ -368,10 +293,10 @@ export class BondAccount {
     totalUnlockedAmount: BN;
     poolMinimumAtCreation: BN;
     stakePool: Uint8Array;
-    lastClaimedTime: BN;
+    lastClaimedOffset: BN;
     sellers: Uint8Array[];
   }) {
-    this.tag = obj.tag;
+    this.tag = obj.tag as Tag;
     this.owner = new PublicKey(obj.owner);
     this.totalAmountSold = obj.totalAmountSold;
     this.totalStaked = obj.totalStaked;
@@ -385,8 +310,48 @@ export class BondAccount {
     this.totalUnlockedAmount = obj.totalUnlockedAmount;
     this.poolMinimumAtCreation = obj.poolMinimumAtCreation;
     this.stakePool = new PublicKey(obj.stakePool);
-    this.lastClaimedTime = obj.lastClaimedTime;
+    this.lastClaimedOffset = obj.lastClaimedOffset;
     this.sellers = obj.sellers.map((e) => new PublicKey(e));
+  }
+
+  static deserialize(data: Buffer) {
+    return deserialize(this.schema, BondAccount, data);
+  }
+
+  /**
+   * This method can be used to retrieve the state of the bond account
+   * @param connection The Solana RPC connection
+   * @param key The key of the bond account
+   * @returns
+   */
+  static async retrieve(connection: Connection, key: PublicKey) {
+    const accountInfo = await connection.getAccountInfo(key);
+    if (!accountInfo?.data) {
+      throw new Error("Bond account not found");
+    }
+    return this.deserialize(accountInfo.data);
+  }
+
+  /**
+   * This method can be used to derive the bond account key
+   * @param programId The ACCESS program ID
+   * @param owner The owner of the bond
+   * @param totalAmountSold The total amount of ACCESS token sold in the bond
+   * @returns
+   */
+  static async getKey(
+    programId: PublicKey,
+    owner: PublicKey,
+    totalAmountSold: number
+  ) {
+    return await PublicKey.findProgramAddress(
+      [
+        Buffer.from("bond_account"),
+        owner.toBuffer(),
+        new u64(totalAmountSold).toBuffer(),
+      ],
+      programId
+    );
   }
 }
 
@@ -394,7 +359,17 @@ export class BondAccount {
  * The central state
  */
 export class CentralState {
-  public static schema: Schema = new Map([
+  tag: Tag;
+  signerNonce: number;
+  dailyInflation: BN;
+  tokenMint: PublicKey;
+  authority: PublicKey;
+  creationTime: BN;
+  totalStaked: BN;
+  totalStakedSnapshot: BN;
+  lastSnapshotOffset: BN;
+
+  static schema: Schema = new Map([
     [
       CentralState,
       {
@@ -405,13 +380,38 @@ export class CentralState {
           ["dailyInflation", "u64"],
           ["tokenMint", [32]],
           ["authority", [32]],
+          ["creationTime", "u64"],
           ["totalStaked", "u64"],
+          ["totalStakedSnapshot", "u64"],
+          ["lastSnapshotOffset", "u64"],
         ],
       },
     ],
   ]);
 
-  public static deserialize(data: Buffer) {
+  constructor(obj: {
+    tag: number;
+    signerNonce: number;
+    dailyInflation: BN;
+    tokenMint: Uint8Array;
+    authority: Uint8Array;
+    creationTime: BN;
+    totalStaked: BN;
+    totalStakedSnapshot: BN;
+    lastSnapshotOffset: BN;
+  }) {
+    this.tag = obj.tag as Tag;
+    this.signerNonce = obj.signerNonce;
+    this.dailyInflation = obj.dailyInflation;
+    this.tokenMint = new PublicKey(obj.tokenMint);
+    this.authority = new PublicKey(obj.authority);
+    this.creationTime = obj.creationTime.fromTwos(64);
+    this.totalStaked = obj.totalStaked;
+    this.totalStakedSnapshot = obj.totalStakedSnapshot.fromTwos(64);
+    this.lastSnapshotOffset = obj.lastSnapshotOffset.fromTwos(64);
+  }
+
+  static deserialize(data: Buffer) {
     return deserialize(this.schema, CentralState, data);
   }
 
@@ -421,9 +421,9 @@ export class CentralState {
    * @param key The key of the stake account
    * @returns
    */
-  public static async retrieve(connection: Connection, key: PublicKey) {
+  static async retrieve(connection: Connection, key: PublicKey) {
     const accountInfo = await connection.getAccountInfo(key);
-    if (!accountInfo || !accountInfo.data) {
+    if (!accountInfo?.data) {
       throw new Error("Central state not found");
     }
     return this.deserialize(accountInfo.data);
@@ -434,32 +434,10 @@ export class CentralState {
    * @param programId The ACCESS program ID
    * @returns
    */
-  public static async getKey(programId: PublicKey) {
+  static async getKey(programId: PublicKey) {
     return await PublicKey.findProgramAddress(
       [programId.toBuffer()],
       programId
     );
-  }
-  public tag: Tag;
-  public signerNonce: number;
-  public dailyInflation: BN;
-  public tokenMint: PublicKey;
-  public authority: PublicKey;
-  public totalStaked: BN;
-
-  constructor(obj: {
-    tag: number;
-    signerNonce: number;
-    dailyInflation: BN;
-    tokenMint: Uint8Array;
-    authority: Uint8Array;
-    totalStaked: BN;
-  }) {
-    this.tag = obj.tag as Tag;
-    this.signerNonce = obj.signerNonce;
-    this.dailyInflation = obj.dailyInflation;
-    this.tokenMint = new PublicKey(obj.tokenMint);
-    this.authority = new PublicKey(obj.authority);
-    this.totalStaked = obj.totalStaked;
   }
 }

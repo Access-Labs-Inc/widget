@@ -1,7 +1,7 @@
 // This file is auto-generated. DO NOT EDIT
-import BN from 'bn.js';
-import { Schema, serialize } from 'borsh';
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import BN from "bn.js";
+import { Schema, serialize } from "borsh";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 
 interface AccountKey {
   pubkey: PublicKey;
@@ -16,11 +16,11 @@ export class createStakeAccountInstruction {
     [
       createStakeAccountInstruction,
       {
-        kind: 'struct',
+        kind: "struct",
         fields: [
-          ['tag', 'u8'],
-          ['nonce', 'u8'],
-          ['owner', [32]],
+          ["tag", "u8"],
+          ["nonce", "u8"],
+          ["owner", [32]],
         ],
       },
     ],
@@ -76,10 +76,10 @@ export class stakeInstruction {
     [
       stakeInstruction,
       {
-        kind: 'struct',
+        kind: "struct",
         fields: [
-          ['tag', 'u8'],
-          ['amount', 'u64'],
+          ["tag", "u8"],
+          ["amount", "u64"],
         ],
       },
     ],
@@ -100,7 +100,8 @@ export class stakeInstruction {
     sourceToken: PublicKey,
     splTokenProgram: PublicKey,
     vault: PublicKey,
-    feeAccount: PublicKey
+    feeAccount: PublicKey,
+    bondAccount?: PublicKey
   ): TransactionInstruction {
     const data = Buffer.from(this.serialize());
     let keys: AccountKey[] = [];
@@ -144,6 +145,13 @@ export class stakeInstruction {
       isSigner: false,
       isWritable: true,
     });
+    if (bondAccount) {
+      keys.push({
+        pubkey: bondAccount,
+        isSigner: false,
+        isWritable: false,
+      });
+    }
     return new TransactionInstruction({
       keys,
       programId,
@@ -158,16 +166,16 @@ export class claimRewardsInstruction {
     [
       claimRewardsInstruction,
       {
-        kind: 'struct',
+        kind: "struct",
         fields: [
-          ['tag', 'u8'],
-          ['allowZeroRewards', 'u8'],
+          ["tag", "u8"],
+          ["allowZeroRewards", "u8"],
         ],
       },
     ],
   ]);
   constructor(obj: { allowZeroRewards: number }) {
-    this.tag = 8;
+    this.tag = 7;
     this.allowZeroRewards = obj.allowZeroRewards;
   }
   serialize(): Uint8Array {
