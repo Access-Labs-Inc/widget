@@ -2,8 +2,8 @@ name: Release to staging
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*-beta"
 
 jobs:
   release:
