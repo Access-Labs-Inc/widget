@@ -2,8 +2,8 @@ name: Release to staging
 
 on:
   push:
-    branch:
-      - "main" # Push to main
+    branches:
+      - main
 
 jobs:
   release:
