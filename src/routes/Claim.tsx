@@ -1,8 +1,13 @@
 import tw, { css } from 'twin.macro';
 import { Fragment, h } from 'preact';
 import BN from 'bn.js';
-import { CentralState, StakeAccount, StakePool } from '../libs/ap/state';
-import { claimRewards } from '../libs/ap/bindings';
+import {
+  BondAccount,
+  CentralState,
+  StakeAccount,
+  StakePool,
+} from '../libs/ap/state';
+import { claimBondRewards, claimRewards } from '../libs/ap/bindings';
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
@@ -17,14 +22,15 @@ import { ConfigContext } from '../AppContext';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import { useWallet } from '../components/wallet-adapter/useWallet';
 import {
-  ACCESS_PROGRAM_ID,
   calculateRewardForStaker,
+  getBondAccounts,
   getStakeAccounts,
 } from '../libs/program';
 import { sendTx } from '../libs/transactions';
 import Loading from '../components/Loading';
-import { ProgressStep } from '../components/ProgressStep';
 import { formatACSCurrency } from '../libs/utils';
+import env from '../libs/env';
+import { ProgressModal } from '../components/ProgressModal';
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -48,13 +54,21 @@ const hoverButtonStyles = css`
   }
 `;
 
+const CLAIM_BOND_REWARDS_STEP = 'Claim airdrop rewards';
+const CLAIM_STAKE_REWARDS_STEP = 'Claim stake rewards';
+const DONE_STEP = 'Done';
+const IDLE_STEP = 'Idle';
+
 export const Claim = () => {
   const { poolId, poolName } = useContext(ConfigContext);
   const { connection } = useConnection();
-  const { publicKey, sendTransaction, signMessage } = useWallet();
+  const { publicKey, sendTransaction } = useWallet();
 
-  const [working, setWorking] = useState('idle');
+  const [working, setWorking] = useState(IDLE_STEP);
   const [stakedAccount, setStakedAccount] = useState<StakeAccount | null>(null);
+  const [bondAccount, setBondAccount] = useState<
+    BondAccount | null | undefined
+  >(undefined);
   const [stakedPool, setStakedPool] = useState<StakePool | null>(null);
   const [stakeModalOpen, setStakeModal] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,11 +76,15 @@ export const Claim = () => {
   const openStakeModal = () => setStakeModal(true);
 
   useEffect(() => {
-    if (!publicKey || !poolId || !connection) {
+    if (!(publicKey && poolId && connection)) {
       return;
     }
     (async () => {
-      const stakedAccounts = await getStakeAccounts(connection, publicKey);
+      const stakedAccounts = await getStakeAccounts(
+        connection,
+        publicKey,
+        env.PROGRAM_ID
+      );
       if (stakedAccounts != null && stakedAccounts.length > 0) {
         const sAccount = stakedAccounts.find((st) => {
           const sa = StakeAccount.deserialize(st.account.data);
@@ -85,6 +103,33 @@ export const Claim = () => {
   }, [publicKey, connection, poolId]);
 
   useEffect(() => {
+    if (!(publicKey && poolId)) {
+      return;
+    }
+    (async () => {
+      const bondAccounts = await getBondAccounts(
+        connection,
+        publicKey,
+        env.PROGRAM_ID
+      );
+      if (bondAccounts != null && bondAccounts.length > 0) {
+        const bAccount = bondAccounts.find((st) => {
+          const sa = BondAccount.deserialize(st.account.data);
+          return sa.stakePool.toBase58() === poolId;
+        });
+        if (bAccount) {
+          const ba = BondAccount.deserialize(bAccount.account.data);
+          setBondAccount(ba);
+        } else {
+          setBondAccount(null);
+        }
+      } else {
+        setBondAccount(null);
+      }
+    })();
+  }, [publicKey, connection, poolId]);
+
+  useEffect(() => {
     if (!stakedAccount?.owner) {
       return;
     }
@@ -94,26 +139,42 @@ export const Claim = () => {
     })();
   }, [stakedAccount?.owner]);
 
-  const claimableAmount = useMemo(() => {
-    if (!stakedAccount || !stakedPool) {
+  const claimableStakeAmount = useMemo(() => {
+    if (!(stakedAccount && stakedPool)) {
       return null;
     }
     return calculateRewardForStaker(
-      stakedAccount.lastClaimedTime as BN,
+      stakedPool.currentDayIdx - stakedAccount.lastClaimedOffset.toNumber(),
       stakedPool,
       stakedAccount.stakeAmount as BN
     );
   }, [stakedAccount, stakedPool]);
 
+  const claimableBondAmount = useMemo(() => {
+    if (!(bondAccount && stakedPool)) {
+      return null;
+    }
+    return calculateRewardForStaker(
+      stakedPool.currentDayIdx - bondAccount.lastClaimedOffset.toNumber(),
+      stakedPool,
+      bondAccount.totalStaked as BN
+    );
+  }, [bondAccount, stakedPool]);
+
+  const claimableAmount = useMemo(() => {
+    return (claimableBondAmount ?? 0) + (claimableStakeAmount ?? 0);
+  }, [claimableBondAmount, claimableStakeAmount]);
+
   const handle = async () => {
     if (
-      !publicKey ||
-      !poolId ||
-      !connection ||
-      !sendTransaction ||
-      !signMessage ||
-      !stakedAccount ||
-      !stakedPool
+      !(
+        publicKey &&
+        poolId &&
+        connection &&
+        stakedAccount &&
+        bondAccount &&
+        stakedPool
+      )
     ) {
       return;
     }
@@ -121,14 +182,19 @@ export const Claim = () => {
     try {
       openStakeModal();
 
-      const [centralKey] = await CentralState.getKey(ACCESS_PROGRAM_ID);
+      const [centralKey] = await CentralState.getKey(env.PROGRAM_ID);
       const centralState = await CentralState.retrieve(connection, centralKey);
 
-      // Check if stake account exists
       const [stakeKey] = await StakeAccount.getKey(
-        ACCESS_PROGRAM_ID,
+        env.PROGRAM_ID,
         publicKey,
         new PublicKey(poolId)
+      );
+
+      const [bondKey] = await BondAccount.getKey(
+        env.PROGRAM_ID,
+        publicKey,
+        bondAccount.totalAmountSold.toNumber()
       );
 
       // Check if stake ata account exists
@@ -142,14 +208,15 @@ export const Claim = () => {
 
       if (
         stakedAccount.stakeAmount.toNumber() > 0 &&
-        stakedAccount.lastClaimedTime < stakedPool.lastCrankTime
+        claimableStakeAmount &&
+        claimableStakeAmount > 0
       ) {
-        setWorking('claim');
+        setWorking(CLAIM_STAKE_REWARDS_STEP);
         const ix = await claimRewards(
           connection,
           stakeKey,
           stakerAta,
-          ACCESS_PROGRAM_ID,
+          env.PROGRAM_ID,
           true
         );
 
@@ -158,14 +225,33 @@ export const Claim = () => {
         });
       }
 
-      setWorking('done');
+      if (
+        stakedAccount.stakeAmount.toNumber() > 0 &&
+        claimableBondAmount &&
+        claimableBondAmount > 0
+      ) {
+        setWorking(CLAIM_BOND_REWARDS_STEP);
+        const ix = await claimBondRewards(
+          connection,
+          bondKey,
+          stakerAta,
+          env.PROGRAM_ID,
+          true
+        );
+
+        await sendTx(connection, publicKey, [ix], sendTransaction, {
+          skipPreflight: true,
+        });
+      }
+
+      setWorking(DONE_STEP);
     } catch (err) {
       if (err instanceof Error) {
         console.error(err);
         setError(err.message);
       }
     } finally {
-      setWorking('done');
+      setWorking(DONE_STEP);
     }
   };
 
@@ -181,39 +267,11 @@ export const Claim = () => {
         </Fragment>
       )}
       {stakeModalOpen && !error && (
-        <Fragment>
-          <div css={styles.title}>Steps to complete</div>
-          <div css={styles.subtitle}>
-            We need you to sign these
-            <br /> transactions to claim rewards
-          </div>
-          <nav css={styles.steps} aria-label='Progress'>
-            <ol css={styles.stepsList}>
-              <ProgressStep
-                name='Claim rewards'
-                status={
-                  working === 'claim'
-                    ? 'current'
-                    : working === 'idle'
-                    ? 'pending'
-                    : 'complete'
-                }
-              />
-            </ol>
-            <RouteLink
-              disabled={working !== 'done'}
-              href='/'
-              css={[
-                styles.button,
-                working !== 'done'
-                  ? styles.disabledButtonStyles
-                  : hoverButtonStyles,
-              ]}
-            >
-              Close
-            </RouteLink>
-          </nav>
-        </Fragment>
+        <ProgressModal
+          working={working}
+          stepOrder={[CLAIM_BOND_REWARDS_STEP, CLAIM_STAKE_REWARDS_STEP]}
+          doneStepName={DONE_STEP}
+        />
       )}
       {!stakeModalOpen && (
         <Fragment>
@@ -227,7 +285,7 @@ export const Claim = () => {
             <Fragment>
               <div css={styles.title}>Claim on &apos;{poolName}&apos;</div>
               <div css={styles.claimAmount}>
-                {formatACSCurrency(claimableAmount?.toNumber() ?? 0)} ACS
+                {formatACSCurrency(claimableAmount)} ACS
               </div>
 
               <div>
@@ -235,8 +293,7 @@ export const Claim = () => {
                   css={[
                     styles.button,
                     hoverButtonStyles,
-                    (claimableAmount?.toNumber() ?? 0) <= 0 &&
-                      styles.disabledButtonStyles,
+                    claimableAmount <= 0 && styles.disabledButtonStyles,
                   ]}
                   onClick={handle}
                 >

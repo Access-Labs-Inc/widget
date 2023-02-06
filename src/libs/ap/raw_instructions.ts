@@ -1,12 +1,53 @@
 // This file is auto-generated. DO NOT EDIT
-import BN from 'bn.js';
-import { Schema, serialize } from 'borsh';
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import BN from "bn.js";
+import { Schema, serialize } from "borsh";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 
 interface AccountKey {
   pubkey: PublicKey;
   isSigner: boolean;
   isWritable: boolean;
+}
+export class crankInstruction {
+  tag: number;
+  static schema: Schema = new Map([
+    [
+      crankInstruction,
+      {
+        kind: "struct",
+        fields: [["tag", "u8"]],
+      },
+    ],
+  ]);
+  constructor() {
+    this.tag = 8;
+  }
+  serialize(): Uint8Array {
+    return serialize(crankInstruction.schema, this);
+  }
+  getInstruction(
+    programId: PublicKey,
+    stakePool: PublicKey,
+    centralState: PublicKey
+  ): TransactionInstruction {
+    const data = Buffer.from(this.serialize());
+    let keys: AccountKey[] = [];
+    keys.push({
+      pubkey: stakePool,
+      isSigner: false,
+      isWritable: true,
+    });
+    keys.push({
+      pubkey: centralState,
+      isSigner: false,
+      isWritable: true,
+    });
+    return new TransactionInstruction({
+      keys,
+      programId,
+      data,
+    });
+  }
 }
 export class createStakeAccountInstruction {
   tag: number;
@@ -16,11 +57,11 @@ export class createStakeAccountInstruction {
     [
       createStakeAccountInstruction,
       {
-        kind: 'struct',
+        kind: "struct",
         fields: [
-          ['tag', 'u8'],
-          ['nonce', 'u8'],
-          ['owner', [32]],
+          ["tag", "u8"],
+          ["nonce", "u8"],
+          ["owner", [32]],
         ],
       },
     ],
@@ -76,10 +117,10 @@ export class stakeInstruction {
     [
       stakeInstruction,
       {
-        kind: 'struct',
+        kind: "struct",
         fields: [
-          ['tag', 'u8'],
-          ['amount', 'u64'],
+          ["tag", "u8"],
+          ["amount", "u64"],
         ],
       },
     ],
@@ -100,7 +141,8 @@ export class stakeInstruction {
     sourceToken: PublicKey,
     splTokenProgram: PublicKey,
     vault: PublicKey,
-    feeAccount: PublicKey
+    feeAccount: PublicKey,
+    bondAccount?: PublicKey
   ): TransactionInstruction {
     const data = Buffer.from(this.serialize());
     let keys: AccountKey[] = [];
@@ -144,6 +186,13 @@ export class stakeInstruction {
       isSigner: false,
       isWritable: true,
     });
+    if (bondAccount) {
+      keys.push({
+        pubkey: bondAccount,
+        isSigner: false,
+        isWritable: false,
+      });
+    }
     return new TransactionInstruction({
       keys,
       programId,
@@ -158,16 +207,16 @@ export class claimRewardsInstruction {
     [
       claimRewardsInstruction,
       {
-        kind: 'struct',
+        kind: "struct",
         fields: [
-          ['tag', 'u8'],
-          ['allowZeroRewards', 'u8'],
+          ["tag", "u8"],
+          ["allowZeroRewards", "u8"],
         ],
       },
     ],
   ]);
   constructor(obj: { allowZeroRewards: number }) {
-    this.tag = 8;
+    this.tag = 7;
     this.allowZeroRewards = obj.allowZeroRewards;
   }
   serialize(): Uint8Array {
@@ -197,6 +246,77 @@ export class claimRewardsInstruction {
     });
     keys.push({
       pubkey: owner,
+      isSigner: true,
+      isWritable: false,
+    });
+    keys.push({
+      pubkey: rewardsDestination,
+      isSigner: false,
+      isWritable: true,
+    });
+    keys.push({
+      pubkey: centralState,
+      isSigner: false,
+      isWritable: false,
+    });
+    keys.push({
+      pubkey: mint,
+      isSigner: false,
+      isWritable: true,
+    });
+    keys.push({
+      pubkey: splTokenProgram,
+      isSigner: false,
+      isWritable: false,
+    });
+    return new TransactionInstruction({
+      keys,
+      programId,
+      data,
+    });
+  }
+}
+export class claimBondRewardsInstruction {
+  tag: number;
+  static schema: Schema = new Map([
+    [
+      claimBondRewardsInstruction,
+      {
+        kind: "struct",
+        fields: [["tag", "u8"]],
+      },
+    ],
+  ]);
+  constructor() {
+    this.tag = 16;
+  }
+  serialize(): Uint8Array {
+    return serialize(claimBondRewardsInstruction.schema, this);
+  }
+  getInstruction(
+    programId: PublicKey,
+    stakePool: PublicKey,
+    bondAccount: PublicKey,
+    bondOwner: PublicKey,
+    rewardsDestination: PublicKey,
+    centralState: PublicKey,
+    mint: PublicKey,
+    splTokenProgram: PublicKey
+  ): TransactionInstruction {
+    const data = Buffer.from(this.serialize());
+    let keys: AccountKey[] = [];
+    keys.push({
+      pubkey: stakePool,
+      isSigner: false,
+      isWritable: true,
+    });
+    keys.push({
+      pubkey: bondAccount,
+      isSigner: false,
+      isWritable: true,
+    });
+    keys.push({
+      pubkey: bondOwner,
       isSigner: true,
       isWritable: false,
     });

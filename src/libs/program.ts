@@ -14,10 +14,6 @@ import {
 } from '@solana/web3.js';
 import BN from 'bn.js';
 
-// Hard-coded values.
-export const ACCESS_PROGRAM_ID = new PublicKey(
-  'acp1VPqNoMs5KC5aEH3MzxnyPZNyKQF1TCPouCoNRuX'
-);
 const SECONDS_IN_DAY = 86400;
 
 /**
@@ -28,7 +24,8 @@ const SECONDS_IN_DAY = 86400;
  */
 export const getStakeAccounts = async (
   connection: Connection,
-  owner: PublicKey
+  owner: PublicKey,
+  programId: PublicKey
 ) => {
   const filters: MemcmpFilter[] = [
     {
@@ -44,7 +41,7 @@ export const getStakeAccounts = async (
       },
     },
   ];
-  return connection.getProgramAccounts(ACCESS_PROGRAM_ID, {
+  return connection.getProgramAccounts(programId, {
     filters,
   });
 };
@@ -53,11 +50,13 @@ export const getStakeAccounts = async (
  * This function can be used to find all bonds of a user
  * @param connection The Solana RPC connection
  * @param owner The owner of the bonds to retrieve
+ * @param programId The program ID
  * @returns
  */
 export const getBondAccounts = async (
   connection: Connection,
   owner: PublicKey,
+  programId: PublicKey
 ) => {
   const filters = [
     {
@@ -73,22 +72,21 @@ export const getBondAccounts = async (
       },
     },
   ];
-  return connection.getProgramAccounts(ACCESS_PROGRAM_ID, {
+  return await connection.getProgramAccounts(programId, {
     filters,
   });
 };
 
 const calculateReward = (
-  lastClaimedTime: BN,
+  unclaimedDays: number,
   stakePool: StakePool,
   staker: boolean
 ) => {
   const BUFF_LEN = 274;
-  let nbDaysBehind = new Date().getTime() - Number(lastClaimedTime) * 1000;
-  nbDaysBehind = Math.round(nbDaysBehind / 1000 / Number(SECONDS_IN_DAY));
-  nbDaysBehind = nbDaysBehind > BUFF_LEN - 1 ? BUFF_LEN - 1 : nbDaysBehind;
+  const nbDaysBehind =
+    unclaimedDays > BUFF_LEN - 1 ? BUFF_LEN - 1 : unclaimedDays;
 
-  const idx = stakePool.currentDayIdx + 1;
+  const idx = stakePool.currentDayIdx;
   let i = (idx - nbDaysBehind) % BUFF_LEN;
 
   let reward = new BN(0);
@@ -103,19 +101,20 @@ const calculateReward = (
 };
 
 export const calculateRewardForStaker = (
-  lastClaimedTime: BN,
+  unclaimedDays: number,
   stakePool: StakePool,
   stakeAmount: BN
 ) => {
-  const reward = calculateReward(lastClaimedTime, stakePool, true);
-  return reward.mul(new BN(stakeAmount.toNumber())).iushrn(32);
+  const reward = calculateReward(unclaimedDays, stakePool, true);
+  return reward.mul(new BN(stakeAmount.toNumber())).iushrn(32).toNumber();
 };
 
 export const getUserACSBalance = async (
   connection: Connection,
-  publicKey: PublicKey
+  publicKey: PublicKey,
+  programId: PublicKey
 ): Promise<BN> => {
-  const [centralKey] = await CentralState.getKey(ACCESS_PROGRAM_ID);
+  const [centralKey] = await CentralState.getKey(programId);
   const centralState = await CentralState.retrieve(connection, centralKey);
   const userAta: PublicKey = await getAssociatedTokenAddress(
     centralState.tokenMint,

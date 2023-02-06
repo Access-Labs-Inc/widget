@@ -1,24 +1,23 @@
-import tw from 'twin.macro';
-import { h, Ref } from 'preact';
-import { useCallback, useMemo, useRef, useState } from 'preact/hooks';
-import { ChangeEventHandler, forwardRef } from 'preact/compat';
-import KeyCode from 'rc-util/lib/KeyCode';
-import { useLayoutUpdateEffect } from 'rc-util/lib/hooks/useLayoutEffect';
-import { composeRef } from 'rc-util/lib/ref';
+import tw from "twin.macro";
+import { h, Ref } from "preact";
+import { useCallback, useMemo, useRef, useState } from "preact/hooks";
+import { ChangeEventHandler, forwardRef } from "preact/compat";
+import KeyCode from "rc-util/lib/KeyCode";
+import { useLayoutUpdateEffect } from "rc-util/lib/hooks/useLayoutEffect";
+import { composeRef } from "rc-util/lib/ref";
 import getMiniDecimal, {
   DecimalClass,
   toFixed,
   ValueType,
-} from './utils/MiniDecimal';
-import StepHandler from './StepHandler';
+} from "./utils/MiniDecimal";
 import {
   getNumberPrecision,
   num2str,
   getDecupleSteps,
   validateNumber,
-} from './utils/numberUtil';
-import useCursor from './hooks/useCursor';
-import useFrame from './hooks/useFrame';
+} from "./utils/numberUtil";
+import useCursor from "./hooks/useCursor";
+import useFrame from "./hooks/useFrame";
 
 /**
  * We support `stringMode` which need handle correct type when user call in onChange
@@ -144,17 +143,17 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
 
       let parsedStr = numStr;
       if (decimalSeparator) {
-        parsedStr = parsedStr.replace(decimalSeparator, '.');
+        parsedStr = parsedStr.replace(decimalSeparator, ".");
       }
 
       // [Legacy] We still support auto convert `$ 123,456` to `123456`
-      return parsedStr.replace(/[^\w.-]+/g, '');
+      return parsedStr.replace(/[^\w.-]+/g, "");
     },
     [parser, decimalSeparator]
   );
 
   // >>> Formatter
-  const inputValueRef = useRef<string | number>('');
+  const inputValueRef = useRef<string | number>("");
   const mergedFormatter = useCallback(
     (number: string, userTyping: boolean) => {
       if (formatter) {
@@ -164,7 +163,7 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
         });
       }
 
-      let str = typeof number === 'number' ? num2str(number) : number;
+      let str = typeof number === "number" ? num2str(number) : number;
 
       // User typing will not auto format with precision directly
       if (!userTyping) {
@@ -172,7 +171,7 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
 
         if (validateNumber(str) && (decimalSeparator || mergedPrecision >= 0)) {
           // Separator
-          const separatorStr = decimalSeparator || '.';
+          const separatorStr = decimalSeparator || ".";
 
           str = toFixed(str, separatorStr, mergedPrecision);
         }
@@ -197,9 +196,9 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
     const initValue = defaultValue ?? value;
     if (
       decimalValue.isInvalidate() &&
-      ['string', 'number'].includes(typeof initValue)
+      ["string", "number"].includes(typeof initValue)
     ) {
-      return Number.isNaN(initValue) ? '' : initValue;
+      return Number.isNaN(initValue) ? "" : initValue;
     }
     return mergedFormatter(decimalValue.toString(), false);
   });
@@ -295,13 +294,13 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
       const numStr = updateValue.toString();
       const mergedPrecision = getPrecision(numStr, userTyping);
       if (mergedPrecision >= 0) {
-        updateValue = getMiniDecimal(toFixed(numStr, '.', mergedPrecision));
+        updateValue = getMiniDecimal(toFixed(numStr, ".", mergedPrecision));
 
         // When to fixed. The value may out of min & max range.
         // 4 in [0, 3.8] => 3.8 => 4 (toFixed)
         if (!isInRange(updateValue)) {
           updateValue = getMiniDecimal(
-            toFixed(numStr, '.', mergedPrecision, true)
+            toFixed(numStr, ".", mergedPrecision, true)
           );
         }
       }
@@ -354,7 +353,7 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
     onNextPromise(() => {
       let nextInputStr = inputStr;
       if (!parser) {
-        nextInputStr = inputStr.replace(/。/g, '.');
+        nextInputStr = inputStr.replace(/。/g, ".");
       }
 
       if (nextInputStr !== inputStr) {
@@ -409,7 +408,7 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
 
     onStep?.(getDecimalValue(stringMode, updatedValue), {
       offset: shiftKeyRef.current ? getDecupleSteps(step) : step,
-      type: up ? 'up' : 'down',
+      type: up ? "up" : "down",
     });
 
     inputRef.current?.focus();
@@ -565,6 +564,6 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
   );
 });
 
-InputNumber.displayName = 'InputNumber';
+InputNumber.displayName = "InputNumber";
 
 export default InputNumber;

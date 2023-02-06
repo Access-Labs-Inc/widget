@@ -4,7 +4,12 @@ import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
-import { calculateRewardForStaker, getBondAccounts, getStakeAccounts, getUserACSBalance } from '../libs/program';
+import {
+  calculateRewardForStaker,
+  getBondAccounts,
+  getStakeAccounts,
+  getUserACSBalance,
+} from '../libs/program';
 import { ConfigContext } from '../AppContext';
 import { BondAccount, StakeAccount, StakePool } from '../libs/ap/state';
 import { formatACSCurrency } from '../libs/utils';
@@ -12,6 +17,7 @@ import { RouteLink } from '../layout/Router';
 import { Header } from '../components/Header';
 import { useWallet } from '../components/wallet-adapter/useWallet';
 import { useConnection } from '../components/wallet-adapter/useConnection';
+import env from '../libs/env';
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -33,12 +39,16 @@ const hoverButtonStyles = css`
 `;
 
 export const Actions = () => {
-  const {poolId} = useContext(ConfigContext);
-  const {connection} = useConnection();
-  const {publicKey, disconnect} = useWallet();
+  const { poolId } = useContext(ConfigContext);
+  const { connection } = useConnection();
+  const { publicKey, disconnect } = useWallet();
   const [balance, setBalance] = useState<BN | null>(null);
-  const [stakedAccount, setStakedAccount] = useState<StakeAccount | null | undefined>(undefined);
-  const [bondAccount, setBondAccount] = useState<BondAccount | null | undefined>(undefined);
+  const [stakedAccount, setStakedAccount] = useState<
+    StakeAccount | null | undefined
+  >(undefined);
+  const [bondAccount, setBondAccount] = useState<
+    BondAccount | null | undefined
+  >(undefined);
   const [stakePool, setStakePool] = useState<StakePool | undefined>(undefined);
 
   useEffect(() => {
@@ -46,12 +56,14 @@ export const Actions = () => {
       return;
     }
     (async () => {
-      setBalance(await getUserACSBalance(connection, publicKey));
+      setBalance(
+        await getUserACSBalance(connection, publicKey, env.PROGRAM_ID)
+      );
     })();
   }, [publicKey, connection]);
 
   useEffect(() => {
-    if (!stakedAccount || !poolId || stakePool) {
+    if (!(stakedAccount && poolId && stakePool)) {
       return;
     }
     (async () => {
@@ -60,11 +72,15 @@ export const Actions = () => {
   }, [poolId, stakedAccount, stakePool, connection]);
 
   useEffect(() => {
-    if (!publicKey || !poolId) {
+    if (!(publicKey && poolId)) {
       return;
     }
     (async () => {
-      const stakedAccounts = await getStakeAccounts(connection, publicKey);
+      const stakedAccounts = await getStakeAccounts(
+        connection,
+        publicKey,
+        env.PROGRAM_ID
+      );
       if (stakedAccounts != null && stakedAccounts.length > 0) {
         const sAccount = stakedAccounts.find((st) => {
           const sa = StakeAccount.deserialize(st.account.data);
@@ -83,11 +99,15 @@ export const Actions = () => {
   }, [publicKey, connection, poolId]);
 
   useEffect(() => {
-    if (!publicKey || !poolId) {
+    if (!(publicKey && poolId)) {
       return;
     }
     (async () => {
-      const bondAccounts = await getBondAccounts(connection, publicKey);
+      const bondAccounts = await getBondAccounts(
+        connection,
+        publicKey,
+        env.PROGRAM_ID
+      );
       if (bondAccounts != null && bondAccounts.length > 0) {
         const bAccount = bondAccounts.find((st) => {
           const sa = BondAccount.deserialize(st.account.data);
@@ -105,16 +125,31 @@ export const Actions = () => {
     })();
   }, [publicKey, connection, poolId]);
 
-  const claimableAmount = useMemo(() => {
-    if (!stakedAccount || !stakePool) {
+  const claimableStakeAmount = useMemo(() => {
+    if (!(stakedAccount && stakePool)) {
       return null;
     }
     return calculateRewardForStaker(
-      stakedAccount.lastClaimedTime as BN,
+      stakePool.currentDayIdx - stakedAccount.lastClaimedOffset.toNumber(),
       stakePool,
       stakedAccount.stakeAmount as BN
     );
   }, [stakedAccount, stakePool]);
+
+  const claimableBondAmount = useMemo(() => {
+    if (!(bondAccount && stakePool)) {
+      return null;
+    }
+    return calculateRewardForStaker(
+      stakePool.currentDayIdx - bondAccount.lastClaimedOffset.toNumber(),
+      stakePool,
+      bondAccount.totalStaked as BN
+    );
+  }, [bondAccount, stakePool]);
+
+  const claimableAmount = useMemo(() => {
+    return (claimableBondAmount ?? 0) + (claimableStakeAmount ?? 0);
+  }, [claimableBondAmount, claimableStakeAmount]);
 
   return (
     <div css={styles.root}>
@@ -147,16 +182,22 @@ export const Actions = () => {
           ]}
         >
           {formatACSCurrency(
-            (stakedAccount?.stakeAmount.toNumber() ?? 0) + (bondAccount?.totalStaked.toNumber() ?? 0))} ACS
-          staked
+            (stakedAccount?.stakeAmount.toNumber() ?? 0) +
+              (bondAccount?.totalStaked.toNumber() ?? 0)
+          )}{' '}
+          ACS staked
         </div>
         <div css={[styles.balance, balance === undefined && styles.blink]}>
           {formatACSCurrency(balance?.toNumber() ?? 0)} ACS available
         </div>
         <div
-          css={[styles.balance, claimableAmount === undefined && styles.blink]}
+          css={[
+            styles.balance,
+            (stakedAccount === undefined || bondAccount === undefined) &&
+              styles.blink,
+          ]}
         >
-          {formatACSCurrency(claimableAmount?.toNumber() ?? 0)} ACS claimable
+          {formatACSCurrency(claimableAmount ?? 0)} ACS claimable
         </div>
       </div>
 
@@ -173,7 +214,7 @@ export const Actions = () => {
             Unstake
           </span>
         )}
-        {claimableAmount && claimableAmount.toNumber() > 0 ? (
+        {claimableAmount && claimableAmount > 0 ? (
           <RouteLink css={[styles.button, hoverButtonStyles]} href='/claim'>
             Claim
           </RouteLink>

@@ -3,16 +3,84 @@ const webpack = require("webpack");
 var CopyPlugin = require("copy-webpack-plugin");
 const StatoscopeWebpackPlugin = require("@statoscope/webpack-plugin").default;
 const { DuplicatesPlugin } = require("inspectpack/plugin");
+const Dotenv = require("dotenv-webpack");
 
 const bundleOutputDir = "./dist";
 
-module.exports = (env, argv) => {
-  const isDevBuild = argv.mode !== "production";
-  console.log("Production build: " + !isDevBuild);
+module.exports = (env) => {
+  console.log("ENVs", env);
+
+  let devtool = "inline-source-map";
+  const isDevBuild = env.TARGET_ENV === "development";
+  let plugins = [];
+
+  switch (env.TARGET_ENV) {
+    case "development":
+      plugins = [
+        new Dotenv({
+          path: path.join(__dirname, ".env.development"),
+        }),
+        new webpack.ProvidePlugin({
+          process: "process/browser",
+          Buffer: ["buffer", "Buffer"],
+        }),
+        new StatoscopeWebpackPlugin(),
+        new CopyPlugin([{ from: "html/" }]),
+        new DuplicatesPlugin({
+          // Emit compilation warning or error? (Default: `false`)
+          emitErrors: false,
+          // Handle all messages with handler function (`(report: string)`)
+          // Overrides `emitErrors` output.
+          emitHandler: undefined,
+          // List of packages that can be ignored. (Default: `[]`)
+          // - If a string, then a prefix match of `{$name}/` for each module.
+          // - If a regex, then `.test(pattern)` which means you should add slashes
+          //   where appropriate.
+          //
+          // **Note**: Uses posix paths for all matching (e.g., on windows `/` not `\`).
+          ignoredPackages: undefined,
+          // Display full duplicates information? (Default: `false`)
+          verbose: true,
+        }),
+      ];
+      break;
+    case "production":
+      plugins = [
+        new Dotenv({
+          path: path.join(__dirname, ".env.production"),
+          allowEmptyValues: false,
+        }),
+        new webpack.ProvidePlugin({
+          process: "process/browser",
+          Buffer: ["buffer", "Buffer"],
+        }),
+        new StatoscopeWebpackPlugin(),
+        new CopyPlugin([{ from: "html/" }]),
+      ];
+      break;
+    case "staging":
+      devtool = false;
+      plugins = [
+        new Dotenv({
+          path: path.join(__dirname, ".env.staging"),
+          allowEmptyValues: false,
+        }),
+        new webpack.ProvidePlugin({
+          process: "process/browser",
+          Buffer: ["buffer", "Buffer"],
+        }),
+        new StatoscopeWebpackPlugin(),
+        new CopyPlugin([{ from: "html/" }]),
+      ];
+      break;
+    default:
+      throw new Error(`Unsupported TARGET_ENV: ${env.TARGET_ENV}`);
+  }
+
   return [
     {
       entry: "./src/index.ts",
-      devtool: isDevBuild ? "inline-source-map" : false,
+      devtool: devtool,
       output: {
         filename: "widget.js",
         path: path.resolve(bundleOutputDir),
@@ -20,39 +88,7 @@ module.exports = (env, argv) => {
       devServer: {
         static: bundleOutputDir,
       },
-      plugins: isDevBuild
-        ? [
-            new webpack.ProvidePlugin({
-              process: "process/browser",
-              Buffer: ["buffer", "Buffer"],
-            }),
-            new StatoscopeWebpackPlugin(),
-            new CopyPlugin([{ from: "dev/" }]),
-            new DuplicatesPlugin({
-              // Emit compilation warning or error? (Default: `false`)
-              emitErrors: false,
-              // Handle all messages with handler function (`(report: string)`)
-              // Overrides `emitErrors` output.
-              emitHandler: undefined,
-              // List of packages that can be ignored. (Default: `[]`)
-              // - If a string, then a prefix match of `{$name}/` for each module.
-              // - If a regex, then `.test(pattern)` which means you should add slashes
-              //   where appropriate.
-              //
-              // **Note**: Uses posix paths for all matching (e.g., on windows `/` not `\`).
-              ignoredPackages: undefined,
-              // Display full duplicates information? (Default: `false`)
-              verbose: true,
-            }),
-          ]
-        : [
-            new webpack.ProvidePlugin({
-              process: "process/browser",
-              Buffer: ["buffer", "Buffer"],
-            }),
-            new StatoscopeWebpackPlugin(),
-            new CopyPlugin([{ from: "dev/" }]),
-          ],
+      plugins: plugins,
       optimization: {
         minimize: !isDevBuild,
       },
@@ -126,7 +162,9 @@ module.exports = (env, argv) => {
         extensions: ["*", ".js", ".ts", ".tsx"],
         alias: {
           react: "preact/compat",
-          "react-dom": "preact/compat",
+          "react-dom/test-utils": "preact/test-utils",
+          "react-dom": "preact/compat", // Must be below test-utils
+          "react/jsx-runtime": "preact/jsx-runtime",
         },
         fallback: {
           crypto: require.resolve("crypto-browserify"),

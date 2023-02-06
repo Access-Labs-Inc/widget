@@ -110,7 +110,7 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
             thumb: {
               width: 30,
               height: 30,
-              backgroundColor: `#749BFF`,
+              backgroundColor: '#749BFF',
               border: '8px solid rgba(31,41,5)',
             },
           }}
