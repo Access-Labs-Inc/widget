@@ -1,9 +1,9 @@
-import { CentralState, StakePool } from "./ap/state";
+import { CentralState, StakePool } from './ap/state';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
+} from '@solana/spl-token';
 import {
   Connection,
   PublicKey,
@@ -11,8 +11,8 @@ import {
   AccountInfo,
   RpcResponseAndContext,
   TokenAmount,
-} from "@solana/web3.js";
-import BN from "bn.js";
+} from '@solana/web3.js';
+import BN from 'bn.js';
 
 const SECONDS_IN_DAY = 86400;
 
@@ -31,7 +31,7 @@ export const getStakeAccounts = async (
     {
       memcmp: {
         offset: 0,
-        bytes: "4",
+        bytes: '4',
       },
     },
     {
@@ -62,7 +62,7 @@ export const getBondAccounts = async (
     {
       memcmp: {
         offset: 0,
-        bytes: "6",
+        bytes: '6',
       },
     },
     {

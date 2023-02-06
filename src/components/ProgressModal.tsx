@@ -1,9 +1,9 @@
-import tw, { css } from "twin.macro";
-import { Fragment, h } from "preact";
+import tw, { css } from 'twin.macro';
+import { Fragment, h } from 'preact';
 
-import { RouteLink } from "../layout/Router";
+import { RouteLink } from '../layout/Router';
 
-import { ProgressStep } from "./ProgressStep";
+import { ProgressStep } from './ProgressStep';
 
 const getStepState = (
   current: string,
@@ -15,12 +15,12 @@ const getStepState = (
   const currentStepIndex = stepOrder.indexOf(current);
   const stepIndex = stepOrder.indexOf(step);
   if (stepIndex < currentStepIndex || current === doneStep) {
-    return "complete";
+    return 'complete';
   }
   if (stepIndex === currentStepIndex) {
-    return "current";
+    return 'current';
   }
-  return "";
+  return '';
 };
 
 const styles = {
@@ -54,7 +54,7 @@ const ProgressModal = ({
         We need you to sign these
         <br /> transactions to stake
       </div>
-      <nav css={styles.steps} aria-label="Progress">
+      <nav css={styles.steps} aria-label='Progress'>
         <ol css={styles.stepsList}>
           {stepOrder.map((step) => (
             <ProgressStep
@@ -66,7 +66,7 @@ const ProgressModal = ({
         </ol>
         <RouteLink
           disabled={working !== doneStepName}
-          href="/"
+          href='/'
           css={[
             styles.button,
             working !== doneStepName
