@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: "16.x"
       - run: yarn install --immutable --immutable-cache --check-cache
-      - run: yarn run build-release
+      - run: yarn run build-production-release
       - run: zip -j widget dist/* README.md
 
       - name: Create Release
