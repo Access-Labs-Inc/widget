@@ -83,6 +83,7 @@ This will open browser with "demo" page which hosts the widget.
 ## Release new version to staging
 ```bash
 git push origin main
+git tag vX.X.X-beta && git push origin vX.X.X-beta
 ```
 
 After this wait for the Github Actions to finish the deploy to S3 and Cloudfront.
