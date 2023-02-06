@@ -6,7 +6,7 @@ on:
       - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   build-ci:
@@ -24,5 +24,5 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: yarn install --immutable --immutable-cache --check-cache
       - run: yarn run lint
-      - run: yarn run build
+      - run: yarn run build-staging-release
       - run: yarn run test

@@ -14,13 +14,14 @@ import { WalletModalProvider } from "./components/wallet-adapter/ui/WalletModalP
 import { Configurations } from "./models";
 import Main from "./layout/Main";
 import { AppContext } from "./AppContext";
+import env from "./libs/env";
 
 type Props = Configurations;
 export const App = ({ element, ...appSettings }: Props) => {
   const network = WalletAdapterNetwork.Devnet;
   console.log("Connected to network: ", network);
 
-  const endpoint = "https://api.devnet.solana.com";
+  const endpoint = env.SOLANA_RPC_URL;
 
   const wallets = useMemo(
     () => [

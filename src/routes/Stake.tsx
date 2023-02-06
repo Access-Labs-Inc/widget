@@ -1,36 +1,47 @@
-import tw, { css } from 'twin.macro';
-import { Fragment, h } from 'preact';
-import BN from 'bn.js';
-import { Info } from 'phosphor-react';
-import { CentralState, StakeAccount, StakePool } from '../libs/ap/state';
-import { claimRewards, createStakeAccount, stake } from '../libs/ap/bindings';
+import tw, { css } from "twin.macro";
+import { Fragment, h } from "preact";
+import BN from "bn.js";
+import { Info } from "phosphor-react";
+import {
+  BondAccount,
+  CentralState,
+  StakeAccount,
+  StakePool,
+} from "../libs/ap/state";
+import {
+  claimRewards,
+  crank,
+  createStakeAccount,
+  stake,
+} from "../libs/ap/bindings";
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
-} from '@solana/spl-token';
-import { PublicKey } from '@solana/web3.js';
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
+} from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
-import { Header } from '../components/Header';
-import { RouteLink } from '../layout/Router';
-import { ConfigContext } from '../AppContext';
-import { useConnection } from '../components/wallet-adapter/useConnection';
-import { useWallet } from '../components/wallet-adapter/useWallet';
+import { Header } from "../components/Header";
+import { RouteLink } from "../layout/Router";
+import { ConfigContext } from "../AppContext";
+import { useConnection } from "../components/wallet-adapter/useConnection";
+import { useWallet } from "../components/wallet-adapter/useWallet";
 import {
-  ACCESS_PROGRAM_ID,
+  getBondAccounts,
   getStakeAccounts,
   getUserACSBalance,
-} from '../libs/program';
-import { Tooltip } from '../components/Tooltip';
-import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
-import { sendTx } from '../libs/transactions';
-import Loading from '../components/Loading';
-import { ProgressStep } from '../components/ProgressStep';
-import { formatACSCurrency } from '../libs/utils';
-import { useFeePayer } from '../hooks/useFeePayer';
-import { WalletAdapterProps } from '@solana/wallet-adapter-base';
+} from "../libs/program";
+import { Tooltip } from "../components/Tooltip";
+import { NumberInputWithSlider } from "../components/NumberInputWithSlider";
+import { sendTx } from "../libs/transactions";
+import Loading from "../components/Loading";
+import { ProgressModal } from "../components/ProgressModal";
+import { formatACSCurrency } from "../libs/utils";
+import { useFeePayer } from "../hooks/useFeePayer";
+import { WalletAdapterProps } from "@solana/wallet-adapter-base";
+import env from "../libs/env";
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -58,32 +69,41 @@ const hoverButtonStyles = css`
 
 interface FeePaymentData {
   feePayerPubKey: string;
-  sendTransaction: WalletAdapterProps['sendTransaction'];
+  sendTransaction: WalletAdapterProps["sendTransaction"];
 }
+
+const CRANK_STEP = "Crank";
+const CREATE_STAKING_ACCOUNT_STEP = "Create staking account";
+const CLAIM_REWARDS_STEP = "Claim rewards";
+const STAKE_STEP = "Stake";
+const DONE_STEP = "Done";
+const IDLE_STEP = "Idle";
 
 export const Stake = () => {
   const { poolId, poolName } = useContext(ConfigContext);
   const { connection } = useConnection();
-  const { publicKey, sendTransaction: sendTransactionWithFeesUnpaid, signMessage } = useWallet();
+  const { publicKey, sendTransaction: sendTransactionWithFeesUnpaid } =
+    useWallet();
 
-  const [feePaymentState, setFeePayer] =
-    useState<FeePaymentData | undefined>();
+  const [feePaymentState, setFeePayer] = useState<FeePaymentData | undefined>();
 
   useEffect(() => {
     (async () => {
-       const {feePayerPubKey: pubkey, sendTransaction} = await useFeePayer({
-          sendTransaction: sendTransactionWithFeesUnpaid,
-          signMessage,
-        });
-       setFeePayer({feePayerPubKey: pubkey, sendTransaction});
-      })();
+      const { feePayerPubKey: pubkey, sendTransaction } = await useFeePayer({
+        sendTransaction: sendTransactionWithFeesUnpaid,
+      });
+      setFeePayer({ feePayerPubKey: pubkey, sendTransaction });
+    })();
   }, [publicKey]);
 
-  const [working, setWorking] = useState('idle');
+  const [working, setWorking] = useState(IDLE_STEP);
   const [balance, setBalance] = useState<BN | null | undefined>(undefined);
   const [solBalance, setSolBalance] = useState<number>(0);
   const [stakedAccount, setStakedAccount] = useState<
     StakeAccount | undefined | null
+  >(undefined);
+  const [bondAccount, setBondAccount] = useState<
+    BondAccount | null | undefined
   >(undefined);
   const [stakedPool, setStakedPool] = useState<StakePool | null>(null);
   const [stakeAmount, setStakeAmount] = useState<number>(0);
@@ -96,7 +116,7 @@ export const Stake = () => {
   const feePercentageFraction = feePercentage / 100;
 
   useEffect(() => {
-    if (!publicKey || !connection) {
+    if (!(publicKey && connection)) {
       return;
     }
     (async () => {
@@ -106,11 +126,11 @@ export const Stake = () => {
   }, [publicKey, connection]);
 
   useEffect(() => {
-    if (!publicKey || !connection) {
+    if (!(publicKey && connection)) {
       return;
     }
     (async () => {
-      const b = await getUserACSBalance(connection, publicKey);
+      const b = await getUserACSBalance(connection, publicKey, env.PROGRAM_ID);
       setBalance(b);
       setStakeAmount(
         b != null ? b.toNumber() / (1 + feePercentageFraction) : 0
@@ -119,11 +139,15 @@ export const Stake = () => {
   }, [publicKey, connection, getUserACSBalance]);
 
   useEffect(() => {
-    if (!publicKey || !poolId || !connection) {
+    if (!(publicKey && poolId && connection)) {
       return;
     }
     (async () => {
-      const stakedAccounts = await getStakeAccounts(connection, publicKey);
+      const stakedAccounts = await getStakeAccounts(
+        connection,
+        publicKey,
+        env.PROGRAM_ID
+      );
       if (stakedAccounts != null && stakedAccounts.length > 0) {
         const sAccount = stakedAccounts.find((st) => {
           const sa = StakeAccount.deserialize(st.account.data);
@@ -138,6 +162,33 @@ export const Stake = () => {
         return;
       }
       setStakedAccount(null);
+    })();
+  }, [publicKey, connection, poolId]);
+
+  useEffect(() => {
+    if (!(publicKey && poolId)) {
+      return;
+    }
+    (async () => {
+      const bondAccounts = await getBondAccounts(
+        connection,
+        publicKey,
+        env.PROGRAM_ID
+      );
+      if (bondAccounts != null && bondAccounts.length > 0) {
+        const bAccount = bondAccounts.find((st) => {
+          const sa = BondAccount.deserialize(st.account.data);
+          return sa.stakePool.toBase58() === poolId;
+        });
+        if (bAccount) {
+          const ba = BondAccount.deserialize(bAccount.account.data);
+          setBondAccount(ba);
+        } else {
+          setBondAccount(null);
+        }
+      } else {
+        setBondAccount(null);
+      }
     })();
   }, [publicKey, connection, poolId]);
 
@@ -158,20 +209,17 @@ export const Stake = () => {
   const handle = async () => {
     let feePayer = publicKey;
     let sendTransaction = sendTransactionWithFeesUnpaid;
-    if (insufficientSolBalance && publicKey != null && feePaymentState != null) {
+    if (
+      insufficientSolBalance &&
+      publicKey != null &&
+      feePaymentState != null
+    ) {
       feePayer = new PublicKey(feePaymentState.feePayerPubKey);
       sendTransaction = feePaymentState.sendTransaction;
     }
 
     if (
-      !publicKey ||
-      !poolId ||
-      !connection ||
-      !feePayer ||
-      !sendTransaction ||
-      !balance ||
-      !signMessage ||
-      !stakedPool
+      !(publicKey && poolId && connection && feePayer && balance && stakedPool)
     ) {
       return;
     }
@@ -179,13 +227,28 @@ export const Stake = () => {
     try {
       openStakeModal();
 
-      const [centralKey] = await CentralState.getKey(ACCESS_PROGRAM_ID);
+      const [centralKey] = await CentralState.getKey(env.PROGRAM_ID);
       const centralState = await CentralState.retrieve(connection, centralKey);
       const txs = [];
 
+      let hasCranked = false;
+      if (
+        centralState.lastSnapshotOffset.toNumber() > stakedPool.currentDayIdx ||
+        centralState.creationTime.toNumber() +
+          86400 * (stakedPool.currentDayIdx + 1) <
+          Date.now() / 1000
+      ) {
+        setWorking(CRANK_STEP);
+        const crankTx = await crank(new PublicKey(poolId), env.PROGRAM_ID);
+        await sendTx(connection, feePayer, [crankTx], sendTransaction, {
+          skipPreflight: true,
+        });
+        hasCranked = true;
+      }
+
       // Check if stake account exists
       const [stakeKey] = await StakeAccount.getKey(
-        ACCESS_PROGRAM_ID,
+        env.PROGRAM_ID,
         publicKey,
         new PublicKey(poolId)
       );
@@ -194,12 +257,12 @@ export const Stake = () => {
       try {
         stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
       } catch {
-        setWorking('account');
+        setWorking(CREATE_STAKING_ACCOUNT_STEP);
         const ixAccount = await createStakeAccount(
           new PublicKey(poolId),
           publicKey,
           feePayer,
-          ACCESS_PROGRAM_ID
+          env.PROGRAM_ID
         );
         await sendTx(connection, feePayer, [ixAccount], sendTransaction, {
           skipPreflight: true,
@@ -231,14 +294,15 @@ export const Stake = () => {
 
       if (
         stakeAccount.stakeAmount.toNumber() > 0 &&
-        stakeAccount.lastClaimedTime < stakedPool.lastCrankTime
+        (stakeAccount.lastClaimedOffset.toNumber() < stakedPool.currentDayIdx ||
+          hasCranked)
       ) {
-        setWorking('claim');
+        setWorking(CLAIM_REWARDS_STEP);
         const ix = await claimRewards(
           connection,
           stakeKey,
           stakerAta,
-          ACCESS_PROGRAM_ID,
+          env.PROGRAM_ID,
           true
         );
 
@@ -247,13 +311,13 @@ export const Stake = () => {
         });
       }
 
-      setWorking('stake');
+      setWorking(STAKE_STEP);
       const ixStake = await stake(
         connection,
         stakeKey,
         stakerAta,
-        stakeAmount,
-        ACCESS_PROGRAM_ID
+        Number(stakeAmount),
+        env.PROGRAM_ID
       );
       txs.push(ixStake);
 
@@ -261,14 +325,14 @@ export const Stake = () => {
         skipPreflight: true,
       });
 
-      setWorking('done');
+      setWorking(DONE_STEP);
     } catch (err) {
       if (err instanceof Error) {
         console.error(err);
         setError(err.message);
       }
     } finally {
-      setWorking('done');
+      setWorking(DONE_STEP);
     }
   };
 
@@ -278,10 +342,16 @@ export const Stake = () => {
 
   const minStakeAmount = useMemo(() => {
     return Math.max(
-      minPoolStakeAmount - Number(stakedAccount?.stakeAmount ?? 0),
+      minPoolStakeAmount -
+        Number(stakedAccount?.stakeAmount ?? 0) -
+        Number(bondAccount?.totalStaked ?? 0),
       10 ** 6
     );
-  }, [stakedAccount?.stakeAmount, minPoolStakeAmount]);
+  }, [
+    stakedAccount?.stakeAmount,
+    bondAccount?.totalStaked,
+    minPoolStakeAmount,
+  ]);
 
   const maxStakeAmount = useMemo(() => {
     return Number(balance) / (1 + feePercentageFraction);
@@ -294,10 +364,7 @@ export const Stake = () => {
     );
   }, [balance, minStakeAmount, feePercentageFraction]);
 
-  const insufficientSolBalance = useMemo(
-    () => solBalance === 0,
-    [solBalance]
-  );
+  const insufficientSolBalance = useMemo(() => solBalance === 0, [solBalance]);
 
   const invalidText = useMemo(() => {
     if (insufficientBalance) {
@@ -319,66 +386,27 @@ export const Stake = () => {
         <Fragment>
           <div css={styles.titleError}>Error occured:</div>
           <div css={styles.subtitleError}>{error}</div>
-          <RouteLink css={[styles.button, hoverButtonStyles]} href='/'>
+          <RouteLink css={[styles.button, hoverButtonStyles]} href="/">
             Close
           </RouteLink>
         </Fragment>
       )}
       {stakeModalOpen && !error && (
-        <Fragment>
-          <div css={styles.title}>Steps to complete</div>
-          <div css={styles.subtitle}>
-            We need you to sign these
-            <br /> transactions to stake
-          </div>
-          <nav css={styles.steps} aria-label='Progress'>
-            <ol css={styles.stepsList}>
-              <ProgressStep
-                name='Create staking account'
-                status={working === 'account' ? 'current' : 'complete'}
-              />
-              <ProgressStep
-                name='Claim rewards'
-                status={
-                  working === 'claim'
-                    ? 'current'
-                    : working === 'account'
-                    ? 'pending'
-                    : 'complete'
-                }
-              />
-              <ProgressStep
-                name='Stake'
-                status={
-                  working === 'stake'
-                    ? 'current'
-                    : working === 'claim' ||
-                      working === 'account' ||
-                      working === 'idle'
-                    ? 'pending'
-                    : 'complete'
-                }
-              />
-            </ol>
-            <RouteLink
-              disabled={working !== 'done'}
-              href='/'
-              css={[
-                styles.button,
-                working !== 'done'
-                  ? styles.disabledButtonStyles
-                  : hoverButtonStyles,
-              ]}
-            >
-              Close
-            </RouteLink>
-          </nav>
-        </Fragment>
+        <ProgressModal
+          working={working}
+          stepOrder={[
+            CRANK_STEP,
+            CREATE_STAKING_ACCOUNT_STEP,
+            CLAIM_REWARDS_STEP,
+            STAKE_STEP,
+          ]}
+          doneStepName={DONE_STEP}
+        />
       )}
       {!stakeModalOpen && (
         <Fragment>
           <Header>
-            <RouteLink href='/' css={styles.cancel_link}>
+            <RouteLink href="/" css={styles.cancel_link}>
               Cancel
             </RouteLink>
           </Header>
@@ -410,11 +438,11 @@ export const Stake = () => {
                   />
                 )}
 
-                {(insufficientBalance) && (
+                {insufficientBalance && (
                   <a
-                    href='https://st-app.accessprotocol.co/get-acs'
-                    target='_blank'
-                    rel='noopener'
+                    href="https://st-app.accessprotocol.co/get-acs"
+                    target="_blank"
+                    rel="noopener"
                     css={[styles.button, styles.invalid]}
                   >
                     Get ACS/SOL on access

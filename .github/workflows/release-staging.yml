@@ -1,9 +1,9 @@
-name: Release
+name: Release to staging
 
 on:
   push:
-    tags:
-      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+    branch:
+      - "main" # Push to main
 
 jobs:
   release:
@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: "16.x"
       - run: yarn install --immutable --immutable-cache --check-cache
-      - run: yarn run build-release
+      - run: yarn run build-release-staging
       - run: zip -j widget dist/* README.md
 
       - name: Create Release
@@ -45,7 +45,7 @@ jobs:
           args: --follow-symlinks --delete
         env:
           SOURCE_DIR: "./dist"
-          DEST_DIR: "acs-widget"
+          DEST_DIR: "acs-widget-staging"
           AWS_REGION: ${{ secrets.AWS_S3_REGION }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -57,7 +57,7 @@ jobs:
         env:
           DISTRIBUTION: ${{ secrets.AWS_CF_DISTRIBUTION }}
           # TODO: Update only updated files w example: https://github.com/chetan/invalidate-cloudfront-action
-          PATHS: "/acs-widget/widget.js /acs-widget/index.html /acs-widget/favicon.ico"
+          PATHS: "/acs-widget-staging/widget.js /acs-widget-staging/index.html /acs-widget-staging/favicon.ico"
           AWS_REGION: ${{ secrets.AWS_S3_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

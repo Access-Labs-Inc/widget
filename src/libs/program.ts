@@ -78,16 +78,15 @@ export const getBondAccounts = async (
 };
 
 const calculateReward = (
-  lastClaimedTime: BN,
+  unclaimedDays: number,
   stakePool: StakePool,
   staker: boolean
 ) => {
   const BUFF_LEN = 274;
-  let nbDaysBehind = new Date().getTime() - Number(lastClaimedTime) * 1000;
-  nbDaysBehind = Math.round(nbDaysBehind / 1000 / Number(SECONDS_IN_DAY));
-  nbDaysBehind = nbDaysBehind > BUFF_LEN - 1 ? BUFF_LEN - 1 : nbDaysBehind;
+  const nbDaysBehind =
+    unclaimedDays > BUFF_LEN - 1 ? BUFF_LEN - 1 : unclaimedDays;
 
-  const idx = stakePool.currentDayIdx + 1;
+  const idx = stakePool.currentDayIdx;
   let i = (idx - nbDaysBehind) % BUFF_LEN;
 
   let reward = new BN(0);
@@ -102,12 +101,12 @@ const calculateReward = (
 };
 
 export const calculateRewardForStaker = (
-  lastClaimedTime: BN,
+  unclaimedDays: number,
   stakePool: StakePool,
   stakeAmount: BN
 ) => {
-  const reward = calculateReward(lastClaimedTime, stakePool, true);
-  return reward.mul(new BN(stakeAmount.toNumber())).iushrn(32);
+  const reward = calculateReward(unclaimedDays, stakePool, true);
+  return reward.mul(new BN(stakeAmount.toNumber())).iushrn(32).toNumber();
 };
 
 export const getUserACSBalance = async (

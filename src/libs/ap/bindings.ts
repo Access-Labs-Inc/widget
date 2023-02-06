@@ -2,9 +2,11 @@ import {
   claimRewardsInstruction,
   createStakeAccountInstruction,
   stakeInstruction,
+  crankInstruction,
+  claimBondRewardsInstruction,
 } from "./raw_instructions";
 import { Connection, PublicKey, SystemProgram } from "@solana/web3.js";
-import { CentralState, StakePool, StakeAccount } from "./state";
+import { CentralState, StakePool, StakeAccount, BondAccount } from "./state";
 import BN from "bn.js";
 import {
   TOKEN_PROGRAM_ID,
@@ -12,6 +14,20 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { getBondAccounts } from "../program";
+
+export const crank = async (
+  stakePoolAccount: PublicKey,
+  programId: PublicKey
+) => {
+  const [centralKey] = await CentralState.getKey(programId);
+  const ix = new crankInstruction().getInstruction(
+    programId,
+    stakePoolAccount,
+    centralKey
+  );
+
+  return ix;
+};
 
 export const stake = async (
   connection: Connection,
@@ -113,6 +129,37 @@ export const claimRewards = async (
 
   if (!ownerMustSign) {
     const idx = ix.keys.findIndex((e) => e.pubkey.equals(stake.owner));
+    ix.keys[idx].isSigner = false;
+  }
+
+  return ix;
+};
+
+export const claimBondRewards = async (
+  connection: Connection,
+  bondAccount: PublicKey,
+  rewardsDestination: PublicKey,
+  programId: PublicKey,
+  ownerMustSign = true
+) => {
+  const [centralKey] = await CentralState.getKey(programId);
+  const centralState = await CentralState.retrieve(connection, centralKey);
+
+  const bond = await BondAccount.retrieve(connection, bondAccount);
+
+  const ix = new claimBondRewardsInstruction().getInstruction(
+    programId,
+    bond.stakePool,
+    bondAccount,
+    bond.owner,
+    rewardsDestination,
+    centralKey,
+    centralState.tokenMint,
+    TOKEN_PROGRAM_ID
+  );
+
+  if (!ownerMustSign) {
+    const idx = ix.keys.findIndex((e) => e.pubkey.equals(bond.owner));
     ix.keys[idx].isSigner = false;
   }
 

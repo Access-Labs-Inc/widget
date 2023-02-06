@@ -8,6 +8,47 @@ interface AccountKey {
   isSigner: boolean;
   isWritable: boolean;
 }
+export class crankInstruction {
+  tag: number;
+  static schema: Schema = new Map([
+    [
+      crankInstruction,
+      {
+        kind: "struct",
+        fields: [["tag", "u8"]],
+      },
+    ],
+  ]);
+  constructor() {
+    this.tag = 8;
+  }
+  serialize(): Uint8Array {
+    return serialize(crankInstruction.schema, this);
+  }
+  getInstruction(
+    programId: PublicKey,
+    stakePool: PublicKey,
+    centralState: PublicKey
+  ): TransactionInstruction {
+    const data = Buffer.from(this.serialize());
+    let keys: AccountKey[] = [];
+    keys.push({
+      pubkey: stakePool,
+      isSigner: false,
+      isWritable: true,
+    });
+    keys.push({
+      pubkey: centralState,
+      isSigner: false,
+      isWritable: true,
+    });
+    return new TransactionInstruction({
+      keys,
+      programId,
+      data,
+    });
+  }
+}
 export class createStakeAccountInstruction {
   tag: number;
   nonce: number;
@@ -205,6 +246,77 @@ export class claimRewardsInstruction {
     });
     keys.push({
       pubkey: owner,
+      isSigner: true,
+      isWritable: false,
+    });
+    keys.push({
+      pubkey: rewardsDestination,
+      isSigner: false,
+      isWritable: true,
+    });
+    keys.push({
+      pubkey: centralState,
+      isSigner: false,
+      isWritable: false,
+    });
+    keys.push({
+      pubkey: mint,
+      isSigner: false,
+      isWritable: true,
+    });
+    keys.push({
+      pubkey: splTokenProgram,
+      isSigner: false,
+      isWritable: false,
+    });
+    return new TransactionInstruction({
+      keys,
+      programId,
+      data,
+    });
+  }
+}
+export class claimBondRewardsInstruction {
+  tag: number;
+  static schema: Schema = new Map([
+    [
+      claimBondRewardsInstruction,
+      {
+        kind: "struct",
+        fields: [["tag", "u8"]],
+      },
+    ],
+  ]);
+  constructor() {
+    this.tag = 16;
+  }
+  serialize(): Uint8Array {
+    return serialize(claimBondRewardsInstruction.schema, this);
+  }
+  getInstruction(
+    programId: PublicKey,
+    stakePool: PublicKey,
+    bondAccount: PublicKey,
+    bondOwner: PublicKey,
+    rewardsDestination: PublicKey,
+    centralState: PublicKey,
+    mint: PublicKey,
+    splTokenProgram: PublicKey
+  ): TransactionInstruction {
+    const data = Buffer.from(this.serialize());
+    let keys: AccountKey[] = [];
+    keys.push({
+      pubkey: stakePool,
+      isSigner: false,
+      isWritable: true,
+    });
+    keys.push({
+      pubkey: bondAccount,
+      isSigner: false,
+      isWritable: true,
+    });
+    keys.push({
+      pubkey: bondOwner,
       isSigner: true,
       isWritable: false,
     });
