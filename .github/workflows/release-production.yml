@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    if: !endsWith(github.ref, '-beta')
+    if: ${{ !endsWith(github.ref, '-beta') }}
     runs-on: ubuntu-latest
 
     steps:
