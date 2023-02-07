@@ -1,47 +1,47 @@
-import tw, { css } from "twin.macro";
-import { Fragment, h } from "preact";
-import BN from "bn.js";
-import { Info } from "phosphor-react";
+import tw, { css } from 'twin.macro';
+import { Fragment, h } from 'preact';
+import BN from 'bn.js';
+import { Info } from 'phosphor-react';
 import {
   BondAccount,
   CentralState,
   StakeAccount,
   StakePool,
-} from "../libs/ap/state";
+} from '../libs/ap/state';
 import {
   claimRewards,
   crank,
   createStakeAccount,
   stake,
-} from "../libs/ap/bindings";
+} from '../libs/ap/bindings';
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
-} from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
-import { useContext, useEffect, useMemo, useState } from "preact/hooks";
+} from '@solana/spl-token';
+import { PublicKey } from '@solana/web3.js';
+import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 
-import { Header } from "../components/Header";
-import { RouteLink } from "../layout/Router";
-import { ConfigContext } from "../AppContext";
-import { useConnection } from "../components/wallet-adapter/useConnection";
-import { useWallet } from "../components/wallet-adapter/useWallet";
+import { Header } from '../components/Header';
+import { RouteLink } from '../layout/Router';
+import { ConfigContext } from '../AppContext';
+import { useConnection } from '../components/wallet-adapter/useConnection';
+import { useWallet } from '../components/wallet-adapter/useWallet';
 import {
   getBondAccounts,
   getStakeAccounts,
   getUserACSBalance,
-} from "../libs/program";
-import { Tooltip } from "../components/Tooltip";
-import { NumberInputWithSlider } from "../components/NumberInputWithSlider";
-import { sendTx } from "../libs/transactions";
-import Loading from "../components/Loading";
-import { ProgressModal } from "../components/ProgressModal";
-import { formatACSCurrency } from "../libs/utils";
-import { useFeePayer } from "../hooks/useFeePayer";
-import { WalletAdapterProps } from "@solana/wallet-adapter-base";
-import env from "../libs/env";
+} from '../libs/program';
+import { Tooltip } from '../components/Tooltip';
+import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
+import { sendTx } from '../libs/transactions';
+import Loading from '../components/Loading';
+import { ProgressModal } from '../components/ProgressModal';
+import { formatACSCurrency } from '../libs/utils';
+import { useFeePayer } from '../hooks/useFeePayer';
+import { WalletAdapterProps } from '@solana/wallet-adapter-base';
+import env from '../libs/env';
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -69,15 +69,15 @@ const hoverButtonStyles = css`
 
 interface FeePaymentData {
   feePayerPubKey: string;
-  sendTransaction: WalletAdapterProps["sendTransaction"];
+  sendTransaction: WalletAdapterProps['sendTransaction'];
 }
 
-const CRANK_STEP = "Crank";
-const CREATE_STAKING_ACCOUNT_STEP = "Create staking account";
-const CLAIM_REWARDS_STEP = "Claim rewards";
-const STAKE_STEP = "Stake";
-const DONE_STEP = "Done";
-const IDLE_STEP = "Idle";
+const CRANK_STEP = 'Crank';
+const CREATE_STAKING_ACCOUNT_STEP = 'Create staking account';
+const CLAIM_REWARDS_STEP = 'Claim rewards';
+const STAKE_STEP = 'Stake';
+const DONE_STEP = 'Done';
+const IDLE_STEP = 'Idle';
 
 export const Stake = () => {
   const { poolId, poolName } = useContext(ConfigContext);
@@ -386,7 +386,7 @@ export const Stake = () => {
         <Fragment>
           <div css={styles.titleError}>Error occured:</div>
           <div css={styles.subtitleError}>{error}</div>
-          <RouteLink css={[styles.button, hoverButtonStyles]} href="/">
+          <RouteLink css={[styles.button, hoverButtonStyles]} href='/'>
             Close
           </RouteLink>
         </Fragment>
@@ -406,7 +406,7 @@ export const Stake = () => {
       {!stakeModalOpen && (
         <Fragment>
           <Header>
-            <RouteLink href="/" css={styles.cancel_link}>
+            <RouteLink href='/' css={styles.cancel_link}>
               Cancel
             </RouteLink>
           </Header>
@@ -441,8 +441,8 @@ export const Stake = () => {
                 {insufficientBalance && (
                   <a
                     href={env.GET_ACS_URL}
-                    target="_blank"
-                    rel="noopener"
+                    target='_blank'
+                    rel='noopener'
                     css={[styles.button, styles.invalid]}
                   >
                     Get ACS/SOL on access
