@@ -25,7 +25,7 @@ module.exports = (env) => {
           Buffer: ["buffer", "Buffer"],
         }),
         new StatoscopeWebpackPlugin(),
-        new CopyPlugin([{ from: "html/" }]),
+        new CopyPlugin([{ from: "html-dev/" }]),
         new DuplicatesPlugin({
           // Emit compilation warning or error? (Default: `false`)
           emitErrors: false,
@@ -55,7 +55,7 @@ module.exports = (env) => {
           Buffer: ["buffer", "Buffer"],
         }),
         new StatoscopeWebpackPlugin(),
-        new CopyPlugin([{ from: "html/" }]),
+        new CopyPlugin([{ from: "html-production/" }]),
       ];
       break;
     case "staging":
@@ -70,7 +70,7 @@ module.exports = (env) => {
           Buffer: ["buffer", "Buffer"],
         }),
         new StatoscopeWebpackPlugin(),
-        new CopyPlugin([{ from: "html/" }]),
+        new CopyPlugin([{ from: "html-staging/" }]),
       ];
       break;
     default:
