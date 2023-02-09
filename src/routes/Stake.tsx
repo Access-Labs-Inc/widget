@@ -1,47 +1,47 @@
-import tw, { css } from 'twin.macro';
-import { Fragment, h } from 'preact';
-import BN from 'bn.js';
-import { Info } from 'phosphor-react';
+import tw, { css } from "twin.macro";
+import { Fragment, h } from "preact";
+import BN from "bn.js";
+import { Info } from "phosphor-react";
 import {
   BondAccount,
   CentralState,
   StakeAccount,
   StakePool,
-} from '../libs/ap/state';
+} from "../libs/ap/state";
 import {
   claimRewards,
   crank,
   createStakeAccount,
   stake,
-} from '../libs/ap/bindings';
+} from "../libs/ap/bindings";
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
-} from '@solana/spl-token';
-import { PublicKey } from '@solana/web3.js';
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
+} from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
-import { Header } from '../components/Header';
-import { RouteLink } from '../layout/Router';
-import { ConfigContext } from '../AppContext';
-import { useConnection } from '../components/wallet-adapter/useConnection';
-import { useWallet } from '../components/wallet-adapter/useWallet';
+import { Header } from "../components/Header";
+import { RouteLink } from "../layout/Router";
+import { ConfigContext } from "../AppContext";
+import { useConnection } from "../components/wallet-adapter/useConnection";
+import { useWallet } from "../components/wallet-adapter/useWallet";
 import {
   getBondAccounts,
   getStakeAccounts,
   getUserACSBalance,
-} from '../libs/program';
-import { Tooltip } from '../components/Tooltip';
-import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
-import { sendTx } from '../libs/transactions';
-import Loading from '../components/Loading';
-import { ProgressModal } from '../components/ProgressModal';
-import { formatACSCurrency } from '../libs/utils';
-import { useFeePayer } from '../hooks/useFeePayer';
-import { WalletAdapterProps } from '@solana/wallet-adapter-base';
-import env from '../libs/env';
+} from "../libs/program";
+import { Tooltip } from "../components/Tooltip";
+import { NumberInputWithSlider } from "../components/NumberInputWithSlider";
+import { sendTx } from "../libs/transactions";
+import Loading from "../components/Loading";
+import { ProgressModal } from "../components/ProgressModal";
+import { formatPenyACSCurrency } from "../libs/utils";
+import { useFeePayer } from "../hooks/useFeePayer";
+import { WalletAdapterProps } from "@solana/wallet-adapter-base";
+import env from "../libs/env";
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -69,15 +69,15 @@ const hoverButtonStyles = css`
 
 interface FeePaymentData {
   feePayerPubKey: string;
-  sendTransaction: WalletAdapterProps['sendTransaction'];
+  sendTransaction: WalletAdapterProps["sendTransaction"];
 }
 
-const CRANK_STEP = 'Crank';
-const CREATE_STAKING_ACCOUNT_STEP = 'Create staking account';
-const CLAIM_REWARDS_STEP = 'Claim rewards';
-const STAKE_STEP = 'Stake';
-const DONE_STEP = 'Done';
-const IDLE_STEP = 'Idle';
+const CRANK_STEP = "Crank";
+const CREATE_STAKING_ACCOUNT_STEP = "Create staking account";
+const CLAIM_REWARDS_STEP = "Claim rewards";
+const STAKE_STEP = "Stake";
+const DONE_STEP = "Done";
+const IDLE_STEP = "Idle";
 
 export const Stake = () => {
   const { poolId, poolName } = useContext(ConfigContext);
@@ -97,7 +97,7 @@ export const Stake = () => {
   }, [publicKey]);
 
   const [working, setWorking] = useState(IDLE_STEP);
-  const [balance, setBalance] = useState<BN | null | undefined>(undefined);
+  const [balance, setBalance] = useState<number | null | undefined>(undefined);
   const [solBalance, setSolBalance] = useState<number>(0);
   const [stakedAccount, setStakedAccount] = useState<
     StakeAccount | undefined | null
@@ -130,11 +130,14 @@ export const Stake = () => {
       return;
     }
     (async () => {
-      const b = await getUserACSBalance(connection, publicKey, env.PROGRAM_ID);
-      setBalance(b);
-      setStakeAmount(
-        b != null ? b.toNumber() / (1 + feePercentageFraction) : 0
+      const balance = await getUserACSBalance(
+        connection,
+        publicKey,
+        env.PROGRAM_ID
       );
+      const acsBalance = (balance?.toNumber() || 0) / 10 ** 6;
+      setBalance(acsBalance);
+      setStakeAmount(acsBalance / (1 + feePercentageFraction));
     })();
   }, [publicKey, connection, getUserACSBalance]);
 
@@ -337,16 +340,13 @@ export const Stake = () => {
   };
 
   const minPoolStakeAmount = useMemo(() => {
-    return stakedPool?.minimumStakeAmount.toNumber() || 0;
+    return (stakedPool?.minimumStakeAmount.toNumber() ?? 0) / 10 ** 6;
   }, [stakedPool?.minimumStakeAmount]);
 
   const minStakeAmount = useMemo(() => {
-    return Math.max(
-      minPoolStakeAmount -
-        Number(stakedAccount?.stakeAmount ?? 0) -
-        Number(bondAccount?.totalStaked ?? 0),
-      10 ** 6
-    );
+    const stakedAmount = Number(stakedAccount?.stakeAmount ?? 0) / 10 ** 6;
+    const airdropAmount = Number(bondAccount?.totalStaked ?? 0) / 10 ** 6;
+    return Math.max(minPoolStakeAmount - stakedAmount - airdropAmount, 1);
   }, [
     stakedAccount?.stakeAmount,
     bondAccount?.totalStaked,
@@ -359,8 +359,7 @@ export const Stake = () => {
 
   const insufficientBalance = useMemo(() => {
     return (
-      minStakeAmount + minStakeAmount * feePercentageFraction >
-      (balance?.toNumber() ?? 0)
+      minStakeAmount + minStakeAmount * feePercentageFraction > (balance ?? 0)
     );
   }, [balance, minStakeAmount, feePercentageFraction]);
 
@@ -386,7 +385,7 @@ export const Stake = () => {
         <Fragment>
           <div css={styles.titleError}>Error occured:</div>
           <div css={styles.subtitleError}>{error}</div>
-          <RouteLink css={[styles.button, hoverButtonStyles]} href='/'>
+          <RouteLink css={[styles.button, hoverButtonStyles]} href="/">
             Close
           </RouteLink>
         </Fragment>
@@ -406,7 +405,7 @@ export const Stake = () => {
       {!stakeModalOpen && (
         <Fragment>
           <Header>
-            <RouteLink href='/' css={styles.cancel_link}>
+            <RouteLink href="/" css={styles.cancel_link}>
               Cancel
             </RouteLink>
           </Header>
@@ -441,8 +440,8 @@ export const Stake = () => {
                 {insufficientBalance && (
                   <a
                     href={env.GET_ACS_URL}
-                    target='_blank'
-                    rel='noopener'
+                    target="_blank"
+                    rel="noopener"
                     css={[styles.button, styles.invalid]}
                   >
                     Get ACS/SOL on access
@@ -459,7 +458,7 @@ export const Stake = () => {
 
                 <div css={styles.feesRoot}>
                   <div css={styles.feeWithTooltip}>
-                    <div>Protocol fee: {formatACSCurrency(fee)} ACS</div>
+                    <div>Protocol fee: {formatPenyACSCurrency(fee)} ACS</div>
                     <Tooltip
                       message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
                     >

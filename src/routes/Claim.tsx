@@ -1,36 +1,36 @@
-import tw, { css } from 'twin.macro';
-import { Fragment, h } from 'preact';
-import BN from 'bn.js';
+import tw, { css } from "twin.macro";
+import { Fragment, h } from "preact";
+import BN from "bn.js";
 import {
   BondAccount,
   CentralState,
   StakeAccount,
   StakePool,
-} from '../libs/ap/state';
-import { claimBondRewards, claimRewards } from '../libs/ap/bindings';
+} from "../libs/ap/state";
+import { claimBondRewards, claimRewards } from "../libs/ap/bindings";
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
-import { PublicKey } from '@solana/web3.js';
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
+} from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
-import { Header } from '../components/Header';
-import { RouteLink } from '../layout/Router';
-import { ConfigContext } from '../AppContext';
-import { useConnection } from '../components/wallet-adapter/useConnection';
-import { useWallet } from '../components/wallet-adapter/useWallet';
+import { Header } from "../components/Header";
+import { RouteLink } from "../layout/Router";
+import { ConfigContext } from "../AppContext";
+import { useConnection } from "../components/wallet-adapter/useConnection";
+import { useWallet } from "../components/wallet-adapter/useWallet";
 import {
   calculateRewardForStaker,
   getBondAccounts,
   getStakeAccounts,
-} from '../libs/program';
-import { sendTx } from '../libs/transactions';
-import Loading from '../components/Loading';
-import { formatACSCurrency } from '../libs/utils';
-import env from '../libs/env';
-import { ProgressModal } from '../components/ProgressModal';
+} from "../libs/program";
+import { sendTx } from "../libs/transactions";
+import Loading from "../components/Loading";
+import { formatPenyACSCurrency } from "../libs/utils";
+import env from "../libs/env";
+import { ProgressModal } from "../components/ProgressModal";
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -54,10 +54,10 @@ const hoverButtonStyles = css`
   }
 `;
 
-const CLAIM_BOND_REWARDS_STEP = 'Claim airdrop rewards';
-const CLAIM_STAKE_REWARDS_STEP = 'Claim stake rewards';
-const DONE_STEP = 'Done';
-const IDLE_STEP = 'Idle';
+const CLAIM_BOND_REWARDS_STEP = "Claim airdrop rewards";
+const CLAIM_STAKE_REWARDS_STEP = "Claim stake rewards";
+const DONE_STEP = "Done";
+const IDLE_STEP = "Idle";
 
 export const Claim = () => {
   const { poolId, poolName } = useContext(ConfigContext);
@@ -261,7 +261,7 @@ export const Claim = () => {
         <Fragment>
           <div css={styles.titleError}>Error occured:</div>
           <div css={styles.subtitleError}>{error}</div>
-          <RouteLink css={[styles.button, hoverButtonStyles]} href='/'>
+          <RouteLink css={[styles.button, hoverButtonStyles]} href="/">
             Close
           </RouteLink>
         </Fragment>
@@ -276,7 +276,7 @@ export const Claim = () => {
       {!stakeModalOpen && (
         <Fragment>
           <Header>
-            <RouteLink href='/' css={styles.cancel_link}>
+            <RouteLink href="/" css={styles.cancel_link}>
               Cancel
             </RouteLink>
           </Header>
@@ -285,7 +285,7 @@ export const Claim = () => {
             <Fragment>
               <div css={styles.title}>Claim on &apos;{poolName}&apos;</div>
               <div css={styles.claimAmount}>
-                {formatACSCurrency(claimableAmount)} ACS
+                {formatPenyACSCurrency(claimableAmount)} ACS
               </div>
 
               <div>
