@@ -207,11 +207,11 @@ export const Actions = () => {
         </RouteLink>
         {stakedAccount && stakedAccount.stakeAmount.toNumber() > 0 ? (
           <RouteLink css={[styles.button, hoverButtonStyles]} href='/unstake'>
-            Unstake
+            Unlock ACS
           </RouteLink>
         ) : (
           <span css={[styles.button, styles.disabledButtonStyles]}>
-            Unstake
+            Unlock ACS
           </span>
         )}
         {claimableAmount && claimableAmount > 0 ? (

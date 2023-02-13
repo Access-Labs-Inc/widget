@@ -33,7 +33,7 @@ export class RewardsTuple {
   poolReward: BN;
   stakersReward: BN;
 
-  constructor(obj: { poolReward: BN; stakersReward: BN }) {
+  constructor(obj: {poolReward: BN; stakersReward: BN}) {
     this.poolReward = obj.poolReward;
     this.stakersReward = obj.stakersReward;
   }
@@ -129,7 +129,7 @@ export class StakePool {
   static async retrieve(connection: Connection, key: PublicKey) {
     const accountInfo = await connection.getAccountInfo(key);
     if (!accountInfo?.data) {
-      throw new Error("Stake pool not found");
+      throw new Error("Creator pool not found");
     }
     return this.deserialize(accountInfo.data);
   }

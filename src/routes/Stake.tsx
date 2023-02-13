@@ -75,7 +75,7 @@ interface FeePaymentData {
 const CRANK_STEP = 'Crank';
 const CREATE_STAKING_ACCOUNT_STEP = 'Create staking account';
 const CLAIM_REWARDS_STEP = 'Claim rewards';
-const STAKE_STEP = 'Stake';
+const STAKE_STEP = 'Lock ACS';
 const DONE_STEP = 'Done';
 const IDLE_STEP = 'Idle';
 
