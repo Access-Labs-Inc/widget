@@ -33,9 +33,9 @@ export const Unstake = () => {
         </RouteLink>
       </Header>
 
-      <div css={styles.title}>Unstake ACS</div>
+      <div css={styles.title}>Unlock ACS</div>
       <div css={styles.subtitle}>
-        Unstake is currently only possible on the access app.
+        ACS unlocking is currently only possible in the access app.
       </div>
 
       <div>
@@ -45,7 +45,7 @@ export const Unstake = () => {
           target='_blank'
           rel='noopener'
         >
-          Unstake on access
+          Unlock ACS on access
         </a>
 
         <div css={styles.footnote}>
