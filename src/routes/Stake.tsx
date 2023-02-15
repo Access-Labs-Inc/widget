@@ -1,6 +1,5 @@
 import tw, { css } from 'twin.macro';
 import { Fragment, h } from 'preact';
-import BN from 'bn.js';
 import { Info } from 'phosphor-react';
 import {
   BondAccount,
@@ -38,7 +37,7 @@ import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
 import { sendTx } from '../libs/transactions';
 import Loading from '../components/Loading';
 import { ProgressModal } from '../components/ProgressModal';
-import { formatPenyACSCurrency } from '../libs/utils';
+import { formatACSCurrency, sleep } from '../libs/utils';
 import { useFeePayer } from '../hooks/useFeePayer';
 import { WalletAdapterProps } from '@solana/wallet-adapter-base';
 import env from '../libs/env';
@@ -47,7 +46,7 @@ const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
   cancel_link: tw`self-end cursor-pointer text-blue-400 no-underline`,
   button: tw`w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0`,
-  title: tw`my-8 mt-16 text-white text-2xl text-center`,
+  title: tw`my-8 mt-16 text-white text-3xl text-center`,
   titleError: tw`mt-8 text-red-500 text-2xl text-center`,
   subtitle: tw`text-white text-center text-stone-400`,
   subtitleError: tw`text-red-500 text-center`,
@@ -73,7 +72,7 @@ interface FeePaymentData {
 }
 
 const CRANK_STEP = 'Crank';
-const CREATE_STAKING_ACCOUNT_STEP = 'Create staking account';
+const CREATE_STAKING_ACCOUNT_STEP = 'Create locking account';
 const CLAIM_REWARDS_STEP = 'Claim rewards';
 const STAKE_STEP = 'Lock ACS';
 const DONE_STEP = 'Done';
@@ -123,7 +122,7 @@ export const Stake = () => {
       const b = await connection.getBalance(publicKey);
       setSolBalance(b / 10 ** 9);
     })();
-  }, [publicKey, connection]);
+  }, [publicKey, connection, setSolBalance]);
 
   useEffect(() => {
     if (!(publicKey && connection)) {
@@ -162,7 +161,7 @@ export const Stake = () => {
       }
       setStakedAccount(null);
     })();
-  }, [publicKey, connection, poolId]);
+  }, [publicKey, connection, poolId, setStakedAccount]);
 
   useEffect(() => {
     if (!(publicKey && poolId)) {
@@ -189,7 +188,7 @@ export const Stake = () => {
         setBondAccount(null);
       }
     })();
-  }, [publicKey, connection, poolId]);
+  }, [publicKey, connection, poolId, setBondAccount]);
 
   useEffect(() => {
     if (!poolId) {
@@ -203,7 +202,7 @@ export const Stake = () => {
 
   const fee = useMemo(() => {
     return Number(stakeAmount) * feePercentageFraction;
-  }, [stakeAmount, feePercentage]);
+  }, [stakeAmount, feePercentageFraction]);
 
   const handle = async () => {
     let feePayer = publicKey;
@@ -266,10 +265,19 @@ export const Stake = () => {
         await sendTx(connection, feePayer, [ixAccount], sendTransaction, {
           skipPreflight: true,
         });
+
         stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
+        let attempts = 0;
+        while (stakeAccount == null && attempts < 20) {
+          // eslint-disable-next-line no-await-in-loop
+          await sleep(1000);
+          console.log('Sleeping...');
+          // eslint-disable-next-line no-await-in-loop
+          stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
+          attempts += 1;
+        }
       }
 
-      // Check if stake ata account exists
       const stakerAta = await getAssociatedTokenAddress(
         centralState.tokenMint,
         publicKey,
@@ -315,7 +323,7 @@ export const Stake = () => {
         connection,
         stakeKey,
         stakerAta,
-        Number(stakeAmount),
+        Number(stakeAmount) * 10 ** 6,
         env.PROGRAM_ID
       );
       txs.push(ixStake);
@@ -363,9 +371,7 @@ export const Stake = () => {
 
   const invalidText = useMemo(() => {
     if (insufficientBalance) {
-      return `Insufficient balance for staking. You need min. of ${minStakeAmount} ACS + ${
-        minStakeAmount * feePercentageFraction
-      } Protocol Fee.`;
+      return `Insufficient balance for locking. You need min. of ${stakeAmount} ACS + ${fee} Protocol Fee.`;
     }
     return null;
   }, [
@@ -406,73 +412,76 @@ export const Stake = () => {
             </RouteLink>
           </Header>
 
-          {stakedAccount !== undefined && balance !== undefined && (
-            <Fragment>
-              <div css={styles.title}>Stake on &apos;{poolName}&apos;</div>
-              {!insufficientBalance ? (
-                <div css={styles.subtitle}>
-                  Both {poolName} and you will receive a ACS inflation rewards
-                  split equally.
-                </div>
-              ) : (
-                <p css={styles.invalidText}>{invalidText}</p>
-              )}
-
-              <div>
-                {!insufficientBalance && (
-                  <NumberInputWithSlider
-                    min={minStakeAmount}
-                    max={maxStakeAmount}
-                    value={stakeAmount}
-                    disabled={insufficientBalance}
-                    invalid={insufficientBalance}
-                    invalidText={invalidText}
-                    onChangeOfValue={(value) => {
-                      setStakeAmount(value);
-                    }}
-                  />
-                )}
-
-                {insufficientBalance && (
-                  <a
-                    href={env.GET_ACS_URL}
-                    target='_blank'
-                    rel='noopener'
-                    css={[styles.button, styles.invalid]}
-                  >
-                    Get ACS/SOL on access
-                  </a>
-                )}
-                {!insufficientBalance && (
-                  <button
-                    css={[styles.button, hoverButtonStyles]}
-                    onClick={handle}
-                  >
-                    Stake
-                  </button>
-                )}
-
-                <div css={styles.feesRoot}>
-                  <div css={styles.feeWithTooltip}>
-                    <div>Protocol fee: {formatPenyACSCurrency(fee)} ACS</div>
-                    <Tooltip
-                      message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
-                    >
-                      <Info size={16} />
-                    </Tooltip>
+          {stakedAccount !== undefined &&
+            bondAccount !== undefined &&
+            balance !== undefined && (
+              <Fragment>
+                <div css={styles.title}>{poolName}</div>
+                {!insufficientBalance ? (
+                  <div css={styles.subtitle}>
+                    Both {poolName} and you will receive a ACS inflation rewards
+                    split equally.
                   </div>
-                  <div>Transaction fee: 0.000005 SOL ~ $0.00024</div>
+                ) : (
+                  <p css={styles.invalidText}>{invalidText}</p>
+                )}
+
+                <div>
+                  {!insufficientBalance && (
+                    <NumberInputWithSlider
+                      min={insufficientBalance ? 0 : minStakeAmount}
+                      max={maxStakeAmount}
+                      value={stakeAmount}
+                      disabled={insufficientBalance}
+                      invalid={insufficientBalance}
+                      invalidText={invalidText}
+                      onChangeOfValue={(value) => {
+                        setStakeAmount(value);
+                      }}
+                    />
+                  )}
+
+                  {insufficientBalance && (
+                    <a
+                      href={env.GET_ACS_URL}
+                      target='_blank'
+                      rel='noopener'
+                      css={[styles.button, styles.invalid]}
+                    >
+                      Get ACS/SOL on access
+                    </a>
+                  )}
+                  {!insufficientBalance && (
+                    <button
+                      css={[styles.button, hoverButtonStyles]}
+                      onClick={handle}
+                    >
+                      Lock
+                    </button>
+                  )}
+
+                  <div css={styles.feesRoot}>
+                    <div css={styles.feeWithTooltip}>
+                      <div>Protocol fee: {formatACSCurrency(fee)} ACS</div>
+                      <Tooltip
+                        message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
+                      >
+                        <Info size={16} />
+                      </Tooltip>
+                    </div>
+                    <div>Transaction fee: 0.000005 SOL ~ $0.00024</div>
+                  </div>
                 </div>
-              </div>
-            </Fragment>
-          )}
-          {stakedAccount === undefined &&
-            stakedPool == null &&
-            balance === undefined && (
-              <div css={styles.loader}>
-                <Loading />
-              </div>
+              </Fragment>
             )}
+          {(stakedAccount === undefined ||
+            bondAccount === undefined ||
+            stakedPool == null ||
+            balance === undefined) && (
+            <div css={styles.loader}>
+              <Loading />
+            </div>
+          )}
         </Fragment>
       )}
     </div>

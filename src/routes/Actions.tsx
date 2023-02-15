@@ -52,7 +52,7 @@ export const Actions = () => {
   const [stakePool, setStakePool] = useState<StakePool | undefined>(undefined);
 
   useEffect(() => {
-    if (!publicKey) {
+    if (!(publicKey && connection)) {
       return;
     }
     (async () => {
@@ -63,16 +63,16 @@ export const Actions = () => {
   }, [publicKey, connection]);
 
   useEffect(() => {
-    if (!(stakedAccount && poolId && stakePool)) {
+    if (!(poolId && connection)) {
       return;
     }
     (async () => {
       setStakePool(await StakePool.retrieve(connection, new PublicKey(poolId)));
     })();
-  }, [poolId, stakedAccount, stakePool, connection]);
+  }, [poolId, connection]);
 
   useEffect(() => {
-    if (!(publicKey && poolId)) {
+    if (!(publicKey && poolId && connection)) {
       return;
     }
     (async () => {
@@ -99,7 +99,7 @@ export const Actions = () => {
   }, [publicKey, connection, poolId]);
 
   useEffect(() => {
-    if (!(publicKey && poolId)) {
+    if (!(publicKey && poolId && connection)) {
       return;
     }
     (async () => {
@@ -129,22 +129,24 @@ export const Actions = () => {
     if (!(stakedAccount && stakePool)) {
       return null;
     }
-    return calculateRewardForStaker(
+    const reward = calculateRewardForStaker(
       stakePool.currentDayIdx - stakedAccount.lastClaimedOffset.toNumber(),
       stakePool,
       stakedAccount.stakeAmount as BN
     );
+    return reward;
   }, [stakedAccount, stakePool]);
 
   const claimableBondAmount = useMemo(() => {
     if (!(bondAccount && stakePool)) {
       return null;
     }
-    return calculateRewardForStaker(
+    const reward = calculateRewardForStaker(
       stakePool.currentDayIdx - bondAccount.lastClaimedOffset.toNumber(),
       stakePool,
       bondAccount.totalStaked as BN
     );
+    return reward;
   }, [bondAccount, stakePool]);
 
   const claimableAmount = useMemo(() => {
@@ -178,14 +180,15 @@ export const Actions = () => {
         <div
           css={[
             styles.stakedAmount,
-            setStakedAccount === undefined && styles.blink,
+            (stakedAccount === undefined || bondAccount === undefined) &&
+              styles.blink,
           ]}
         >
           {formatPenyACSCurrency(
             (stakedAccount?.stakeAmount.toNumber() ?? 0) +
               (bondAccount?.totalStaked.toNumber() ?? 0)
           )}{' '}
-          ACS staked
+          ACS locked
         </div>
         <div css={[styles.balance, balance === undefined && styles.blink]}>
           {formatPenyACSCurrency(balance?.toNumber() ?? 0)} ACS available
@@ -203,7 +206,7 @@ export const Actions = () => {
 
       <div css={styles.links_wrapper}>
         <RouteLink css={[styles.button, hoverButtonStyles]} href='/stake'>
-          Stake
+          Lock
         </RouteLink>
         {stakedAccount && stakedAccount.stakeAmount.toNumber() > 0 ? (
           <RouteLink css={[styles.button, hoverButtonStyles]} href='/unstake'>

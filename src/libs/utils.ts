@@ -15,3 +15,7 @@ export const formatPenyACSCurrency = (amount: number) => {
     useGrouping: true,
   });
 };
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
