@@ -1,36 +1,38 @@
-import tw, { css } from 'twin.macro';
-import { Fragment, h } from 'preact';
-import BN from 'bn.js';
+import tw, { css } from "twin.macro";
+import { Fragment, h } from "preact";
+import BN from "bn.js";
 import {
   BondAccount,
   CentralState,
   StakeAccount,
   StakePool,
-} from '../libs/ap/state';
-import { claimBondRewards, claimRewards } from '../libs/ap/bindings';
+} from "../libs/ap/state";
+import { claimBondRewards, claimRewards } from "../libs/ap/bindings";
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
-import { PublicKey } from '@solana/web3.js';
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
+} from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
-import { Header } from '../components/Header';
-import { RouteLink } from '../layout/Router';
-import { ConfigContext } from '../AppContext';
-import { useConnection } from '../components/wallet-adapter/useConnection';
-import { useWallet } from '../components/wallet-adapter/useWallet';
+import { Header } from "../components/Header";
+import { RouteLink } from "../layout/Router";
+import { ConfigContext } from "../AppContext";
+import { useConnection } from "../components/wallet-adapter/useConnection";
+import { useWallet } from "../components/wallet-adapter/useWallet";
 import {
   calculateRewardForStaker,
   getBondAccounts,
   getStakeAccounts,
-} from '../libs/program';
-import { sendTx } from '../libs/transactions';
-import Loading from '../components/Loading';
-import { formatPenyACSCurrency } from '../libs/utils';
-import env from '../libs/env';
-import { ProgressModal } from '../components/ProgressModal';
+} from "../libs/program";
+import { sendTx } from "../libs/transactions";
+import Loading from "../components/Loading";
+import { formatPenyACSCurrency } from "../libs/utils";
+import env from "../libs/env";
+import { ProgressModal } from "../components/ProgressModal";
+import { useFeePayer } from "../hooks/useFeePayer";
+import { WalletAdapterProps } from "@solana/wallet-adapter-base";
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -54,15 +56,32 @@ const hoverButtonStyles = css`
   }
 `;
 
-const CLAIM_BOND_REWARDS_STEP = 'Claim airdrop rewards';
-const CLAIM_STAKE_REWARDS_STEP = 'Claim stake rewards';
-const DONE_STEP = 'Done';
-const IDLE_STEP = 'Idle';
+const CLAIM_BOND_REWARDS_STEP = "Claim airdrop rewards";
+const CLAIM_STAKE_REWARDS_STEP = "Claim stake rewards";
+const DONE_STEP = "Done";
+const IDLE_STEP = "Idle";
+
+interface FeePaymentData {
+  feePayerPubKey: string;
+  sendTransaction: WalletAdapterProps["sendTransaction"];
+}
 
 export const Claim = () => {
   const { poolId, poolName } = useContext(ConfigContext);
   const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
+  const { publicKey, sendTransaction: sendTransactionWithFeesUnpaid } =
+    useWallet();
+
+  const [feePaymentState, setFeePayer] = useState<FeePaymentData | undefined>();
+
+  useEffect(() => {
+    (async () => {
+      const { feePayerPubKey: pubkey, sendTransaction } = await useFeePayer({
+        sendTransaction: sendTransactionWithFeesUnpaid,
+      });
+      setFeePayer({ feePayerPubKey: pubkey, sendTransaction });
+    })();
+  }, [publicKey]);
 
   const [working, setWorking] = useState(IDLE_STEP);
   const [stakedAccount, setStakedAccount] = useState<StakeAccount | null>(null);
@@ -118,6 +137,7 @@ export const Claim = () => {
           return sa.stakePool.toBase58() === poolId;
         });
         if (bAccount) {
+          console.log("Bond address: ", bAccount.pubkey.toBase58());
           const ba = BondAccount.deserialize(bAccount.account.data);
           setBondAccount(ba);
         } else {
@@ -179,6 +199,13 @@ export const Claim = () => {
       return;
     }
 
+    let feePayer = publicKey;
+    let sendTransaction = sendTransactionWithFeesUnpaid;
+    if (publicKey != null && feePaymentState != null) {
+      feePayer = new PublicKey(feePaymentState.feePayerPubKey);
+      sendTransaction = feePaymentState.sendTransaction;
+    }
+
     try {
       openStakeModal();
 
@@ -197,7 +224,8 @@ export const Claim = () => {
         bondAccount.totalAmountSold.toNumber()
       );
 
-      // Check if stake ata account exists
+      console.log("Bond account key: ", bondKey.toBase58());
+
       const stakerAta = await getAssociatedTokenAddress(
         centralState.tokenMint,
         publicKey,
@@ -220,7 +248,7 @@ export const Claim = () => {
           true
         );
 
-        await sendTx(connection, publicKey, [ix], sendTransaction, {
+        await sendTx(connection, feePayer, [ix], sendTransaction, {
           skipPreflight: true,
         });
       }
@@ -239,7 +267,7 @@ export const Claim = () => {
           true
         );
 
-        await sendTx(connection, publicKey, [ix], sendTransaction, {
+        await sendTx(connection, feePayer, [ix], sendTransaction, {
           skipPreflight: true,
         });
       }
@@ -261,7 +289,7 @@ export const Claim = () => {
         <Fragment>
           <div css={styles.titleError}>Error occured:</div>
           <div css={styles.subtitleError}>{error}</div>
-          <RouteLink css={[styles.button, hoverButtonStyles]} href='/'>
+          <RouteLink css={[styles.button, hoverButtonStyles]} href="/">
             Close
           </RouteLink>
         </Fragment>
@@ -276,7 +304,7 @@ export const Claim = () => {
       {!stakeModalOpen && (
         <Fragment>
           <Header>
-            <RouteLink href='/' css={styles.cancel_link}>
+            <RouteLink href="/" css={styles.cancel_link}>
               Cancel
             </RouteLink>
           </Header>
