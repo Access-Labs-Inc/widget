@@ -45,10 +45,11 @@ export const stake = async (
     stake.owner,
     programId
   );
-  let bondAccountKey: PublicKey | undefined;
-  if (bondAccounts.length > 0) {
-    bondAccountKey = bondAccounts[0].pubkey;
-  }
+  const bondAccountKey = bondAccounts.find(
+    bond =>
+      BondAccount.deserialize(bond.account.data).stakePool.toBase58() ===
+      stake.stakePool.toBase58(),
+  )?.pubkey;
 
   const feesAta = await getAssociatedTokenAddress(
     centralState.tokenMint,
