@@ -1,6 +1,5 @@
 import tw, { css } from 'twin.macro';
 import { Fragment, h } from 'preact';
-import BN from 'bn.js';
 import { Info } from 'phosphor-react';
 import {
   BondAccount,
