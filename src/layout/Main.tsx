@@ -1,5 +1,5 @@
-import tw from "twin.macro";
-import { h } from "preact";
+import tw from 'twin.macro';
+import { h } from 'preact';
 import {
   useCallback,
   useContext,
@@ -7,17 +7,17 @@ import {
   useMemo,
   useRef,
   useState,
-} from "preact/hooks";
-import { Router, RouteComponent } from "../layout/Router";
-import { Actions } from "../routes/Actions";
-import { Stake } from "../routes/Stake";
-import { Unstake } from "../routes/Unstake";
-import { Claim } from "../routes/Claim";
-import { Button } from "../components/wallet-adapter/ui/Button";
-import { WalletConnectButton } from "../components/wallet-adapter/ui/WalletConnectButton";
-import { WalletModalButton } from "../components/wallet-adapter/ui/WalletModalButton";
-import { useWallet } from "../components/wallet-adapter/useWallet";
-import { ConfigContext } from "../AppContext";
+} from 'preact/hooks';
+import { Router, RouteComponent } from '../layout/Router';
+import { Actions } from '../routes/Actions';
+import { Stake } from '../routes/Stake';
+import { Unstake } from '../routes/Unstake';
+import { Claim } from '../routes/Claim';
+import { Button } from '../components/wallet-adapter/ui/Button';
+import { WalletConnectButton } from '../components/wallet-adapter/ui/WalletConnectButton';
+import { WalletModalButton } from '../components/wallet-adapter/ui/WalletModalButton';
+import { useWallet } from '../components/wallet-adapter/useWallet';
+import { ConfigContext } from '../AppContext';
 
 const styles = {
   wallet_adapter_dropdown_wrapper: tw`relative inline-block text-left font-sans`,
@@ -52,7 +52,7 @@ const Main = () => {
 
   useEffect(() => {
     if (connected && element) {
-      const connectedEvent = new CustomEvent("connected", {
+      const connectedEvent = new CustomEvent('connected', {
         detail: {
           address: base58,
         },
@@ -76,12 +76,12 @@ const Main = () => {
       closeDropdown();
     };
 
-    document.addEventListener("mousedown", listener);
-    document.addEventListener("touchstart", listener);
+    document.addEventListener('mousedown', listener);
+    document.addEventListener('touchstart', listener);
 
     return () => {
-      document.removeEventListener("mousedown", listener);
-      document.removeEventListener("touchstart", listener);
+      document.removeEventListener('mousedown', listener);
+      document.removeEventListener('touchstart', listener);
     };
   }, [ref, closeDropdown]);
 
@@ -109,7 +109,7 @@ const Main = () => {
           styles.wallet_adapter_button_trigger_active,
         ]}
         externalButtonClass={connectedButtonClass}
-        style={{ pointerEvents: active ? "none" : "auto" }}
+        style={{ pointerEvents: active ? 'none' : 'auto' }}
         onClick={toggleDropdown}
       >
         {content}
@@ -123,10 +123,10 @@ const Main = () => {
       >
         <Router
           routes={{
-            "/": <RouteComponent component={Actions} />,
-            "/stake": <RouteComponent component={Stake} />,
-            "/unstake": <RouteComponent component={Unstake} />,
-            "/claim": <RouteComponent component={Claim} />,
+            '/': <RouteComponent component={Actions} />,
+            '/stake': <RouteComponent component={Stake} />,
+            '/unstake': <RouteComponent component={Unstake} />,
+            '/claim': <RouteComponent component={Claim} />,
           }}
         />
       </div>
