@@ -1,6 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
-var CopyPlugin = require("copy-webpack-plugin");
+const CopyPlugin = require("copy-webpack-plugin");
 const StatoscopeWebpackPlugin = require("@statoscope/webpack-plugin").default;
 const { DuplicatesPlugin } = require("inspectpack/plugin");
 const Dotenv = require("dotenv-webpack");

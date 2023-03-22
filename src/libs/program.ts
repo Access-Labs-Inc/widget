@@ -14,8 +14,6 @@ import {
 } from '@solana/web3.js';
 import BN from 'bn.js';
 
-const SECONDS_IN_DAY = 86400;
-
 /**
  * This function can be used to find all stake accounts of a user
  * @param connection The Solana RPC connection
