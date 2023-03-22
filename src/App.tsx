@@ -18,7 +18,7 @@ import env from "./libs/env";
 
 type Props = Configurations;
 export const App = ({ element, ...appSettings }: Props) => {
-  const network = WalletAdapterNetwork.Devnet;
+  const network = env.SOLANA_NETWORK as WalletAdapterNetwork;
   console.log("Connected to network: ", network);
 
   const endpoint = env.SOLANA_RPC_URL;
