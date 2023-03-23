@@ -28,10 +28,10 @@ const styles = {
 };
 
 const Main = () => {
-  const { publicKey, wallet } = useWallet();
+  const { publicKey, wallet, connected } = useWallet();
   const [active, setActive] = useState(false);
   const ref = useRef<HTMLUListElement>(null);
-  const { disconnectButtonClass, connectedButtonClass } =
+  const { disconnectButtonClass, connectedButtonClass, element } =
     useContext(ConfigContext);
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey]);
@@ -39,7 +39,7 @@ const Main = () => {
     if (!wallet || !base58) {
       return null;
     }
-    return base58.slice(0, 4) + '..' + base58.slice(-4);
+    return `${base58.slice(0, 4)}..${base58.slice(-4)}`;
   }, [wallet, base58]);
 
   const toggleDropdown = useCallback(() => {
@@ -49,6 +49,20 @@ const Main = () => {
   const closeDropdown = useCallback(() => {
     setActive(false);
   }, []);
+
+  useEffect(() => {
+    if (connected && element) {
+      const connectedEvent = new CustomEvent('connected', {
+        detail: {
+          address: base58,
+        },
+        bubbles: true,
+        cancelable: true,
+        composed: false, // if you want to listen on parent turn this on
+      });
+      element.dispatchEvent(connectedEvent);
+    }
+  }, [connected, element]);
 
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
