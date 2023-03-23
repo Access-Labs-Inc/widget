@@ -50,10 +50,20 @@ In order to embed the widget add the following snippet at any location on the ho
     }(window, document, 'script', '_acs', 'https://d3bgshfwq8wmv6.cloudfront.net/acs-widget-staging/widget.js'));
     _acs('init', {
       element: document.getElementById('acs'),
-      poolId: 'B1PciBp1hnhRYtE1rQyHFZBiGfZXTYDg7h6M6pAzY3Hd',
+      poolId: 'Fxh4hDFHJuTfD3Eq4en36dTk8QvbsSMoTE5Y2hVX3qVt',
       poolName: "The Block",
       disconnectButtonClass: "disconnectButton",
       connectedButtonClass: "connectedButton"
+    });
+    // Here's how you listen for connected wallet and you'll receive:
+    // { address: string; locked: number, airdrop: number }
+    // address - user's wallet address
+    // locked - amount of ACS (with decimals) locked against your pool
+    // airdrop - amount of ACS (with decimals) airdroped against your pool
+    // ----------------------------------------------------------------
+    // NOTE: To get ACS withtout decimals divide the numbers by 10 ** 8
+    document.querySelector("#acs").addEventListener("connected", (event) => {
+      console.log("Connected to the wallet: " + JSON.stringify(event.detail));
     });
   </script>
 </body>

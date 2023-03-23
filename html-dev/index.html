@@ -51,13 +51,13 @@
       _acs('init', {
         element: document.getElementById('acs'),
         debug: true,
-        poolId: '6x7AqteEnWZB7ub4JcHTj13EeTYiaJSAnp6YyVfv3wdW',
+        poolId: 'Fxh4hDFHJuTfD3Eq4en36dTk8QvbsSMoTE5Y2hVX3qVt',
         poolName: "The Block",
         disconnectButtonClass: "disconnectButton",
         connectedButtonClass: "connectedButton"
       });
       document.querySelector("#acs").addEventListener("connected", (event) => {
-        console.log("Connected to the wallet with address: " + event.detail.address);
+        console.log("Connected to the wallet with address: " + JSON.stringify(event.detail));
       });
     </script>
   </body>
