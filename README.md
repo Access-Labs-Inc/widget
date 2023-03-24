@@ -61,7 +61,7 @@ In order to embed the widget add the following snippet at any location on the ho
     // locked - amount of ACS (with decimals) locked against your pool
     // airdrop - amount of ACS (with decimals) airdroped against your pool
     // ----------------------------------------------------------------
-    // NOTE: To get ACS withtout decimals divide the numbers by 10 ** 8
+    // NOTE: To get ACS withtout decimals divide the numbers by 10 ** 6
     document.querySelector("#acs").addEventListener("connected", (event) => {
       console.log("Connected to the wallet: " + JSON.stringify(event.detail));
     });
