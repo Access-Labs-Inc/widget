@@ -8,6 +8,7 @@ import {
   StakePool,
 } from '../libs/ap/state';
 import {
+  claimBondRewards,
   claimRewards,
   crank,
   createStakeAccount,
@@ -28,6 +29,7 @@ import { ConfigContext } from '../AppContext';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import { useWallet } from '../components/wallet-adapter/useWallet';
 import {
+  calculateRewardForStaker,
   getBondAccounts,
   getStakeAccounts,
   getUserACSBalance,
@@ -41,6 +43,7 @@ import { formatACSCurrency, sleep } from '../libs/utils';
 import { useFeePayer } from '../hooks/useFeePayer';
 import { WalletAdapterProps } from '@solana/wallet-adapter-base';
 import env from '../libs/env';
+import BN from 'bn.js';
 
 const styles = {
   root: tw`h-[31em] flex flex-col justify-between`,
@@ -79,7 +82,7 @@ const DONE_STEP = 'Done';
 const IDLE_STEP = 'Idle';
 
 export const Stake = () => {
-  const { poolId, poolName } = useContext(ConfigContext);
+  const { poolId, poolName, element } = useContext(ConfigContext);
   const { connection } = useConnection();
   const { publicKey, sendTransaction: sendTransactionWithFeesUnpaid } =
     useWallet();
@@ -113,6 +116,17 @@ export const Stake = () => {
 
   const feePercentage = 2;
   const feePercentageFraction = feePercentage / 100;
+
+  const claimableStakeAmount = useMemo(() => {
+    if (!(stakedAccount && stakedPool)) {
+      return null;
+    }
+    return calculateRewardForStaker(
+      stakedPool.currentDayIdx - stakedAccount.lastClaimedOffset.toNumber(),
+      stakedPool,
+      stakedAccount.stakeAmount as BN
+    );
+  }, [stakedAccount, stakedPool]);
 
   useEffect(() => {
     if (!(publicKey && connection)) {
@@ -163,8 +177,6 @@ export const Stake = () => {
     })();
   }, [publicKey, connection, poolId, setStakedAccount]);
 
-  console.log('Stake account: ', stakedAccount);
-
   useEffect(() => {
     if (!(publicKey && poolId)) {
       return;
@@ -192,8 +204,6 @@ export const Stake = () => {
     })();
   }, [publicKey, connection, poolId, setBondAccount]);
 
-  console.log('Bond account: ', bondAccount);
-
   useEffect(() => {
     if (!poolId) {
       return;
@@ -203,8 +213,6 @@ export const Stake = () => {
       setStakedPool(sp);
     })();
   }, [poolId]);
-
-  console.log('Stake pool: ', stakedPool);
 
   const fee = useMemo(() => {
     return Number(stakeAmount) * feePercentageFraction;
@@ -322,6 +330,17 @@ export const Stake = () => {
         await sendTx(connection, feePayer, [ix], sendTransaction, {
           skipPreflight: true,
         });
+
+        const claimEvent = new CustomEvent('claim', {
+          detail: {
+            address: publicKey.toBase58(),
+            locked: claimableStakeAmount,
+          },
+          bubbles: true,
+          cancelable: true,
+          composed: false, // if you want to listen on parent turn this on
+        });
+        element?.dispatchEvent(claimEvent);
       }
 
       setWorking(STAKE_STEP);
@@ -337,6 +356,17 @@ export const Stake = () => {
       await sendTx(connection, feePayer, txs, sendTransaction, {
         skipPreflight: true,
       });
+
+      const lockedEvent = new CustomEvent('lock', {
+        detail: {
+          address: publicKey.toBase58(),
+          amount: Number(stakeAmount) * 10 ** 6,
+        },
+        bubbles: true,
+        cancelable: true,
+        composed: false, // if you want to listen on parent turn this on
+      });
+      element?.dispatchEvent(lockedEvent);
 
       setWorking(DONE_STEP);
     } catch (err) {

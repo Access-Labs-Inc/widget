@@ -67,7 +67,7 @@ interface FeePaymentData {
 }
 
 export const Claim = () => {
-  const { poolId, poolName } = useContext(ConfigContext);
+  const { poolId, poolName, element } = useContext(ConfigContext);
   const { connection } = useConnection();
   const { publicKey, sendTransaction: sendTransactionWithFeesUnpaid } =
     useWallet();
@@ -137,7 +137,6 @@ export const Claim = () => {
           return sa.stakePool.toBase58() === poolId;
         });
         if (bAccount) {
-          console.log('Bond address: ', bAccount.pubkey.toBase58());
           const ba = BondAccount.deserialize(bAccount.account.data);
           setBondAccount(ba);
         } else {
@@ -224,8 +223,6 @@ export const Claim = () => {
         bondAccount.totalAmountSold.toNumber()
       );
 
-      console.log('Bond account key: ', bondKey.toBase58());
-
       const stakerAta = await getAssociatedTokenAddress(
         centralState.tokenMint,
         publicKey,
@@ -263,6 +260,18 @@ export const Claim = () => {
           skipPreflight: true,
         });
       }
+
+      const connectedEvent = new CustomEvent('claim', {
+        detail: {
+          address: publicKey.toBase58(),
+          locked: claimableStakeAmount,
+          airdrop: claimableBondAmount,
+        },
+        bubbles: true,
+        cancelable: true,
+        composed: false, // if you want to listen on parent turn this on
+      });
+      element?.dispatchEvent(connectedEvent);
 
       setWorking(DONE_STEP);
     } catch (err) {
