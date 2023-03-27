@@ -1,9 +1,9 @@
-import tw from "twin.macro";
-import { h, ComponentChildren } from "preact";
-import { useState, useMemo, useCallback } from "preact/hooks";
-import { Copy, ArrowUpRight } from "phosphor-react";
+import tw from 'twin.macro';
+import { h, ComponentChildren } from 'preact';
+import { useState, useMemo, useCallback } from 'preact/hooks';
+import { Copy, ArrowUpRight } from 'phosphor-react';
 
-import { useWallet } from "./wallet-adapter/useWallet";
+import { useWallet } from './wallet-adapter/useWallet';
 
 const styles = {
   header_dropdown_copy: tw`flex items-center cursor-pointer`,
@@ -42,15 +42,15 @@ export const Header = ({ children }: { children: ComponentChildren }) => {
           <div css={styles.header_copy_text}>
             <div css={styles.header_copy_text}>
               <div css={styles.header_copy_text_base58}>{shortBase58}</div>
-              <Copy color="white" />
+              <Copy color='white' />
             </div>
             <a
               css={styles.header_explorer}
               href={`https://explorer.solana.com/address/${base58}`}
-              rel="nofollow noopener"
-              target="_blank"
+              rel='nofollow noopener'
+              target='_blank'
             >
-              <ArrowUpRight color="white" />
+              <ArrowUpRight color='white' />
             </a>
           </div>
         )}
