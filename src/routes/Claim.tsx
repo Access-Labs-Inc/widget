@@ -234,11 +234,7 @@ export const Claim = () => {
         ASSOCIATED_TOKEN_PROGRAM_ID
       );
 
-      if (
-        stakedAccount.stakeAmount.toNumber() > 0 &&
-        claimableStakeAmount &&
-        claimableStakeAmount > 0
-      ) {
+      if (claimableStakeAmount && claimableStakeAmount > 0) {
         setWorking(CLAIM_STAKE_REWARDS_STEP);
         const ix = await claimRewards(
           connection,
@@ -253,11 +249,7 @@ export const Claim = () => {
         });
       }
 
-      if (
-        stakedAccount.stakeAmount.toNumber() > 0 &&
-        claimableBondAmount &&
-        claimableBondAmount > 0
-      ) {
+      if (claimableBondAmount && claimableBondAmount > 0) {
         setWorking(CLAIM_BOND_REWARDS_STEP);
         const ix = await claimBondRewards(
           connection,
