@@ -300,6 +300,11 @@ export const Stake = () => {
         }
       }
 
+      if (stakeAccount == null) {
+        // last attempt or throw error
+        stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
+      }
+
       const stakerAta = await getAssociatedTokenAddress(
         centralState.tokenMint,
         publicKey,
