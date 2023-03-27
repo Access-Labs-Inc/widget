@@ -20,8 +20,10 @@ export const Header = ({ children }: { children: ComponentChildren }) => {
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey]);
   const shortBase58 = useMemo(() => {
-    if (!base58) { return null; }
-    return base58.slice(0, 4) + '..' + base58.slice(-4);
+    if (!base58) {
+      return null;
+    }
+    return `${base58.slice(0, 4)}..${base58.slice(-4)}`;
   }, [base58]);
   const copyAddress = useCallback(async () => {
     if (base58) {
@@ -44,7 +46,7 @@ export const Header = ({ children }: { children: ComponentChildren }) => {
             </div>
             <a
               css={styles.header_explorer}
-              href={`https://explorer.solana.com/${base58}`}
+              href={`https://explorer.solana.com/address/${base58}`}
               rel='nofollow noopener'
               target='_blank'
             >
