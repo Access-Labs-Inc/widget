@@ -280,16 +280,29 @@ export const Stake = () => {
           skipPreflight: true,
         });
 
-        stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
+        try {
+          stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
+        } catch (e) {
+          console.warn('Stake account not ready yet.');
+        }
         let attempts = 0;
         while (stakeAccount == null && attempts < 20) {
           // eslint-disable-next-line no-await-in-loop
           await sleep(1000);
           console.log('Sleeping...');
           // eslint-disable-next-line no-await-in-loop
-          stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
+          try {
+            stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
+          } catch (e) {
+            console.warn('Stake account not ready yet attempt: ', attempts);
+          }
           attempts += 1;
         }
+      }
+
+      if (stakeAccount == null) {
+        // last attempt or throw error
+        stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
       }
 
       const stakerAta = await getAssociatedTokenAddress(
