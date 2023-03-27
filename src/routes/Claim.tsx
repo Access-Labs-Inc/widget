@@ -261,7 +261,7 @@ export const Claim = () => {
         });
       }
 
-      const connectedEvent = new CustomEvent('claim', {
+      const claimEvent = new CustomEvent('claim', {
         detail: {
           address: publicKey.toBase58(),
           locked: claimableStakeAmount,
@@ -271,7 +271,7 @@ export const Claim = () => {
         cancelable: true,
         composed: false, // if you want to listen on parent turn this on
       });
-      element?.dispatchEvent(connectedEvent);
+      element?.dispatchEvent(claimEvent);
 
       setWorking(DONE_STEP);
     } catch (err) {
