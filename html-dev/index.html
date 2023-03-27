@@ -59,6 +59,12 @@
       document.querySelector("#acs").addEventListener("connected", (event) => {
         console.log("Connected to the wallet with address: " + JSON.stringify(event.detail));
       });
+      document.querySelector("#acs").addEventListener("lock", (event) => {
+        console.log("Connected to the wallet with address: " + JSON.stringify(event.detail));
+      });
+      document.querySelector("#acs").addEventListener("claim", (event) => {
+        console.log("Connected to the wallet with address: " + JSON.stringify(event.detail));
+      });
     </script>
   </body>
 </html>
