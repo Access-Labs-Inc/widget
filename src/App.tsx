@@ -4,7 +4,6 @@ import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
-  TorusWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 
 import { ConnectionProvider } from "./components/wallet-adapter/ConnectionProvider";
@@ -24,11 +23,7 @@ export const App = ({ element, ...appSettings }: Props) => {
   const endpoint = env.SOLANA_RPC_URL;
 
   const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter({ network }),
-      new TorusWalletAdapter({ params: { network } }),
-    ],
+    () => [new PhantomWalletAdapter(), new SolflareWalletAdapter({ network })],
     [network]
   );
   return (
