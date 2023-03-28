@@ -1,7 +1,13 @@
 import tw, { css } from 'twin.macro';
 import { h } from 'preact';
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
-import { PublicKey } from '@solana/web3.js';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'preact/hooks';
+import { Loader, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
 import {
@@ -41,7 +47,7 @@ const hoverButtonStyles = css`
 export const Actions = () => {
   const { poolId } = useContext(ConfigContext);
   const { connection } = useConnection();
-  const { publicKey, disconnect } = useWallet();
+  const { publicKey, disconnect, disconnecting, connected } = useWallet();
   const [balance, setBalance] = useState<BN | null>(null);
   const [stakedAccount, setStakedAccount] = useState<
     StakeAccount | null | undefined
@@ -153,13 +159,28 @@ export const Actions = () => {
     return (claimableBondAmount ?? 0) + (claimableStakeAmount ?? 0);
   }, [claimableBondAmount, claimableStakeAmount]);
 
+  const disconnectHandler = useCallback(async () => {
+    try {
+      await disconnect();
+    } catch (error) {
+      console.error('Failed to disconnect:', error);
+    }
+  }, [disconnect]);
+
   return (
     <div css={styles.root}>
-      <Header>
-        <div onClick={disconnect} css={styles.actions_disconnect}>
-          Disconnect
-        </div>
-      </Header>
+      {connected && disconnecting && (
+        <Header>
+          <div css={styles.actions_disconnect}>Disconnecting...</div>
+        </Header>
+      )}
+      {connected && !disconnecting && (
+        <Header>
+          <div onClick={disconnectHandler} css={styles.actions_disconnect}>
+            Disconnect
+          </div>
+        </Header>
+      )}
 
       <div css={styles.logo}>
         <svg
