@@ -16,7 +16,6 @@ import { useWallet, type Wallet } from "../useWallet";
 import { Collapse } from "./Collapse";
 import { useWalletModal } from "./useWalletModal";
 import { WalletListItem } from "./WalletListItem";
-import tw from "twin.macro";
 
 export interface WalletModalProps {
   className?: string;
@@ -24,18 +23,18 @@ export interface WalletModalProps {
 }
 
 const styles = {
-  wallet_adapter_modal_title: tw`text-2xl font-sans font-semibold text-center pb-2 px-10`,
-  wallet_adapter_modal_title_para: tw`text-sm font-sans w-80 py-0 text-center`,
-  wallet_adapter_modal: tw`absolute left-0 top-[110%] text-white`,
-  wallet_adapter_modal_wrapper: tw`relative flex flex-col items-center justify-center pb-2`,
-  wallet_adapter_modal_container: tw`rounded-[1rem] bg-stone-800 p-3 content-center items-center z-10`,
-  wallet_adapter_modal_button_close: tw`absolute top-4 right-4 p-3 cursor-pointer bg-stone-800 border-0 fill-[#fff]`,
-  wallet_adapter_modal_list: tw`list-none m-0 p-0 w-full`,
-  wallet_adapter_modal_list_more: tw`cursor-pointer text-white bg-transparent border-0 px-4 py-2 mt-2 text-sm text-center self-center`,
-  wallet_adapter_modal_list_more_icon_rotate: tw`transform rotate-0 pl-2`,
-  wallet_adapter_modal_list_more_icon_rotate_expanded: tw`pl-2 transform rotate-180`,
-  wallet_adapter_modal_middle: tw`flex flex-col align-middle justify-center`,
-  wallet_adapter_modal_middle_button: tw`w-full block rounded-full mt-2 px-6 py-3 bg-stone-700 border-0 text-white cursor-pointer`,
+  wallet_adapter_modal_title: `text-2xl font-sans font-semibold text-center pb-2 px-10`,
+  wallet_adapter_modal_title_para: `text-sm font-sans w-80 py-0 text-center`,
+  wallet_adapter_modal: `absolute left-0 top-[110%] text-white`,
+  wallet_adapter_modal_wrapper: `relative flex flex-col items-center justify-center pb-2`,
+  wallet_adapter_modal_container: `rounded-[1rem] bg-stone-800 p-3 content-center items-center z-10`,
+  wallet_adapter_modal_button_close: `absolute top-4 right-4 p-3 cursor-pointer bg-stone-800 border-0 fill-[#fff]`,
+  wallet_adapter_modal_list: `list-none m-0 p-0 w-full`,
+  wallet_adapter_modal_list_more: `cursor-pointer text-white bg-transparent border-0 px-4 py-2 mt-2 text-sm text-center self-center`,
+  wallet_adapter_modal_list_more_icon_rotate: `transform rotate-0 pl-2`,
+  wallet_adapter_modal_list_more_icon_rotate_expanded: `pl-2 transform rotate-180`,
+  wallet_adapter_modal_middle: `flex flex-col align-middle justify-center`,
+  wallet_adapter_modal_middle_button: `w-full block rounded-full mt-2 px-6 py-3 bg-stone-700 border-0 text-white cursor-pointer`,
 };
 
 export const WalletModal: FunctionalComponent<WalletModalProps> = ({
@@ -68,8 +67,7 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
 
   const getStartedWallet = useMemo(() => {
     return installedWallets.length
-      ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        installedWallets[0]!
+      ? installedWallets[0]
       : wallets.find(
           (wallet: { adapter: { name: WalletName } }) =>
             wallet.adapter.name === "Torus"
@@ -82,8 +80,7 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
             (wallet: { readyState: any }) =>
               wallet.readyState === WalletReadyState.Loadable
           ) ||
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          otherWallets[0]!;
+          otherWallets[0];
   }, [installedWallets, wallets, otherWallets]);
 
   const hideModal = useCallback(() => {
@@ -119,9 +116,9 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
       // here we query all focusable elements
       const focusableElements = node.querySelectorAll("button");
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const firstElement = focusableElements[0]!;
+      const firstElement = focusableElements[0];
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const lastElement = focusableElements[focusableElements.length - 1]!;
+      const lastElement = focusableElements[focusableElements.length - 1];
 
       if (event.shiftKey) {
         // if going backward by pressing tab and firstElement is active, shift focus to last focusable element
@@ -185,7 +182,7 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
   useLayoutEffect(() => {
     const containerEl = document.querySelector(container);
     const portalEl = document.createElement("div");
-    if (containerEl && containerEl.parentNode && portalEl)
+    if (containerEl?.parentNode && portalEl)
       containerEl.parentNode.insertBefore(
         portalEl,
         containerEl.nextElementSibling
@@ -199,22 +196,22 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
       <div
         aria-labelledby="wallet-adapter-modal-title"
         aria-modal="true"
-        css={[styles.wallet_adapter_modal, className]}
+        className={[styles.wallet_adapter_modal, className].join(" ")}
         ref={ref}
         role="dialog"
       >
-        <div css={styles.wallet_adapter_modal_container}>
-          <div css={styles.wallet_adapter_modal_wrapper}>
+        <div className={styles.wallet_adapter_modal_container}>
+          <div className={styles.wallet_adapter_modal_wrapper}>
             {installedWallets.length ? (
               <Fragment>
-                <h1 css={styles.wallet_adapter_modal_title}>
+                <h1 className={styles.wallet_adapter_modal_title}>
                   Connect your wallet
                 </h1>
-                <p css={styles.wallet_adapter_modal_title_para}>
+                <p className={styles.wallet_adapter_modal_title_para}>
                   You need a Solana wallet to
                   <br /> connect to the website.
                 </p>
-                <ul css={styles.wallet_adapter_modal_list}>
+                <ul className={styles.wallet_adapter_modal_list}>
                   {installedWallets.map((wallet) => (
                     <WalletListItem
                       key={wallet.adapter.name}
@@ -244,7 +241,7 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
                 </ul>
                 {otherWallets.length ? (
                   <button
-                    css={styles.wallet_adapter_modal_list_more}
+                    className={styles.wallet_adapter_modal_list_more}
                     onClick={handleCollapseClick}
                     tabIndex={0}
                   >
@@ -255,7 +252,7 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
                       viewBox="0 0 13 7"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="white"
-                      css={
+                      className={
                         expanded
                           ? styles.wallet_adapter_modal_list_more_icon_rotate_expanded
                           : styles.wallet_adapter_modal_list_more_icon_rotate
@@ -268,13 +265,13 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
               </Fragment>
             ) : (
               <Fragment>
-                <h1 css={styles.wallet_adapter_modal_title}>
+                <h1 className={styles.wallet_adapter_modal_title}>
                   You'll need a wallet
                 </h1>
-                <div css={styles.wallet_adapter_modal_middle}>
+                <div className={styles.wallet_adapter_modal_middle}>
                   <button
                     type="button"
-                    css={styles.wallet_adapter_modal_middle_button}
+                    className={styles.wallet_adapter_modal_middle_button}
                     onClick={(event: MouseEvent) =>
                       handleWalletClick(event, getStartedWallet.adapter.name)
                     }
@@ -285,7 +282,7 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
                 {otherWallets.length ? (
                   <Fragment>
                     <button
-                      css={styles.wallet_adapter_modal_list_more}
+                      className={styles.wallet_adapter_modal_list_more}
                       onClick={handleCollapseClick}
                       tabIndex={0}
                     >
@@ -299,7 +296,7 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
                         viewBox="0 0 13 7"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="white"
-                        css={
+                        className={
                           expanded
                             ? styles.wallet_adapter_modal_list_more_icon_rotate_expanded
                             : styles.wallet_adapter_modal_list_more_icon_rotate
@@ -312,7 +309,7 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
                       expanded={expanded}
                       id="wallet-adapter-modal-collapse"
                     >
-                      <ul css={styles.wallet_adapter_modal_list}>
+                      <ul className={styles.wallet_adapter_modal_list}>
                         {otherWallets.map((wallet) => (
                           <WalletListItem
                             key={wallet.adapter.name}

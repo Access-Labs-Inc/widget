@@ -1,51 +1,50 @@
-import tw, { css } from 'twin.macro';
-import { h } from 'preact';
+import { h } from "preact";
 import {
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
-} from 'preact/hooks';
-import { Loader, PublicKey } from '@solana/web3.js';
-import BN from 'bn.js';
+} from "preact/hooks";
+import { PublicKey } from "@solana/web3.js";
+import BN from "bn.js";
 
 import {
   calculateRewardForStaker,
   getBondAccounts,
   getStakeAccounts,
   getUserACSBalance,
-} from '../libs/program';
-import { ConfigContext } from '../AppContext';
-import { BondAccount, StakeAccount, StakePool } from '../libs/ap/state';
-import { formatPenyACSCurrency } from '../libs/utils';
-import { RouteLink } from '../layout/Router';
-import { Header } from '../components/Header';
-import { useWallet } from '../components/wallet-adapter/useWallet';
-import { useConnection } from '../components/wallet-adapter/useConnection';
-import env from '../libs/env';
+} from "../libs/program";
+import { ConfigContext } from "../AppContext";
+import { BondAccount, StakeAccount, StakePool } from "../libs/ap/state";
+import { formatPenyACSCurrency } from "../libs/utils";
+import { RouteLink } from "../layout/Router";
+import { Header } from "../components/Header";
+import { useWallet } from "../components/wallet-adapter/useWallet";
+import { useConnection } from "../components/wallet-adapter/useConnection";
+import env from "../libs/env";
 
 const styles = {
-  root: tw`h-[31em] flex flex-col justify-between`,
-  links_wrapper: tw`block my-4 mt-8 flex flex-col gap-3`,
-  actions_disconnect: tw`self-end cursor-pointer text-red-400 no-underline`,
-  logo: tw`mt-8 flex items-center justify-center`,
-  button: tw`rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center text-indigo-500 bg-stone-700`,
-  balance: tw`text-white text-center text-stone-400`,
-  stakedAmount: tw`text-xl text-white text-center my-3`,
-  disabledButtonStyles: tw`bg-stone-500 text-stone-300 cursor-not-allowed`,
-  loader: tw`flex justify-center content-center`,
-  blink: tw`animate-pulse`,
+  root: `h-[31em] flex flex-col justify-between`,
+  links_wrapper: `block my-4 mt-8 flex flex-col gap-3`,
+  actions_disconnect: `self-end cursor-pointer text-red-400 no-underline`,
+  logo: `mt-8 flex items-center justify-center`,
+  button: `rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center text-indigo-500 bg-stone-700`,
+  balance: `text-white text-center text-stone-400`,
+  stakedAmount: `text-xl text-white text-center my-3`,
+  disabledButtonStyles: `bg-stone-500 text-stone-300 cursor-not-allowed`,
+  loader: `flex justify-center content-center`,
+  blink: `animate-pulse`,
 };
 
-const hoverButtonStyles = css`
-  &:hover {
-    ${tw`bg-indigo-500 text-stone-800`}
-  }
-`;
+// const hoverButtonStyles = css`
+//   &:hover {
+//     ${tw`bg-indigo-500 text-stone-800`}
+//   }
+// `;
 
 export const Actions = () => {
-  const { poolId } = useContext(ConfigContext);
+  const { poolId, classPrefix } = useContext(ConfigContext);
   const { connection } = useConnection();
   const { publicKey, disconnect, disconnecting, connected } = useWallet();
   const [balance, setBalance] = useState<BN | null>(null);
@@ -163,87 +162,110 @@ export const Actions = () => {
     try {
       await disconnect();
     } catch (error) {
-      console.error('Failed to disconnect:', error);
+      console.error("Failed to disconnect:", error);
     }
   }, [disconnect]);
 
   return (
-    <div css={styles.root}>
+    <div className={styles.root}>
       {connected && disconnecting && (
         <Header>
-          <div css={styles.actions_disconnect}>Disconnecting...</div>
+          <div className={styles.actions_disconnect}>Disconnecting...</div>
         </Header>
       )}
       {connected && !disconnecting && (
         <Header>
-          <div onClick={disconnectHandler} css={styles.actions_disconnect}>
+          <div
+            className={styles.actions_disconnect}
+            onClick={disconnectHandler}
+          >
             Disconnect
           </div>
         </Header>
       )}
 
-      <div css={styles.logo}>
+      <div className={styles.logo}>
         <svg
-          width='48'
-          height='48'
-          viewBox='0 0 48 48'
-          fill='white'
-          xmlns='http://www.w3.org/2000/svg'
+          width="48"
+          height="48"
+          viewBox="0 0 48 48"
+          fill="white"
+          xmlns="http://www.w3.org/2000/svg"
         >
           <path
-            d='M22.8221 47.17C30.5621 47.17 37.1321 43.48 40.1021 36.28V46H47.9321V24.13C47.9321 9.91 38.2121 0.369997 24.2621 0.369997C10.1321 0.369997 0.23207 10.18 0.23207 24.13C0.23207 38.8 11.2121 47.17 22.8221 47.17ZM24.1721 39.25C14.9921 39.25 8.87207 32.77 8.87207 23.77C8.87207 14.77 14.9921 8.29 24.1721 8.29C33.3521 8.29 39.4721 14.77 39.4721 23.77C39.4721 32.77 33.3521 39.25 24.1721 39.25Z'
-            fill='#E7E5E4'
+            d="M22.8221 47.17C30.5621 47.17 37.1321 43.48 40.1021 36.28V46H47.9321V24.13C47.9321 9.91 38.2121 0.369997 24.2621 0.369997C10.1321 0.369997 0.23207 10.18 0.23207 24.13C0.23207 38.8 11.2121 47.17 22.8221 47.17ZM24.1721 39.25C14.9921 39.25 8.87207 32.77 8.87207 23.77C8.87207 14.77 14.9921 8.29 24.1721 8.29C33.3521 8.29 39.4721 14.77 39.4721 23.77C39.4721 32.77 33.3521 39.25 24.1721 39.25Z"
+            fill="#E7E5E4"
           />
         </svg>
       </div>
 
       <div>
         <div
-          css={[
+          className={[
             styles.stakedAmount,
             (stakedAccount === undefined || bondAccount === undefined) &&
               styles.blink,
-          ]}
+          ].join(" ")}
         >
           {formatPenyACSCurrency(
             (stakedAccount?.stakeAmount.toNumber() ?? 0) +
               (bondAccount?.totalStaked.toNumber() ?? 0)
-          )}{' '}
+          )}{" "}
           ACS locked
         </div>
-        <div css={[styles.balance, balance === undefined && styles.blink]}>
+        <div
+          className={[
+            styles.balance,
+            balance === undefined && styles.blink,
+          ].join(" ")}
+        >
           {formatPenyACSCurrency(balance?.toNumber() ?? 0)} ACS available
         </div>
         <div
-          css={[
+          className={[
             styles.balance,
             (stakedAccount === undefined || bondAccount === undefined) &&
               styles.blink,
-          ]}
+          ].join(" ")}
         >
           {formatPenyACSCurrency(claimableAmount ?? 0)} ACS claimable
         </div>
       </div>
 
-      <div css={styles.links_wrapper}>
-        <RouteLink css={[styles.button, hoverButtonStyles]} href='/stake'>
+      <div className={styles.links_wrapper}>
+        <RouteLink
+          className={[styles.button, "hoverButtonStyles"].join(" ")}
+          href="/stake"
+        >
           Lock
         </RouteLink>
         {stakedAccount && stakedAccount.stakeAmount.toNumber() > 0 ? (
-          <RouteLink css={[styles.button, hoverButtonStyles]} href='/unstake'>
+          <RouteLink
+            className={[styles.button, "hoverButtonStyles"].join(" ")}
+            href="/unstake"
+          >
             Unlock ACS
           </RouteLink>
         ) : (
-          <span css={[styles.button, styles.disabledButtonStyles]}>
+          <span
+            className={[styles.button, styles.disabledButtonStyles].join(" ")}
+          >
             Unlock ACS
           </span>
         )}
         {claimableAmount && claimableAmount > 0 ? (
-          <RouteLink css={[styles.button, hoverButtonStyles]} href='/claim'>
+          <RouteLink
+            className={[styles.button, "hoverButtonStyles"].join(" ")}
+            href="/claim"
+          >
             Claim
           </RouteLink>
         ) : (
-          <span css={[styles.button, styles.disabledButtonStyles]}>Claim</span>
+          <span
+            className={[styles.button, styles.disabledButtonStyles].join(" ")}
+          >
+            Claim
+          </span>
         )}
       </div>
     </div>

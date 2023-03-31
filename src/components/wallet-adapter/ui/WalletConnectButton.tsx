@@ -3,10 +3,9 @@ import { type FunctionalComponent, h } from "preact";
 import { useCallback, useMemo } from "preact/hooks";
 import type { ButtonProps } from "./Button";
 import { Button } from "./Button";
-import tw from "twin.macro";
 
 const styles = {
-  wallet_adapter_button_trigger: tw`bg-yellow-600 text-stone-800 border-0 py-3 px-5 text-xl rounded-full`,
+  wallet_adapter_button_trigger: `bg-yellow-600 text-stone-800 border-0 py-3 px-5 text-xl rounded-full`,
 };
 
 export const WalletConnectButton: FunctionalComponent<ButtonProps> = ({
@@ -36,7 +35,7 @@ export const WalletConnectButton: FunctionalComponent<ButtonProps> = ({
 
   return (
     <Button
-      cssClass={styles.wallet_adapter_button_trigger}
+      className={styles.wallet_adapter_button_trigger}
       disabled={disabled || !wallet || connecting || connected}
       onClick={handleClick}
       {...props}

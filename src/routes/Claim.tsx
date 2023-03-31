@@ -1,69 +1,68 @@
-import tw, { css } from 'twin.macro';
-import { Fragment, h } from 'preact';
-import BN from 'bn.js';
+import { Fragment, h } from "preact";
+import BN from "bn.js";
 import {
   BondAccount,
   CentralState,
   StakeAccount,
   StakePool,
-} from '../libs/ap/state';
-import { claimBondRewards, claimRewards } from '../libs/ap/bindings';
+} from "../libs/ap/state";
+import { claimBondRewards, claimRewards } from "../libs/ap/bindings";
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
-import { PublicKey } from '@solana/web3.js';
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
+} from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
-import { Header } from '../components/Header';
-import { RouteLink } from '../layout/Router';
-import { ConfigContext } from '../AppContext';
-import { useConnection } from '../components/wallet-adapter/useConnection';
-import { useWallet } from '../components/wallet-adapter/useWallet';
+import { Header } from "../components/Header";
+import { RouteLink } from "../layout/Router";
+import { ConfigContext } from "../AppContext";
+import { useConnection } from "../components/wallet-adapter/useConnection";
+import { useWallet } from "../components/wallet-adapter/useWallet";
 import {
   calculateRewardForStaker,
   getBondAccounts,
   getStakeAccounts,
-} from '../libs/program';
-import { sendTx } from '../libs/transactions';
-import Loading from '../components/Loading';
-import { formatPenyACSCurrency } from '../libs/utils';
-import env from '../libs/env';
-import { ProgressModal } from '../components/ProgressModal';
-import { useFeePayer } from '../hooks/useFeePayer';
-import { WalletAdapterProps } from '@solana/wallet-adapter-base';
+} from "../libs/program";
+import { sendTx } from "../libs/transactions";
+import Loading from "../components/Loading";
+import { formatPenyACSCurrency } from "../libs/utils";
+import env from "../libs/env";
+import { ProgressModal } from "../components/ProgressModal";
+import { useFeePayer } from "../hooks/useFeePayer";
+import { WalletAdapterProps } from "@solana/wallet-adapter-base";
 
 const styles = {
-  root: tw`h-[31em] flex flex-col justify-between`,
-  cancel_link: tw`self-end cursor-pointer text-blue-400 no-underline`,
-  button: tw`w-full rounded-full cursor-pointer no-underline font-bold py-4 mb-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0`,
-  title: tw`my-8 mt-16 text-white text-2xl text-center`,
-  titleError: tw`mt-8 text-red-500 text-2xl text-center`,
-  subtitle: tw`text-white text-center text-stone-400`,
-  subtitleError: tw`text-red-500 text-center`,
-  claimAmount: tw`text-white mb-40 text-4xl text-center text-green-400`,
-  loader: tw`flex justify-center content-center mb-56`,
-  steps: tw`flex flex-col justify-start my-4`,
-  stepsList: tw`space-y-4 list-none mb-10`,
-  disabledButtonStyles: tw`bg-stone-600 cursor-not-allowed`,
-  invalid: tw`bg-red-400`,
+  root: `h-[31em] flex flex-col justify-between`,
+  cancel_link: `self-end cursor-pointer text-blue-400 no-underline`,
+  button: `w-full rounded-full cursor-pointer no-underline font-bold py-4 mb-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0`,
+  title: `my-8 mt-16 text-white text-2xl text-center`,
+  titleError: `mt-8 text-red-500 text-2xl text-center`,
+  subtitle: `text-white text-center text-stone-400`,
+  subtitleError: `text-red-500 text-center`,
+  claimAmount: `text-white mb-40 text-4xl text-center text-green-400`,
+  loader: `flex justify-center content-center mb-56`,
+  steps: `flex flex-col justify-start my-4`,
+  stepsList: `space-y-4 list-none mb-10`,
+  disabledButtonStyles: `bg-stone-600 cursor-not-allowed`,
+  invalid: `bg-red-400`,
 };
 
-const hoverButtonStyles = css`
-  &:hover {
-    ${tw`bg-indigo-300 text-stone-800`}
-  }
-`;
+// const hoverButtonStyles = css`
+//   &:hover {
+//     ${`bg-indigo-300 text-stone-800`}
+//   }
+// `;
 
-const CLAIM_BOND_REWARDS_STEP = 'Claim airdrop rewards';
-const CLAIM_STAKE_REWARDS_STEP = 'Claim stake rewards';
-const DONE_STEP = 'Done';
-const IDLE_STEP = 'Idle';
+const CLAIM_BOND_REWARDS_STEP = "Claim airdrop rewards";
+const CLAIM_STAKE_REWARDS_STEP = "Claim stake rewards";
+const DONE_STEP = "Done";
+const IDLE_STEP = "Idle";
 
 interface FeePaymentData {
   feePayerPubKey: string;
-  sendTransaction: WalletAdapterProps['sendTransaction'];
+  sendTransaction: WalletAdapterProps["sendTransaction"];
 }
 
 export const Claim = () => {
@@ -261,7 +260,7 @@ export const Claim = () => {
         });
       }
 
-      const claimEvent = new CustomEvent('claim', {
+      const claimEvent = new CustomEvent("claim", {
         detail: {
           address: publicKey.toBase58(),
           locked: claimableStakeAmount,
@@ -285,12 +284,12 @@ export const Claim = () => {
   };
 
   return (
-    <div css={styles.root}>
+    <div className={styles.root}>
       {stakeModalOpen && error && (
         <Fragment>
-          <div css={styles.titleError}>Error occured:</div>
-          <div css={styles.subtitleError}>{error}</div>
-          <RouteLink css={[styles.button, hoverButtonStyles]} href='/'>
+          <div className={styles.titleError}>Error occured:</div>
+          <div className={styles.subtitleError}>{error}</div>
+          <RouteLink css={[styles.button, hoverButtonStyles]} href="/">
             Close
           </RouteLink>
         </Fragment>
@@ -305,25 +304,27 @@ export const Claim = () => {
       {!stakeModalOpen && (
         <Fragment>
           <Header>
-            <RouteLink href='/' css={styles.cancel_link}>
+            <RouteLink href="/" css={styles.cancel_link}>
               Cancel
             </RouteLink>
           </Header>
 
           {stakedAccount?.stakeAmount && stakedPool ? (
             <Fragment>
-              <div css={styles.title}>Claim on &apos;{poolName}&apos;</div>
-              <div css={styles.claimAmount}>
+              <div className={styles.title}>
+                Claim on &apos;{poolName}&apos;
+              </div>
+              <div className={styles.claimAmount}>
                 {formatPenyACSCurrency(claimableAmount)} ACS
               </div>
 
               <div>
                 <button
-                  css={[
+                  className={[
                     styles.button,
                     hoverButtonStyles,
                     claimableAmount <= 0 && styles.disabledButtonStyles,
-                  ]}
+                  ].join(" ")}
                   onClick={handle}
                 >
                   Claim
@@ -331,7 +332,7 @@ export const Claim = () => {
               </div>
             </Fragment>
           ) : (
-            <div css={styles.loader}>
+            <div className={styles.loader}>
               <Loading />
             </div>
           )}

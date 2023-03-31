@@ -1,85 +1,83 @@
-import tw, { css } from 'twin.macro';
-import { Fragment, h } from 'preact';
-import { Info } from 'phosphor-react';
+import { Fragment, h } from "preact";
+import { Info } from "phosphor-react";
 import {
   BondAccount,
   CentralState,
   StakeAccount,
   StakePool,
-} from '../libs/ap/state';
+} from "../libs/ap/state";
 import {
-  claimBondRewards,
   claimRewards,
   crank,
   createStakeAccount,
   stake,
-} from '../libs/ap/bindings';
+} from "../libs/ap/bindings";
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
-} from '@solana/spl-token';
-import { PublicKey } from '@solana/web3.js';
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
+} from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+import { useContext, useEffect, useMemo, useState } from "preact/hooks";
 
-import { Header } from '../components/Header';
-import { RouteLink } from '../layout/Router';
-import { ConfigContext } from '../AppContext';
-import { useConnection } from '../components/wallet-adapter/useConnection';
-import { useWallet } from '../components/wallet-adapter/useWallet';
+import { Header } from "../components/Header";
+import { RouteLink } from "../layout/Router";
+import { ConfigContext } from "../AppContext";
+import { useConnection } from "../components/wallet-adapter/useConnection";
+import { useWallet } from "../components/wallet-adapter/useWallet";
 import {
   calculateRewardForStaker,
   getBondAccounts,
   getStakeAccounts,
   getUserACSBalance,
-} from '../libs/program';
-import { Tooltip } from '../components/Tooltip';
-import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
-import { sendTx } from '../libs/transactions';
-import Loading from '../components/Loading';
-import { ProgressModal } from '../components/ProgressModal';
-import { formatACSCurrency, sleep } from '../libs/utils';
-import { useFeePayer } from '../hooks/useFeePayer';
-import { WalletAdapterProps } from '@solana/wallet-adapter-base';
-import env from '../libs/env';
-import BN from 'bn.js';
+} from "../libs/program";
+import { Tooltip } from "../components/Tooltip";
+import { NumberInputWithSlider } from "../components/NumberInputWithSlider";
+import { sendTx } from "../libs/transactions";
+import Loading from "../components/Loading";
+import { ProgressModal } from "../components/ProgressModal";
+import { formatACSCurrency, sleep } from "../libs/utils";
+import { useFeePayer } from "../hooks/useFeePayer";
+import { WalletAdapterProps } from "@solana/wallet-adapter-base";
+import env from "../libs/env";
+import BN from "bn.js";
 
 const styles = {
-  root: tw`h-[31em] flex flex-col justify-between`,
-  cancel_link: tw`self-end cursor-pointer text-blue-400 no-underline`,
-  button: tw`w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0`,
-  title: tw`my-8 mt-16 text-white text-3xl text-center`,
-  titleError: tw`mt-8 text-red-500 text-2xl text-center`,
-  subtitle: tw`text-white text-center text-stone-400`,
-  subtitleError: tw`text-red-500 text-center`,
-  feesRoot: tw`mt-2 text-center text-xs text-stone-400`,
-  feeWithTooltip: tw`flex justify-center`,
-  loader: tw`flex justify-center content-center mb-56`,
-  steps: tw`flex flex-col justify-start my-4`,
-  stepsList: tw`space-y-4 list-none mb-10`,
-  disabledButtonStyles: tw`bg-stone-600 cursor-not-allowed`,
-  invalid: tw`bg-red-400`,
-  invalidText: tw`mt-1 text-center text-red-500`,
+  root: `h-[31em] flex flex-col justify-between`,
+  cancel_link: `self-end cursor-pointer text-blue-400 no-underline`,
+  button: `w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0`,
+  title: `my-8 mt-16 text-white text-3xl text-center`,
+  titleError: `mt-8 text-red-500 text-2xl text-center`,
+  subtitle: `text-white text-center text-stone-400`,
+  subtitleError: `text-red-500 text-center`,
+  feesRoot: `mt-2 text-center text-xs text-stone-400`,
+  feeWithTooltip: `flex justify-center`,
+  loader: `flex justify-center content-center mb-56`,
+  steps: `flex flex-col justify-start my-4`,
+  stepsList: `space-y-4 list-none mb-10`,
+  disabledButtonStyles: `bg-stone-600 cursor-not-allowed`,
+  invalid: `bg-red-400`,
+  invalidText: `mt-1 text-center text-red-500`,
 };
 
-const hoverButtonStyles = css`
-  &:hover {
-    ${tw`bg-indigo-300 text-stone-800`}
-  }
-`;
+// const hoverButtonStyles = css`
+//   &:hover {
+//     ${`bg-indigo-300 text-stone-800`}
+//   }
+// `;
 
 interface FeePaymentData {
   feePayerPubKey: string;
-  sendTransaction: WalletAdapterProps['sendTransaction'];
+  sendTransaction: WalletAdapterProps["sendTransaction"];
 }
 
-const CRANK_STEP = 'Crank';
-const CREATE_STAKING_ACCOUNT_STEP = 'Create locking account';
-const CLAIM_REWARDS_STEP = 'Claim rewards';
-const STAKE_STEP = 'Lock ACS';
-const DONE_STEP = 'Done';
-const IDLE_STEP = 'Idle';
+const CRANK_STEP = "Crank";
+const CREATE_STAKING_ACCOUNT_STEP = "Create locking account";
+const CLAIM_REWARDS_STEP = "Claim rewards";
+const STAKE_STEP = "Lock ACS";
+const DONE_STEP = "Done";
+const IDLE_STEP = "Idle";
 
 export const Stake = () => {
   const { poolId, poolName, element } = useContext(ConfigContext);
@@ -283,18 +281,18 @@ export const Stake = () => {
         try {
           stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
         } catch (e) {
-          console.warn('Stake account not ready yet.');
+          console.warn("Stake account not ready yet.");
         }
         let attempts = 0;
         while (stakeAccount == null && attempts < 20) {
           // eslint-disable-next-line no-await-in-loop
           await sleep(1000);
-          console.log('Sleeping...');
+          console.log("Sleeping...");
           // eslint-disable-next-line no-await-in-loop
           try {
             stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
           } catch (e) {
-            console.warn('Stake account not ready yet attempt: ', attempts);
+            console.warn("Stake account not ready yet attempt: ", attempts);
           }
           attempts += 1;
         }
@@ -344,7 +342,7 @@ export const Stake = () => {
           skipPreflight: true,
         });
 
-        const claimEvent = new CustomEvent('claim', {
+        const claimEvent = new CustomEvent("claim", {
           detail: {
             address: publicKey.toBase58(),
             locked: claimableStakeAmount,
@@ -370,7 +368,7 @@ export const Stake = () => {
         skipPreflight: true,
       });
 
-      const lockedEvent = new CustomEvent('lock', {
+      const lockedEvent = new CustomEvent("lock", {
         detail: {
           address: publicKey.toBase58(),
           amount: Number(stakeAmount) * 10 ** 6,
@@ -406,7 +404,7 @@ export const Stake = () => {
     minPoolStakeAmount,
   ]);
 
-  console.log('Min stake: ', minStakeAmount);
+  console.log("Min stake: ", minStakeAmount);
 
   const maxStakeAmount = useMemo(() => {
     return Number(balance) / (1 + feePercentageFraction);
@@ -435,12 +433,12 @@ export const Stake = () => {
   ]);
 
   return (
-    <div css={styles.root}>
+    <div className={styles.root}>
       {stakeModalOpen && error && (
         <Fragment>
-          <div css={styles.titleError}>Error occured:</div>
-          <div css={styles.subtitleError}>{error}</div>
-          <RouteLink css={[styles.button, hoverButtonStyles]} href='/'>
+          <div className={styles.titleError}>Error occured:</div>
+          <div className={styles.subtitleError}>{error}</div>
+          <RouteLink className={[styles.button, "hoverButtonStyles"]} href="/">
             Close
           </RouteLink>
         </Fragment>
@@ -460,7 +458,7 @@ export const Stake = () => {
       {!stakeModalOpen && (
         <Fragment>
           <Header>
-            <RouteLink href='/' css={styles.cancel_link}>
+            <RouteLink href="/" css={styles.cancel_link}>
               Cancel
             </RouteLink>
           </Header>
@@ -469,14 +467,14 @@ export const Stake = () => {
             bondAccount !== undefined &&
             balance !== undefined && (
               <Fragment>
-                <div css={styles.title}>{poolName}</div>
+                <div className={styles.title}>{poolName}</div>
                 {!insufficientBalance ? (
-                  <div css={styles.subtitle}>
+                  <div className={styles.subtitle}>
                     Both {poolName} and you will receive a ACS inflation rewards
                     split equally.
                   </div>
                 ) : (
-                  <p css={styles.invalidText}>{invalidText}</p>
+                  <p className={styles.invalidText}>{invalidText}</p>
                 )}
 
                 <div>
@@ -497,24 +495,24 @@ export const Stake = () => {
                   {insufficientBalance && (
                     <a
                       href={env.GET_ACS_URL}
-                      target='_blank'
-                      rel='noopener'
-                      css={[styles.button, styles.invalid]}
+                      target="_blank"
+                      rel="noopener"
+                      className={[styles.button, styles.invalid].join(" ")}
                     >
                       Get ACS/SOL on access
                     </a>
                   )}
                   {!insufficientBalance && (
                     <button
-                      css={[styles.button, hoverButtonStyles]}
+                      className={[styles.button, "hoverButtonStyles"].join(" ")}
                       onClick={handle}
                     >
                       Lock
                     </button>
                   )}
 
-                  <div css={styles.feesRoot}>
-                    <div css={styles.feeWithTooltip}>
+                  <div className={styles.feesRoot}>
+                    <div className={styles.feeWithTooltip}>
                       <div>Protocol fee: {formatACSCurrency(fee)} ACS</div>
                       <Tooltip
                         message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
@@ -531,7 +529,7 @@ export const Stake = () => {
             bondAccount === undefined ||
             stakedPool == null ||
             balance === undefined) && (
-            <div css={styles.loader}>
+            <div className={styles.loader}>
               <Loading />
             </div>
           )}

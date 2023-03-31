@@ -1,11 +1,12 @@
-import tw from 'twin.macro';
-import { ComponentChildren, h } from 'preact';
+import { ComponentChildren, h } from "preact";
+import { useContext } from "preact/hooks";
+import { ConfigContext } from "../AppContext";
 
 const styles = {
-  tooltipRoot: tw`relative flex flex-row items-center justify-center`,
-  wrapper: tw`absolute bottom-0 mb-6 hidden w-80 flex-col items-center group-hover:flex`,
-  message: tw`relative z-10 rounded-md bg-stone-500 p-2 text-xs leading-none text-white shadow-lg`,
-  arrow: tw`-mt-2 h-3 w-3 rotate-45 bg-stone-500`,
+  tooltipRoot: `relative flex flex-row items-center justify-center`,
+  wrapper: `absolute bottom-0 mb-6 hidden w-80 flex-col items-center group-hover:flex`,
+  message: `relative z-10 rounded-md bg-stone-500 p-2 text-xs leading-none text-white shadow-lg`,
+  arrow: `-mt-2 h-3 w-3 rotate-45 bg-stone-500`,
 };
 
 export const Tooltip = ({
@@ -15,12 +16,13 @@ export const Tooltip = ({
   message: string;
   children: ComponentChildren;
 }) => {
+  const { classPrefix } = useContext(ConfigContext);
   return (
-    <div className='group' css={styles.tooltipRoot}>
+    <div className={["group", styles.tooltipRoot].join(" ")}>
       {children}
-      <div css={styles.wrapper}>
-        <span css={styles.message}>{message}</span>
-        <div css={styles.arrow} />
+      <div className={styles.wrapper}>
+        <span className={styles.message}>{message}</span>
+        <div className={styles.arrow} />
       </div>
     </div>
   );

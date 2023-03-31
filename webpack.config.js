@@ -1,11 +1,16 @@
 const path = require("path");
+const glob = require("glob");
 const webpack = require("webpack");
+const Dotenv = require("dotenv-webpack");
+
 const CopyPlugin = require("copy-webpack-plugin");
 const StatoscopeWebpackPlugin = require("@statoscope/webpack-plugin").default;
 const { DuplicatesPlugin } = require("inspectpack/plugin");
-const Dotenv = require("dotenv-webpack");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const { PurgeCSSPlugin } = require("purgecss-webpack-plugin");
 
 const bundleOutputDir = "./dist";
+const ALL_FILES = glob.sync(path.join(__dirname, "src/*.tsx"));
 
 module.exports = (env) => {
   console.log("ENVs", env);
@@ -26,6 +31,9 @@ module.exports = (env) => {
         }),
         new StatoscopeWebpackPlugin(),
         new CopyPlugin([{ from: "html-dev/" }]),
+        new MiniCssExtractPlugin({
+          filename: "[name].css",
+        }),
         new DuplicatesPlugin({
           // Emit compilation warning or error? (Default: `false`)
           emitErrors: false,
@@ -56,6 +64,9 @@ module.exports = (env) => {
         }),
         new StatoscopeWebpackPlugin(),
         new CopyPlugin([{ from: "html-production/" }]),
+        new MiniCssExtractPlugin({
+          filename: "[name].css",
+        }),
       ];
       break;
     case "staging":
@@ -71,6 +82,9 @@ module.exports = (env) => {
         }),
         new StatoscopeWebpackPlugin(),
         new CopyPlugin([{ from: "html-staging/" }]),
+        new MiniCssExtractPlugin({
+          filename: "[name].css",
+        }),
       ];
       break;
     default:
@@ -100,21 +114,23 @@ module.exports = (env) => {
           {
             test: /\.css$/i,
             use: [
+              { loader: MiniCssExtractPlugin.loader },
               {
-                loader: "style-loader",
+                loader: "css-loader",
               },
               {
-                // allows import CSS as modules
-                loader: "css-loader",
+                loader: "postcss-loader",
                 options: {
-                  modules: {
-                    // css class names format
-                    localIdentName: "[name]-[local]-[hash:base64:5]",
+                  postcssOptions: {
+                    plugins: [
+                      require("autoprefixer")(),
+                      require("tailwindcss")(),
+                    ],
                   },
-                  sourceMap: isDevBuild,
                 },
               },
             ],
+            sideEffects: true,
           },
           // use babel-loader for TS and JS modeles,
           // starting v7 Babel babel-loader can transpile TS into JS,
@@ -149,8 +165,6 @@ module.exports = (env) => {
                         pragmaFrag: "Fragment",
                       },
                     ],
-                    "babel-plugin-macros",
-                    "babel-plugin-styled-components",
                   ],
                 },
               },

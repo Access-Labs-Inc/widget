@@ -1,5 +1,4 @@
-import tw from 'twin.macro';
-import { h } from 'preact';
+import { h } from "preact";
 import {
   useCallback,
   useContext,
@@ -7,31 +6,23 @@ import {
   useMemo,
   useRef,
   useState,
-} from 'preact/hooks';
-import { PublicKey } from '@solana/web3.js';
-import BN from 'bn.js';
-import { Router, RouteComponent } from '../layout/Router';
-import { Actions } from '../routes/Actions';
-import { Stake } from '../routes/Stake';
-import { Unstake } from '../routes/Unstake';
-import { Claim } from '../routes/Claim';
-import { Button } from '../components/wallet-adapter/ui/Button';
-import { WalletConnectButton } from '../components/wallet-adapter/ui/WalletConnectButton';
-import { WalletModalButton } from '../components/wallet-adapter/ui/WalletModalButton';
-import { useWallet } from '../components/wallet-adapter/useWallet';
-import { ConfigContext } from '../AppContext';
-import { BondAccount, StakeAccount } from '../libs/ap/state';
-import env from '../libs/env';
-import { useConnection } from '../components/wallet-adapter/useConnection';
-import { getBondAccounts } from '../libs/program';
-
-const styles = {
-  wallet_adapter_dropdown_wrapper: tw`relative inline-block text-left font-sans`,
-  wallet_adapter_button_trigger: tw`bg-stone-400 text-stone-800 border-0 py-3 px-5 text-xl rounded-full`,
-  wallet_adapter_button_trigger_active: tw`bg-indigo-400`,
-  wallet_adapter_dropdown: tw`absolute mt-2 w-80 px-6 py-4 top-[100%] bg-stone-800 text-white rounded-[1rem] opacity-0`,
-  wallet_adapter_dropdown_active: tw`visible opacity-100`,
-};
+} from "preact/hooks";
+import { PublicKey } from "@solana/web3.js";
+import BN from "bn.js";
+import { Router, RouteComponent } from "../layout/Router";
+import { Actions } from "../routes/Actions";
+import { Stake } from "../routes/Stake";
+import { Unstake } from "../routes/Unstake";
+import { Claim } from "../routes/Claim";
+import { Button } from "../components/wallet-adapter/ui/Button";
+import { WalletConnectButton } from "../components/wallet-adapter/ui/WalletConnectButton";
+import { WalletModalButton } from "../components/wallet-adapter/ui/WalletModalButton";
+import { useWallet } from "../components/wallet-adapter/useWallet";
+import { ConfigContext } from "../AppContext";
+import { BondAccount, StakeAccount } from "../libs/ap/state";
+import env from "../libs/env";
+import { useConnection } from "../components/wallet-adapter/useConnection";
+import { getBondAccounts } from "../libs/program";
 
 const Main = () => {
   const { publicKey, wallet, connected } = useWallet();
@@ -72,7 +63,7 @@ const Main = () => {
             stakeAccountKey
           );
         } catch (e) {
-          console.log('No stake account found');
+          console.log("No stake account found");
         }
         const bondAccounts = await getBondAccounts(
           connection,
@@ -90,12 +81,12 @@ const Main = () => {
               return acc;
             }, new BN(0));
           } catch (e) {
-            console.log('Error parsing bond accounts', e);
+            console.log("Error parsing bond accounts", e);
           }
         } else {
-          console.log('No bond accounts found');
+          console.log("No bond accounts found");
         }
-        const connectedEvent = new CustomEvent('connected', {
+        const connectedEvent = new CustomEvent("connected", {
           detail: {
             address: base58,
             locked: stakeAccount?.stakeAmount.toNumber() || 0,
@@ -122,57 +113,56 @@ const Main = () => {
       closeDropdown();
     };
 
-    document.addEventListener('mousedown', listener);
-    document.addEventListener('touchstart', listener);
+    document.addEventListener("mousedown", listener);
+    document.addEventListener("touchstart", listener);
 
     return () => {
-      document.removeEventListener('mousedown', listener);
-      document.removeEventListener('touchstart', listener);
+      document.removeEventListener("mousedown", listener);
+      document.removeEventListener("touchstart", listener);
     };
   }, [ref, closeDropdown]);
 
   if (!wallet) {
     return (
-      <div css={styles.wallet_adapter_dropdown_wrapper}>
+      <div className="wallet_adapter_dropdown_wrapper">
         <WalletModalButton externalButtonClass={disconnectButtonClass} />
       </div>
     );
   }
   if (!base58) {
     return (
-      <div css={styles.wallet_adapter_dropdown_wrapper}>
+      <div className="wallet_adapter_dropdown_wrapper">
         <WalletConnectButton externalButtonClass={disconnectButtonClass} />
       </div>
     );
   }
 
   return (
-    <div css={styles.wallet_adapter_dropdown_wrapper}>
+    <div className="wallet_adapter_dropdown_wrapper">
       <Button
         aria-expanded={active}
-        cssClass={[
-          styles.wallet_adapter_button_trigger,
-          styles.wallet_adapter_button_trigger_active,
-        ]}
+        className={[
+          "wallet_adapter_button_trigger",
+          active ? "wallet_adapter_button_trigger_active" : "",
+        ].join(" ")}
         externalButtonClass={connectedButtonClass}
-        style={{ pointerEvents: active ? 'none' : 'auto' }}
+        style={{ pointerEvents: active ? "none" : "auto" }}
         onClick={toggleDropdown}
       >
         {content}
       </Button>
       <div
-        css={[
-          styles.wallet_adapter_dropdown,
-          active && styles.wallet_adapter_dropdown_active,
-        ]}
-        ref={ref}
+        className={[
+          "wallet_adapter_dropdown",
+          active ? "wallet_adapter_dropdown_active" : "",
+        ].join(" ")}
       >
         <Router
           routes={{
-            '/': <RouteComponent component={Actions} />,
-            '/stake': <RouteComponent component={Stake} />,
-            '/unstake': <RouteComponent component={Unstake} />,
-            '/claim': <RouteComponent component={Claim} />,
+            "/": <RouteComponent component={Actions} />,
+            "/stake": <RouteComponent component={Stake} />,
+            "/unstake": <RouteComponent component={Unstake} />,
+            "/claim": <RouteComponent component={Claim} />,
           }}
         />
       </div>

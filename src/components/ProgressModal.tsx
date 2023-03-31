@@ -1,9 +1,10 @@
-import tw, { css } from 'twin.macro';
-import { Fragment, h } from 'preact';
+import { Fragment, h } from "preact";
 
-import { RouteLink } from '../layout/Router';
+import { RouteLink } from "../layout/Router";
 
-import { ProgressStep } from './ProgressStep';
+import { ProgressStep } from "./ProgressStep";
+import { useContext } from "preact/hooks";
+import { ConfigContext } from "../AppContext";
 
 const getStepState = (
   current: string,
@@ -15,28 +16,28 @@ const getStepState = (
   const currentStepIndex = stepOrder.indexOf(current);
   const stepIndex = stepOrder.indexOf(step);
   if (stepIndex < currentStepIndex || current === doneStep) {
-    return 'complete';
+    return "complete";
   }
   if (stepIndex === currentStepIndex) {
-    return 'current';
+    return "current";
   }
-  return '';
+  return "";
 };
 
 const styles = {
-  button: tw`w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0`,
-  title: tw`my-8 mt-16 text-white text-2xl text-center`,
-  subtitle: tw`text-white text-center text-stone-400`,
-  steps: tw`flex flex-col justify-start my-4`,
-  stepsList: tw`space-y-4 list-none mb-10`,
-  disabledButtonStyles: tw`bg-stone-600 cursor-not-allowed`,
+  button: `w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0`,
+  title: `my-8 mt-16 text-white text-2xl text-center`,
+  subtitle: `text-white text-center text-stone-400`,
+  steps: `flex flex-col justify-start my-4`,
+  stepsList: `space-y-4 list-none mb-10`,
+  disabledButtonStyles: `bg-stone-600 cursor-not-allowed`,
 };
 
-const hoverButtonStyles = css`
-  &:hover {
-    ${tw`bg-indigo-300 text-stone-800`}
-  }
-`;
+// const hoverButtonStyles = css`
+//   &:hover {
+//     ${`bg-indigo-300 text-stone-800`}
+//   }
+// `;
 
 const ProgressModal = ({
   working,
@@ -47,15 +48,16 @@ const ProgressModal = ({
   stepOrder: string[];
   doneStepName: string;
 }) => {
+  const { classPrefix } = useContext(ConfigContext);
   return (
     <Fragment>
-      <div css={styles.title}>Steps to complete</div>
-      <div css={styles.subtitle}>
+      <div className={styles.title}>Steps to complete</div>
+      <div className={styles.subtitle}>
         We need you to sign these
         <br /> transactions to stake
       </div>
-      <nav css={styles.steps} aria-label='Progress'>
-        <ol css={styles.stepsList}>
+      <nav className={styles.steps} aria-label="Progress">
+        <ol className={styles.stepsList}>
           {stepOrder.map((step) => (
             <ProgressStep
               name={step}
@@ -66,12 +68,12 @@ const ProgressModal = ({
         </ol>
         <RouteLink
           disabled={working !== doneStepName}
-          href='/'
-          css={[
+          href="/"
+          className={[
             styles.button,
             working !== doneStepName
               ? styles.disabledButtonStyles
-              : hoverButtonStyles,
+              : "hoverButtonStyles",
           ]}
         >
           Close

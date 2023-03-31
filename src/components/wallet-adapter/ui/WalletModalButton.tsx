@@ -1,12 +1,11 @@
 import { type FunctionalComponent, h } from "preact";
 import { useCallback } from "preact/hooks";
-import tw from "twin.macro";
 import type { ButtonProps } from "./Button";
 import { Button } from "./Button";
 import { useWalletModal } from "./useWalletModal";
 
 const styles = {
-  wallet_adapter_button_trigger: tw`bg-stone-400 text-stone-800 border-0 py-3 px-5 text-xl rounded-full`,
+  wallet_adapter_button_trigger: `bg-stone-400 text-stone-800 border-0 py-3 px-5 text-xl rounded-full`,
 };
 
 export const WalletModalButton: FunctionalComponent<ButtonProps> = ({
@@ -27,7 +26,7 @@ export const WalletModalButton: FunctionalComponent<ButtonProps> = ({
   return (
     <Button
       id="wallet-modal-button"
-      cssClass={styles.wallet_adapter_button_trigger}
+      className={styles.wallet_adapter_button_trigger}
       onClick={handleClick}
       {...props}
     >

@@ -5,25 +5,25 @@ import type {
   WalletAdapterProps,
   WalletError,
   WalletName,
-} from '@solana/wallet-adapter-base';
+} from "@solana/wallet-adapter-base";
 import {
   WalletNotConnectedError,
   WalletNotReadyError,
   WalletReadyState,
-} from '@solana/wallet-adapter-base';
-import type { PublicKey } from '@solana/web3.js';
-import { h, ComponentChildren } from 'preact';
+} from "@solana/wallet-adapter-base";
+import type { PublicKey } from "@solana/web3.js";
+import { h, ComponentChildren } from "preact";
 import {
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
-} from 'preact/hooks';
+} from "preact/hooks";
 
-import { WalletNotSelectedError } from './errors';
-import { useLocalStorage } from './useLocalStorage';
-import { type Wallet, WalletContext } from './useWallet';
+import { WalletNotSelectedError } from "./errors";
+import { useLocalStorage } from "./useLocalStorage";
+import { type Wallet, WalletContext } from "./useWallet";
 
 export interface WalletProviderProps {
   children: ComponentChildren;
@@ -50,7 +50,7 @@ export const WalletProvider = ({
   wallets: adapters,
   autoConnect = false,
   onError,
-  localStorageKey = 'walletName',
+  localStorageKey = "walletName",
 }: WalletProviderProps) => {
   const [name, setName] = useLocalStorage<WalletName | null>(
     localStorageKey,
@@ -100,7 +100,7 @@ export const WalletProvider = ({
         if (index === -1) return prevWallets;
 
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const { adapter } = prevWallets[index]!;
+        const { adapter } = prevWallets[index];
         return [
           ...prevWallets.slice(0, index),
           { adapter, readyState },
@@ -110,11 +110,11 @@ export const WalletProvider = ({
     }
 
     adapters.forEach((adapter) =>
-      adapter.on('readyStateChange', handleReadyStateChange, adapter)
+      adapter.on("readyStateChange", handleReadyStateChange, adapter)
     );
     return () =>
       adapters.forEach((adapter) =>
-        adapter.off('readyStateChange', handleReadyStateChange, adapter)
+        adapter.off("readyStateChange", handleReadyStateChange, adapter)
       );
   }, [adapters]);
 
@@ -139,8 +139,8 @@ export const WalletProvider = ({
       isUnloading.current = true;
     }
 
-    window.addEventListener('beforeunload', listener);
-    return () => window.removeEventListener('beforeunload', listener);
+    window.addEventListener("beforeunload", listener);
+    return () => window.removeEventListener("beforeunload", listener);
   }, [isUnloading]);
 
   // Handle the adapter's connect event
@@ -172,13 +172,13 @@ export const WalletProvider = ({
   // Setup and teardown event listeners when the adapter changes
   useEffect(() => {
     if (adapter) {
-      adapter.on('connect', handleConnect);
-      adapter.on('disconnect', handleDisconnect);
-      adapter.on('error', handleError);
+      adapter.on("connect", handleConnect);
+      adapter.on("disconnect", handleDisconnect);
+      adapter.on("error", handleError);
       return () => {
-        adapter.off('connect', handleConnect);
-        adapter.off('disconnect', handleDisconnect);
-        adapter.off('error', handleError);
+        adapter.off("connect", handleConnect);
+        adapter.off("disconnect", handleDisconnect);
+        adapter.off("error", handleError);
       };
     }
     return () => {};
@@ -210,7 +210,7 @@ export const WalletProvider = ({
       setConnecting(true);
       try {
         await adapter.connect();
-      } catch (error: any) {
+      } catch (error) {
         // Clear the selected wallet
         setName(null);
         // Don't throw error, but handleError will still be called
@@ -235,8 +235,8 @@ export const WalletProvider = ({
       // Clear the selected wallet
       setName(null);
 
-      if (typeof window !== 'undefined') {
-        window.open(adapter.url, '_blank');
+      if (typeof window !== "undefined") {
+        window.open(adapter.url, "_blank");
       }
 
       throw handleError(new WalletNotReadyError());
@@ -246,7 +246,7 @@ export const WalletProvider = ({
     setConnecting(true);
     try {
       await adapter.connect();
-    } catch (error: any) {
+    } catch (error) {
       // Clear the selected wallet
       setName(null);
       // Rethrow the error, and handleError will also be called
@@ -274,7 +274,7 @@ export const WalletProvider = ({
     setDisconnecting(true);
     try {
       await adapter.disconnect();
-    } catch (error: any) {
+    } catch (error) {
       // Clear the selected wallet
       setName(null);
       // Rethrow the error, and handleError will also be called
@@ -286,7 +286,7 @@ export const WalletProvider = ({
   }, [isDisconnecting, adapter, setName]);
 
   // Send a transaction using the provided connection
-  const sendTransaction: WalletAdapterProps['sendTransaction'] = useCallback(
+  const sendTransaction: WalletAdapterProps["sendTransaction"] = useCallback(
     async (transaction, connection, options) => {
       if (!adapter) throw handleError(new WalletNotSelectedError());
       if (!connected) throw handleError(new WalletNotConnectedError());
@@ -297,10 +297,10 @@ export const WalletProvider = ({
 
   // Sign a transaction if the wallet supports it
   const signTransaction:
-    | SignerWalletAdapterProps['signTransaction']
+    | SignerWalletAdapterProps["signTransaction"]
     | undefined = useMemo(
     () =>
-      adapter && 'signTransaction' in adapter
+      adapter && "signTransaction" in adapter
         ? async (transaction) => {
             if (!connected) throw handleError(new WalletNotConnectedError());
             return await adapter.signTransaction(transaction);
@@ -311,10 +311,10 @@ export const WalletProvider = ({
 
   // Sign multiple transactions if the wallet supports it
   const signAllTransactions:
-    | SignerWalletAdapterProps['signAllTransactions']
+    | SignerWalletAdapterProps["signAllTransactions"]
     | undefined = useMemo(
     () =>
-      adapter && 'signAllTransactions' in adapter
+      adapter && "signAllTransactions" in adapter
         ? async (transactions) => {
             if (!connected) throw handleError(new WalletNotConnectedError());
             return await adapter.signAllTransactions(transactions);
@@ -325,10 +325,10 @@ export const WalletProvider = ({
 
   // Sign an arbitrary message if the wallet supports it
   const signMessage:
-    | MessageSignerWalletAdapterProps['signMessage']
+    | MessageSignerWalletAdapterProps["signMessage"]
     | undefined = useMemo(
     () =>
-      adapter && 'signMessage' in adapter
+      adapter && "signMessage" in adapter
         ? async (message) => {
             if (!connected) throw handleError(new WalletNotConnectedError());
             return await adapter.signMessage(message);

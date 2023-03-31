@@ -1,7 +1,9 @@
-import { h, render } from 'preact';
-import { App } from './App';
-import loader from './loader';
-import { Configurations } from './models';
+import { h, render } from "preact";
+import { App } from "./App";
+import loader from "./loader";
+import { Configurations } from "./models";
+
+import "./main.css";
 
 /**
  * Default configurations that are overridden by

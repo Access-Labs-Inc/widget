@@ -1,4 +1,3 @@
-import tw from "twin.macro";
 import { h, Ref } from "preact";
 import { useCallback, useMemo, useRef, useState } from "preact/hooks";
 import { ChangeEventHandler, forwardRef } from "preact/compat";
@@ -32,14 +31,14 @@ import useFrame from "./hooks/useFrame";
  */
 
 const styles = {
-  root: tw`text-xl w-auto pl-8 py-4 border-0 rounded-[0.5rem] bg-stone-900 text-stone-200 outline-none`,
-  rootFocused: tw`block text-xl pl-8 py-4 border-0 rounded-[0.5rem] bg-stone-900 text-stone-200 outline-none ring-stone-900`,
-  rootDisabled: tw`block bg-stone-500`,
-  rootReadonly: tw`border-2 border-indigo-500`,
-  rootNaN: tw`border-2 border-red-500`,
-  rootOutOfRange: tw`border-2 border-red-500`,
-  wrap: tw`w-auto overflow-hidden`,
-  input: tw`text-stone-200 bg-stone-900 outline-none ring-stone-800 border-0 text-3xl`,
+  root: `text-xl w-auto pl-8 py-4 border-0 rounded-[0.5rem] bg-stone-900 text-stone-200 outline-none`,
+  rootFocused: `block text-xl pl-8 py-4 border-0 rounded-[0.5rem] bg-stone-900 text-stone-200 outline-none ring-stone-900`,
+  rootDisabled: `block bg-stone-500`,
+  rootReadonly: `border-2 border-indigo-500`,
+  rootNaN: `border-2 border-red-500`,
+  rootOutOfRange: `border-2 border-red-500`,
+  wrap: `w-auto overflow-hidden`,
+  input: `text-stone-200 bg-stone-900 outline-none ring-stone-800 border-0 text-3xl`,
 };
 
 const getDecimalValue = (stringMode: boolean, decimalValue: DecimalClass) => {
@@ -519,7 +518,7 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
   // ============================ Render ============================
   return (
     <div
-      css={[
+      className={[
         styles.root,
         focus && styles.rootFocused,
         disabled && styles.rootDisabled,
@@ -528,7 +527,7 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
         !decimalValue.isInvalidate() &&
           !isInRange(decimalValue) &&
           styles.rootOutOfRange,
-      ]}
+      ].join(" ")}
       style={style}
       onFocus={() => {
         setFocus(true);
@@ -539,16 +538,16 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
       onCompositionStart={onCompositionStart}
       onCompositionEnd={onCompositionEnd}
     >
-      <div css={styles.wrap}>
+      <div className={styles.wrap}>
         <input
           autoComplete="off"
           role="input"
-          aria-valuemin={min as any}
-          aria-valuemax={max as any}
+          aria-valuemin={min as number}
+          aria-valuemax={max as number}
           aria-valuenow={
             decimalValue.isInvalidate()
               ? null
-              : (decimalValue.toString() as any)
+              : (decimalValue.toString() as string)
           }
           step={step}
           {...inputProps}
