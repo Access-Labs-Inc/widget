@@ -41,7 +41,7 @@ button.acs__wallet_adapter_button_trigger {
 }
 
 .acs__wallet_list_item {
-  @apply text-white w-full text-left mt-4 text-xl bg-stone-700 rounded-full font-normal py-3 px-6;
+  @apply text-white w-full text-left mt-4 text-xl bg-stone-700 rounded-full font-normal py-3 px-6 flex;
 }
 
 /* >> components/wallet-adapter/WalletModal.tsx */
