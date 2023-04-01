@@ -1,25 +1,25 @@
 import { h } from "preact";
 import type { Wallet } from "@solana/wallet-adapter-react";
 import type { FunctionalComponent } from "preact";
+import { useContext } from "preact/hooks";
+import { ConfigContext } from "../../../AppContext";
+import { clsxp } from "../../../libs/utils";
 
 export interface WalletIconProps {
   wallet: Wallet | null;
 }
 
-const styles = {
-  wallet_adapter_wallet_icon: `w-8 h-8 mr-8`,
-};
-
 export const WalletIcon: FunctionalComponent<WalletIconProps> = ({
   wallet,
   ...props
 }) => {
+  const { classPrefix } = useContext(ConfigContext);
   return (
     wallet && (
       <img
         src={wallet.adapter.icon}
         alt={`${wallet.adapter.name} icon`}
-        className={styles.wallet_adapter_wallet_icon}
+        className={clsxp(classPrefix, "wallet_adapter_wallet_icon")}
         {...props}
       />
     )

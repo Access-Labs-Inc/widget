@@ -9,7 +9,6 @@ interface Props {
   children: ComponentChildren;
   config: Configurations;
   element?: HTMLElement;
-  classPrefix?: string;
 }
 export const AppContext = ({ children, config, element }: Props) => {
   const enhancedConfig = { ...config, element };

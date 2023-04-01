@@ -1,6 +1,7 @@
 import { FunctionalComponent, h } from "preact";
 import {
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -16,31 +17,19 @@ import { useWallet, type Wallet } from "../useWallet";
 import { Collapse } from "./Collapse";
 import { useWalletModal } from "./useWalletModal";
 import { WalletListItem } from "./WalletListItem";
+import { ConfigContext } from "../../../AppContext";
+import { clsxp } from "../../../libs/utils";
 
 export interface WalletModalProps {
   className?: string;
   container?: string;
 }
 
-const styles = {
-  wallet_adapter_modal_title: `text-2xl font-sans font-semibold text-center pb-2 px-10`,
-  wallet_adapter_modal_title_para: `text-sm font-sans w-80 py-0 text-center`,
-  wallet_adapter_modal: `absolute left-0 top-[110%] text-white`,
-  wallet_adapter_modal_wrapper: `relative flex flex-col items-center justify-center pb-2`,
-  wallet_adapter_modal_container: `rounded-[1rem] bg-stone-800 p-3 content-center items-center z-10`,
-  wallet_adapter_modal_button_close: `absolute top-4 right-4 p-3 cursor-pointer bg-stone-800 border-0 fill-[#fff]`,
-  wallet_adapter_modal_list: `list-none m-0 p-0 w-full`,
-  wallet_adapter_modal_list_more: `cursor-pointer text-white bg-transparent border-0 px-4 py-2 mt-2 text-sm text-center self-center`,
-  wallet_adapter_modal_list_more_icon_rotate: `transform rotate-0 pl-2`,
-  wallet_adapter_modal_list_more_icon_rotate_expanded: `pl-2 transform rotate-180`,
-  wallet_adapter_modal_middle: `flex flex-col align-middle justify-center`,
-  wallet_adapter_modal_middle_button: `w-full block rounded-full mt-2 px-6 py-3 bg-stone-700 border-0 text-white cursor-pointer`,
-};
-
 export const WalletModal: FunctionalComponent<WalletModalProps> = ({
   className = "",
   container = "#wallet-modal-button",
 }) => {
+  const { classPrefix } = useContext(ConfigContext);
   const ref = useRef<HTMLDivElement>(null);
   const { wallets, select } = useWallet();
   const { setVisible } = useWalletModal();
@@ -77,7 +66,7 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
               wallet.adapter.name === "Phantom"
           ) ||
           wallets.find(
-            (wallet: { readyState: any }) =>
+            (wallet: { readyState: WalletReadyState }) =>
               wallet.readyState === WalletReadyState.Loadable
           ) ||
           otherWallets[0];
@@ -196,22 +185,29 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
       <div
         aria-labelledby="wallet-adapter-modal-title"
         aria-modal="true"
-        className={[styles.wallet_adapter_modal, className].join(" ")}
+        className={clsxp(classPrefix, "wallet_adapter_modal", className)}
         ref={ref}
         role="dialog"
       >
-        <div className={styles.wallet_adapter_modal_container}>
-          <div className={styles.wallet_adapter_modal_wrapper}>
+        <div className={clsxp(classPrefix, "wallet_adapter_modal_container")}>
+          <div className={clsxp(classPrefix, "wallet_adapter_modal_wrapper")}>
             {installedWallets.length ? (
               <Fragment>
-                <h1 className={styles.wallet_adapter_modal_title}>
+                <h1
+                  className={clsxp(classPrefix, "wallet_adapter_modal_title")}
+                >
                   Connect your wallet
                 </h1>
-                <p className={styles.wallet_adapter_modal_title_para}>
+                <p
+                  className={clsxp(
+                    classPrefix,
+                    "wallet_adapter_modal_title_para"
+                  )}
+                >
                   You need a Solana wallet to
                   <br /> connect to the website.
                 </p>
-                <ul className={styles.wallet_adapter_modal_list}>
+                <ul className={clsxp(classPrefix, "wallet_adapter_modal_list")}>
                   {installedWallets.map((wallet) => (
                     <WalletListItem
                       key={wallet.adapter.name}
@@ -241,7 +237,10 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
                 </ul>
                 {otherWallets.length ? (
                   <button
-                    className={styles.wallet_adapter_modal_list_more}
+                    className={clsxp(
+                      classPrefix,
+                      "wallet_adapter_modal_list_more"
+                    )}
                     onClick={handleCollapseClick}
                     tabIndex={0}
                   >
@@ -254,8 +253,14 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
                       fill="white"
                       className={
                         expanded
-                          ? styles.wallet_adapter_modal_list_more_icon_rotate_expanded
-                          : styles.wallet_adapter_modal_list_more_icon_rotate
+                          ? clsxp(
+                              classPrefix,
+                              "wallet_adapter_modal_list_more_icon_rotate_expanded"
+                            )
+                          : clsxp(
+                              classPrefix,
+                              "wallet_adapter_modal_list_more_icon_rotate"
+                            )
                       }
                     >
                       <path d="M0.71418 1.626L5.83323 6.26188C5.91574 6.33657 6.0181 6.39652 6.13327 6.43762C6.24844 6.47872 6.37371 6.5 6.50048 6.5C6.62725 6.5 6.75252 6.47872 6.8677 6.43762C6.98287 6.39652 7.08523 6.33657 7.16774 6.26188L12.2868 1.626C12.7753 1.1835 12.3703 0.5 11.6195 0.5H1.37997C0.629216 0.5 0.224175 1.1835 0.71418 1.626Z" />
@@ -265,13 +270,20 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
               </Fragment>
             ) : (
               <Fragment>
-                <h1 className={styles.wallet_adapter_modal_title}>
+                <h1
+                  className={clsxp(classPrefix, "wallet_adapter_modal_title")}
+                >
                   You'll need a wallet
                 </h1>
-                <div className={styles.wallet_adapter_modal_middle}>
+                <div
+                  className={clsxp(classPrefix, "wallet_adapter_modal_middle")}
+                >
                   <button
                     type="button"
-                    className={styles.wallet_adapter_modal_middle_button}
+                    className={clsxp(
+                      classPrefix,
+                      "wallet_adapter_modal_middle_button"
+                    )}
                     onClick={(event: MouseEvent) =>
                       handleWalletClick(event, getStartedWallet.adapter.name)
                     }
@@ -282,7 +294,10 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
                 {otherWallets.length ? (
                   <Fragment>
                     <button
-                      className={styles.wallet_adapter_modal_list_more}
+                      className={clsxp(
+                        classPrefix,
+                        "wallet_adapter_modal_list_more"
+                      )}
                       onClick={handleCollapseClick}
                       tabIndex={0}
                     >
@@ -298,8 +313,14 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
                         fill="white"
                         className={
                           expanded
-                            ? styles.wallet_adapter_modal_list_more_icon_rotate_expanded
-                            : styles.wallet_adapter_modal_list_more_icon_rotate
+                            ? clsxp(
+                                classPrefix,
+                                "wallet_adapter_modal_list_more_icon_rotate_expanded"
+                              )
+                            : clsxp(
+                                classPrefix,
+                                "wallet_adapter_modal_list_more_icon_rotate"
+                              )
                         }
                       >
                         <path d="M0.71418 1.626L5.83323 6.26188C5.91574 6.33657 6.0181 6.39652 6.13327 6.43762C6.24844 6.47872 6.37371 6.5 6.50048 6.5C6.62725 6.5 6.75252 6.47872 6.8677 6.43762C6.98287 6.39652 7.08523 6.33657 7.16774 6.26188L12.2868 1.626C12.7753 1.1835 12.3703 0.5 11.6195 0.5H1.37997C0.629216 0.5 0.224175 1.1835 0.71418 1.626Z" />
@@ -309,7 +330,12 @@ export const WalletModal: FunctionalComponent<WalletModalProps> = ({
                       expanded={expanded}
                       id="wallet-adapter-modal-collapse"
                     >
-                      <ul className={styles.wallet_adapter_modal_list}>
+                      <ul
+                        className={clsxp(
+                          classPrefix,
+                          "wallet_adapter_modal_list"
+                        )}
+                      >
                         {otherWallets.map((wallet) => (
                           <WalletListItem
                             key={wallet.adapter.name}

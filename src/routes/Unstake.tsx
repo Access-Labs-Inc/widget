@@ -5,41 +5,31 @@ import { RouteLink } from "../layout/Router";
 import { useContext } from "preact/hooks";
 import { ConfigContext } from "../AppContext";
 import env from "../libs/env";
-
-const styles = {
-  root: `h-[31em] flex flex-col justify-between`,
-  cancel_link: `self-end cursor-pointer text-blue-400 no-underline`,
-  button: `w-full block rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700`,
-  title: `text-white text-2xl text-center`,
-  subtitle: `text-white text-center text-stone-400 my-14`,
-  footnote: `flex justify-center text-sm text-indigo-500 mt-2 mb-2`,
-};
-
-// const hoverButtonStyles = css`
-//   &:hover {
-//     ${tw`bg-indigo-300 text-stone-800`}
-//   }
-// `;
+import clsx from "clsx";
+import { clsxp } from "../libs/utils";
 
 export const Unstake = () => {
-  const { poolId } = useContext(ConfigContext);
+  const { poolId, classPrefix } = useContext(ConfigContext);
 
   return (
-    <div className={styles.root}>
+    <div className={clsxp(classPrefix, "unstake_root")}>
       <Header>
-        <RouteLink href="/" css={styles.cancel_link}>
+        <RouteLink
+          href="/"
+          className={clsx(classPrefix, "unstake_cancel_link")}
+        >
           Cancel
         </RouteLink>
       </Header>
 
-      <div className={styles.title}>Unlock ACS</div>
-      <div className={styles.subtitle}>
+      <div className={clsxp(classPrefix, "unstake_title")}>Unlock ACS</div>
+      <div className={clsxp(classPrefix, "unstake_subtitle")}>
         ACS unlocking is currently only possible in the access app.
       </div>
 
       <div>
         <a
-          className={[styles.button, "hoverButtonStyles"].join(" ")}
+          className={clsxp(classPrefix, "unstake_button")}
           href={`${env.UNSTAKE_BASE_URL}/${poolId}`}
           target="_blank"
           rel="noopener"
@@ -47,7 +37,7 @@ export const Unstake = () => {
           Unlock ACS on access
         </a>
 
-        <div className={styles.footnote}>
+        <div className={clsxp(classPrefix, "unstake_footnote")}>
           This will direct you to accessprotocol.co
         </div>
       </div>

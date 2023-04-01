@@ -27,33 +27,11 @@ import {
 } from "../libs/program";
 import { sendTx } from "../libs/transactions";
 import Loading from "../components/Loading";
-import { formatPenyACSCurrency } from "../libs/utils";
+import { clsxp, formatPenyACSCurrency } from "../libs/utils";
 import env from "../libs/env";
 import { ProgressModal } from "../components/ProgressModal";
 import { useFeePayer } from "../hooks/useFeePayer";
 import { WalletAdapterProps } from "@solana/wallet-adapter-base";
-
-const styles = {
-  root: `h-[31em] flex flex-col justify-between`,
-  cancel_link: `self-end cursor-pointer text-blue-400 no-underline`,
-  button: `w-full rounded-full cursor-pointer no-underline font-bold py-4 mb-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0`,
-  title: `my-8 mt-16 text-white text-2xl text-center`,
-  titleError: `mt-8 text-red-500 text-2xl text-center`,
-  subtitle: `text-white text-center text-stone-400`,
-  subtitleError: `text-red-500 text-center`,
-  claimAmount: `text-white mb-40 text-4xl text-center text-green-400`,
-  loader: `flex justify-center content-center mb-56`,
-  steps: `flex flex-col justify-start my-4`,
-  stepsList: `space-y-4 list-none mb-10`,
-  disabledButtonStyles: `bg-stone-600 cursor-not-allowed`,
-  invalid: `bg-red-400`,
-};
-
-// const hoverButtonStyles = css`
-//   &:hover {
-//     ${`bg-indigo-300 text-stone-800`}
-//   }
-// `;
 
 const CLAIM_BOND_REWARDS_STEP = "Claim airdrop rewards";
 const CLAIM_STAKE_REWARDS_STEP = "Claim stake rewards";
@@ -66,7 +44,7 @@ interface FeePaymentData {
 }
 
 export const Claim = () => {
-  const { poolId, poolName, element } = useContext(ConfigContext);
+  const { poolId, poolName, element, classPrefix } = useContext(ConfigContext);
   const { connection } = useConnection();
   const { publicKey, sendTransaction: sendTransactionWithFeesUnpaid } =
     useWallet();
@@ -284,12 +262,16 @@ export const Claim = () => {
   };
 
   return (
-    <div className={styles.root}>
+    <div className={clsxp(classPrefix, "claim_root")}>
       {stakeModalOpen && error && (
         <Fragment>
-          <div className={styles.titleError}>Error occured:</div>
-          <div className={styles.subtitleError}>{error}</div>
-          <RouteLink css={[styles.button, hoverButtonStyles]} href="/">
+          <div className={clsxp(classPrefix, "claim_title_error")}>
+            Error occured:
+          </div>
+          <div className={clsxp(classPrefix, "claim_subtitle_error")}>
+            {error}
+          </div>
+          <RouteLink className={clsxp(classPrefix, "claim_button")} href="/">
             Close
           </RouteLink>
         </Fragment>
@@ -304,27 +286,30 @@ export const Claim = () => {
       {!stakeModalOpen && (
         <Fragment>
           <Header>
-            <RouteLink href="/" css={styles.cancel_link}>
+            <RouteLink
+              href="/"
+              className={clsxp(classPrefix, "claim_cancel_link")}
+            >
               Cancel
             </RouteLink>
           </Header>
 
           {stakedAccount?.stakeAmount && stakedPool ? (
             <Fragment>
-              <div className={styles.title}>
+              <div className={clsxp(classPrefix, "claim_title")}>
                 Claim on &apos;{poolName}&apos;
               </div>
-              <div className={styles.claimAmount}>
+              <div className={clsxp(classPrefix, "claim_claim_amount")}>
                 {formatPenyACSCurrency(claimableAmount)} ACS
               </div>
 
               <div>
                 <button
-                  className={[
-                    styles.button,
-                    hoverButtonStyles,
-                    claimableAmount <= 0 && styles.disabledButtonStyles,
-                  ].join(" ")}
+                  className={clsxp(
+                    classPrefix,
+                    "claim_button",
+                    claimableAmount <= 0 && "claim_button_disabled"
+                  )}
                   onClick={handle}
                 >
                   Claim
@@ -332,7 +317,7 @@ export const Claim = () => {
               </div>
             </Fragment>
           ) : (
-            <div className={styles.loader}>
+            <div className={clsxp(classPrefix, "claim_loader")}>
               <Loading />
             </div>
           )}

@@ -37,35 +37,11 @@ import { NumberInputWithSlider } from "../components/NumberInputWithSlider";
 import { sendTx } from "../libs/transactions";
 import Loading from "../components/Loading";
 import { ProgressModal } from "../components/ProgressModal";
-import { formatACSCurrency, sleep } from "../libs/utils";
+import { clsxp, formatACSCurrency, sleep } from "../libs/utils";
 import { useFeePayer } from "../hooks/useFeePayer";
 import { WalletAdapterProps } from "@solana/wallet-adapter-base";
 import env from "../libs/env";
 import BN from "bn.js";
-
-const styles = {
-  root: `h-[31em] flex flex-col justify-between`,
-  cancel_link: `self-end cursor-pointer text-blue-400 no-underline`,
-  button: `w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0`,
-  title: `my-8 mt-16 text-white text-3xl text-center`,
-  titleError: `mt-8 text-red-500 text-2xl text-center`,
-  subtitle: `text-white text-center text-stone-400`,
-  subtitleError: `text-red-500 text-center`,
-  feesRoot: `mt-2 text-center text-xs text-stone-400`,
-  feeWithTooltip: `flex justify-center`,
-  loader: `flex justify-center content-center mb-56`,
-  steps: `flex flex-col justify-start my-4`,
-  stepsList: `space-y-4 list-none mb-10`,
-  disabledButtonStyles: `bg-stone-600 cursor-not-allowed`,
-  invalid: `bg-red-400`,
-  invalidText: `mt-1 text-center text-red-500`,
-};
-
-// const hoverButtonStyles = css`
-//   &:hover {
-//     ${`bg-indigo-300 text-stone-800`}
-//   }
-// `;
 
 interface FeePaymentData {
   feePayerPubKey: string;
@@ -80,7 +56,7 @@ const DONE_STEP = "Done";
 const IDLE_STEP = "Idle";
 
 export const Stake = () => {
-  const { poolId, poolName, element } = useContext(ConfigContext);
+  const { poolId, poolName, element, classPrefix } = useContext(ConfigContext);
   const { connection } = useConnection();
   const { publicKey, sendTransaction: sendTransactionWithFeesUnpaid } =
     useWallet();
@@ -433,12 +409,16 @@ export const Stake = () => {
   ]);
 
   return (
-    <div className={styles.root}>
+    <div className={clsxp(classPrefix, "stake_root")}>
       {stakeModalOpen && error && (
         <Fragment>
-          <div className={styles.titleError}>Error occured:</div>
-          <div className={styles.subtitleError}>{error}</div>
-          <RouteLink className={[styles.button, "hoverButtonStyles"]} href="/">
+          <div className={clsxp(classPrefix, "stake_title_error")}>
+            Error occured:
+          </div>
+          <div className={clsxp(classPrefix, "stake_subtitle_error")}>
+            {error}
+          </div>
+          <RouteLink className={clsxp(classPrefix, "stake_button")} href="/">
             Close
           </RouteLink>
         </Fragment>
@@ -458,7 +438,10 @@ export const Stake = () => {
       {!stakeModalOpen && (
         <Fragment>
           <Header>
-            <RouteLink href="/" css={styles.cancel_link}>
+            <RouteLink
+              href="/"
+              className={clsxp(classPrefix, "stake_cancel_link")}
+            >
               Cancel
             </RouteLink>
           </Header>
@@ -467,14 +450,18 @@ export const Stake = () => {
             bondAccount !== undefined &&
             balance !== undefined && (
               <Fragment>
-                <div className={styles.title}>{poolName}</div>
+                <div className={clsxp(classPrefix, "stake_title")}>
+                  {poolName}
+                </div>
                 {!insufficientBalance ? (
-                  <div className={styles.subtitle}>
+                  <div className={clsxp(classPrefix, "stake_subtitle")}>
                     Both {poolName} and you will receive a ACS inflation rewards
                     split equally.
                   </div>
                 ) : (
-                  <p className={styles.invalidText}>{invalidText}</p>
+                  <p className={clsxp(classPrefix, "stake_invalid_text")}>
+                    {invalidText}
+                  </p>
                 )}
 
                 <div>
@@ -497,22 +484,28 @@ export const Stake = () => {
                       href={env.GET_ACS_URL}
                       target="_blank"
                       rel="noopener"
-                      className={[styles.button, styles.invalid].join(" ")}
+                      className={clsxp(
+                        classPrefix,
+                        "stake_button",
+                        "stake_button_invalid"
+                      )}
                     >
                       Get ACS/SOL on access
                     </a>
                   )}
                   {!insufficientBalance && (
                     <button
-                      className={[styles.button, "hoverButtonStyles"].join(" ")}
+                      className={clsxp(classPrefix, "stake_button")}
                       onClick={handle}
                     >
                       Lock
                     </button>
                   )}
 
-                  <div className={styles.feesRoot}>
-                    <div className={styles.feeWithTooltip}>
+                  <div className={clsxp(classPrefix, "stake_fees_root")}>
+                    <div
+                      className={clsxp(classPrefix, "stake_fee_with_tooltip")}
+                    >
                       <div>Protocol fee: {formatACSCurrency(fee)} ACS</div>
                       <Tooltip
                         message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
@@ -529,7 +522,7 @@ export const Stake = () => {
             bondAccount === undefined ||
             stakedPool == null ||
             balance === undefined) && (
-            <div className={styles.loader}>
+            <div className={clsxp(classPrefix, "stake_loader")}>
               <Loading />
             </div>
           )}

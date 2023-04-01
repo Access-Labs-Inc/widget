@@ -22,7 +22,7 @@
       .disconnectButton:hover {
         background-color: red;
       }
-      .PREFIX__Button__wallet_adapter_button {
+      .PREFIX__wallet_adapter_button_trigger {
         background-color: blue;
         border: none;
         color: white;
@@ -38,10 +38,12 @@
   </head>
 
   <body>
-    <h1>ACS Widget dev page</h1>
-    <h2>The shown widget is for demonstration purpose only</h2>
+    <div style="padding: 2rem;">
+      <h1>ACS Widget dev page</h1>
+      <h2>The shown widget is for demonstration purpose only</h2>
 
-    <div id="acs"></div>
+      <div id="acs"></div>
+    </div>
 
     <script>
       (function (w, d, s, o, f, js, fjs) {
@@ -54,7 +56,6 @@
         debug: true,
         poolId: 'Fxh4hDFHJuTfD3Eq4en36dTk8QvbsSMoTE5Y2hVX3qVt',
         poolName: "The Block",
-        classPrefix: "PREFIX__",
       });
       document.querySelector("#acs").addEventListener("connected", (event) => {
         console.log("Connected to the wallet with address: " + JSON.stringify(event.detail));

@@ -1,5 +1,7 @@
 import { FunctionalComponent, type ComponentChildren, h } from "preact";
-import { useLayoutEffect, useRef } from "preact/hooks";
+import { useContext, useLayoutEffect, useRef } from "preact/hooks";
+import { ConfigContext } from "../../../AppContext";
+import { clsxp } from "../../../libs/utils";
 
 export type CollapseProps = {
   children: ComponentChildren;
@@ -12,6 +14,7 @@ export const Collapse: FunctionalComponent<CollapseProps> = ({
   children,
   expanded = false,
 }) => {
+  const { classPrefix } = useContext(ConfigContext);
   const ref = useRef<HTMLDivElement>(null);
   const instant = useRef(true);
   const transition = "height 250ms ease-out";
@@ -76,7 +79,7 @@ export const Collapse: FunctionalComponent<CollapseProps> = ({
 
   return (
     <div
-      className="wallet-adapter-collapse"
+      className={clsxp(classPrefix, "wallet-adapter-collapse")}
       id={id}
       ref={ref}
       role="region"

@@ -4,6 +4,7 @@ import RcInputNumber from "../libs/rc-input-number";
 import RcSlider from "react-input-slider";
 import { formatACSCurrency } from "../libs/utils";
 import { ConfigContext } from "../AppContext";
+import { clsxp } from "../libs/utils";
 
 export interface InputProps {
   invalid?: boolean;
@@ -34,13 +35,6 @@ function setNativeValue(
     }
   }
 }
-
-const styles = {
-  root: `relative my-6`,
-  slider: `mt-4 block border-0 mx-1`,
-  thumb: `cursor-pointer rounded-full border-4 border-stone-800 bg-indigo-500 px-2.5`,
-  minMax: `absolute top-0 right-0 mt-4 mr-8 text-2xl font-bold hover:cursor-pointer text-indigo-200`,
-};
 
 export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
   props
@@ -82,7 +76,7 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
   };
 
   return (
-    <div className={styles.root}>
+    <div className={clsxp(classPrefix, "number_input_with_slider_root")}>
       <RcInputNumber
         min={Number(min)}
         max={Number(max)}
@@ -93,7 +87,7 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
         formatter={(newValue: number) => formatACSCurrency(newValue)}
         onChange={handleChange}
       />
-      <div className={styles.slider}>
+      <div className={clsxp(classPrefix, "number_input_with_slider_slider")}>
         <RcSlider
           xmin={Number(min)}
           xmax={Number(max)}
@@ -117,7 +111,7 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
           }}
         />
       </div>
-      <div className={styles.minMax}>
+      <div className={clsxp(classPrefix, "number_input_with_slider_minmax")}>
         {value === max && max && min && max > min ? (
           <span onClick={changeToMin}>Min</span>
         ) : null}

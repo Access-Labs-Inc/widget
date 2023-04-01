@@ -1,13 +1,7 @@
 import { ComponentChildren, h } from "preact";
 import { useContext } from "preact/hooks";
 import { ConfigContext } from "../AppContext";
-
-const styles = {
-  tooltipRoot: `relative flex flex-row items-center justify-center`,
-  wrapper: `absolute bottom-0 mb-6 hidden w-80 flex-col items-center group-hover:flex`,
-  message: `relative z-10 rounded-md bg-stone-500 p-2 text-xs leading-none text-white shadow-lg`,
-  arrow: `-mt-2 h-3 w-3 rotate-45 bg-stone-500`,
-};
+import { clsxp } from "../libs/utils";
 
 export const Tooltip = ({
   message,
@@ -18,11 +12,11 @@ export const Tooltip = ({
 }) => {
   const { classPrefix } = useContext(ConfigContext);
   return (
-    <div className={["group", styles.tooltipRoot].join(" ")}>
+    <div className={clsxp(classPrefix, "group", "tooltip_root")}>
       {children}
-      <div className={styles.wrapper}>
-        <span className={styles.message}>{message}</span>
-        <div className={styles.arrow} />
+      <div className={clsxp(classPrefix, "tooltip_wrapper")}>
+        <span className={clsxp(classPrefix, "tooltip_message")}>{message}</span>
+        <div className={clsxp(classPrefix, "tooltip_arrow")} />
       </div>
     </div>
   );

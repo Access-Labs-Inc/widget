@@ -13,6 +13,7 @@ const defaultConfig: Configurations = {
   poolId: null,
   poolName: null,
   debug: true,
+  classPrefix: "acs__",
 };
 
 // main entry point - calls loader and render Preact app into supplied element

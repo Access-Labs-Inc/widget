@@ -23,13 +23,19 @@ import { BondAccount, StakeAccount } from "../libs/ap/state";
 import env from "../libs/env";
 import { useConnection } from "../components/wallet-adapter/useConnection";
 import { getBondAccounts } from "../libs/program";
+import { clsxp } from "../libs/utils";
 
 const Main = () => {
   const { publicKey, wallet, connected } = useWallet();
   const [active, setActive] = useState(false);
   const ref = useRef<HTMLUListElement>(null);
-  const { disconnectButtonClass, connectedButtonClass, element, poolId } =
-    useContext(ConfigContext);
+  const {
+    disconnectButtonClass,
+    connectedButtonClass,
+    element,
+    poolId,
+    classPrefix,
+  } = useContext(ConfigContext);
   const { connection } = useConnection();
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey]);
@@ -124,38 +130,39 @@ const Main = () => {
 
   if (!wallet) {
     return (
-      <div className="wallet_adapter_dropdown_wrapper">
-        <WalletModalButton externalButtonClass={disconnectButtonClass} />
+      <div className={clsxp(classPrefix, "wallet_adapter_dropdown_wrapper")}>
+        <WalletModalButton />
       </div>
     );
   }
   if (!base58) {
     return (
-      <div className="wallet_adapter_dropdown_wrapper">
-        <WalletConnectButton externalButtonClass={disconnectButtonClass} />
+      <div className={clsxp(classPrefix, "wallet_adapter_dropdown_wrapper")}>
+        <WalletConnectButton />
       </div>
     );
   }
 
   return (
-    <div className="wallet_adapter_dropdown_wrapper">
+    <div className={clsxp(classPrefix, "wallet_adapter_dropdown_wrapper")}>
       <Button
         aria-expanded={active}
-        className={[
+        className={clsxp(
+          classPrefix,
           "wallet_adapter_button_trigger",
-          active ? "wallet_adapter_button_trigger_active" : "",
-        ].join(" ")}
-        externalButtonClass={connectedButtonClass}
+          active && "wallet_adapter_button_trigger_active"
+        )}
         style={{ pointerEvents: active ? "none" : "auto" }}
         onClick={toggleDropdown}
       >
         {content}
       </Button>
       <div
-        className={[
+        className={clsxp(
+          classPrefix,
           "wallet_adapter_dropdown",
-          active ? "wallet_adapter_dropdown_active" : "",
-        ].join(" ")}
+          active && "wallet_adapter_dropdown_active"
+        )}
       >
         <Router
           routes={{

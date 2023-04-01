@@ -13,7 +13,7 @@ export interface AppConfigurations {
   poolName: string | null;
   disconnectButtonClass?: string | null;
   connectedButtonClass?: string | null;
-  classPrefix?: string;
+  classPrefix: string;
 }
 
 export type Configurations = InfraConfigurations & AppConfigurations;
