@@ -1,59 +1,59 @@
-import { Fragment, h } from "preact";
-import { Info } from "phosphor-react";
+import { Fragment, h } from 'preact';
+import { Info } from 'phosphor-react';
 import {
   BondAccount,
   CentralState,
   StakeAccount,
   StakePool,
-} from "../libs/ap/state";
+} from '../libs/ap/state';
 import {
   claimRewards,
   crank,
   createStakeAccount,
   stake,
-} from "../libs/ap/bindings";
+} from '../libs/ap/bindings';
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
-} from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
-import { useContext, useEffect, useMemo, useState } from "preact/hooks";
+} from '@solana/spl-token';
+import { PublicKey } from '@solana/web3.js';
+import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 
-import { Header } from "../components/Header";
-import { RouteLink } from "../layout/Router";
-import { ConfigContext } from "../AppContext";
-import { useConnection } from "../components/wallet-adapter/useConnection";
-import { useWallet } from "../components/wallet-adapter/useWallet";
+import { Header } from '../components/Header';
+import { RouteLink } from '../layout/Router';
+import { ConfigContext } from '../AppContext';
+import { useConnection } from '../components/wallet-adapter/useConnection';
+import { useWallet } from '../components/wallet-adapter/useWallet';
 import {
   calculateRewardForStaker,
   getBondAccounts,
   getStakeAccounts,
   getUserACSBalance,
-} from "../libs/program";
-import { Tooltip } from "../components/Tooltip";
-import { NumberInputWithSlider } from "../components/NumberInputWithSlider";
-import { sendTx } from "../libs/transactions";
-import Loading from "../components/Loading";
-import { ProgressModal } from "../components/ProgressModal";
-import { clsxp, formatACSCurrency, sleep } from "../libs/utils";
-import { useFeePayer } from "../hooks/useFeePayer";
-import { WalletAdapterProps } from "@solana/wallet-adapter-base";
-import env from "../libs/env";
-import BN from "bn.js";
+} from '../libs/program';
+import { Tooltip } from '../components/Tooltip';
+import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
+import { sendTx } from '../libs/transactions';
+import Loading from '../components/Loading';
+import { ProgressModal } from '../components/ProgressModal';
+import { clsxp, formatACSCurrency, sleep } from '../libs/utils';
+import { useFeePayer } from '../hooks/useFeePayer';
+import { WalletAdapterProps } from '@solana/wallet-adapter-base';
+import env from '../libs/env';
+import BN from 'bn.js';
 
 interface FeePaymentData {
   feePayerPubKey: string;
-  sendTransaction: WalletAdapterProps["sendTransaction"];
+  sendTransaction: WalletAdapterProps['sendTransaction'];
 }
 
-const CRANK_STEP = "Crank";
-const CREATE_STAKING_ACCOUNT_STEP = "Create locking account";
-const CLAIM_REWARDS_STEP = "Claim rewards";
-const STAKE_STEP = "Lock ACS";
-const DONE_STEP = "Done";
-const IDLE_STEP = "Idle";
+const CRANK_STEP = 'Crank';
+const CREATE_STAKING_ACCOUNT_STEP = 'Create locking account';
+const CLAIM_REWARDS_STEP = 'Claim rewards';
+const STAKE_STEP = 'Lock ACS';
+const DONE_STEP = 'Done';
+const IDLE_STEP = 'Idle';
 
 export const Stake = () => {
   const { poolId, poolName, element, classPrefix } = useContext(ConfigContext);
@@ -257,18 +257,18 @@ export const Stake = () => {
         try {
           stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
         } catch (e) {
-          console.warn("Stake account not ready yet.");
+          console.warn('Stake account not ready yet.');
         }
         let attempts = 0;
         while (stakeAccount == null && attempts < 20) {
           // eslint-disable-next-line no-await-in-loop
           await sleep(1000);
-          console.log("Sleeping...");
+          console.log('Sleeping...');
           // eslint-disable-next-line no-await-in-loop
           try {
             stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
           } catch (e) {
-            console.warn("Stake account not ready yet attempt: ", attempts);
+            console.warn('Stake account not ready yet attempt: ', attempts);
           }
           attempts += 1;
         }
@@ -318,7 +318,7 @@ export const Stake = () => {
           skipPreflight: true,
         });
 
-        const claimEvent = new CustomEvent("claim", {
+        const claimEvent = new CustomEvent('claim', {
           detail: {
             address: publicKey.toBase58(),
             locked: claimableStakeAmount,
@@ -344,7 +344,7 @@ export const Stake = () => {
         skipPreflight: true,
       });
 
-      const lockedEvent = new CustomEvent("lock", {
+      const lockedEvent = new CustomEvent('lock', {
         detail: {
           address: publicKey.toBase58(),
           amount: Number(stakeAmount) * 10 ** 6,
@@ -380,7 +380,7 @@ export const Stake = () => {
     minPoolStakeAmount,
   ]);
 
-  console.log("Min stake: ", minStakeAmount);
+  console.log('Min stake: ', minStakeAmount);
 
   const maxStakeAmount = useMemo(() => {
     return Number(balance) / (1 + feePercentageFraction);
@@ -409,16 +409,16 @@ export const Stake = () => {
   ]);
 
   return (
-    <div className={clsxp(classPrefix, "stake_root")}>
+    <div className={clsxp(classPrefix, 'stake_root')}>
       {stakeModalOpen && error && (
         <Fragment>
-          <div className={clsxp(classPrefix, "stake_title_error")}>
+          <div className={clsxp(classPrefix, 'stake_title_error')}>
             Error occured:
           </div>
-          <div className={clsxp(classPrefix, "stake_subtitle_error")}>
+          <div className={clsxp(classPrefix, 'stake_subtitle_error')}>
             {error}
           </div>
-          <RouteLink className={clsxp(classPrefix, "stake_button")} href="/">
+          <RouteLink className={clsxp(classPrefix, 'stake_button')} href='/'>
             Close
           </RouteLink>
         </Fragment>
@@ -439,8 +439,8 @@ export const Stake = () => {
         <Fragment>
           <Header>
             <RouteLink
-              href="/"
-              className={clsxp(classPrefix, "stake_cancel_link")}
+              href='/'
+              className={clsxp(classPrefix, 'stake_cancel_link')}
             >
               Cancel
             </RouteLink>
@@ -450,16 +450,16 @@ export const Stake = () => {
             bondAccount !== undefined &&
             balance !== undefined && (
               <Fragment>
-                <div className={clsxp(classPrefix, "stake_title")}>
+                <div className={clsxp(classPrefix, 'stake_title')}>
                   {poolName}
                 </div>
                 {!insufficientBalance ? (
-                  <div className={clsxp(classPrefix, "stake_subtitle")}>
+                  <div className={clsxp(classPrefix, 'stake_subtitle')}>
                     Both {poolName} and you will receive a ACS inflation rewards
                     split equally.
                   </div>
                 ) : (
-                  <p className={clsxp(classPrefix, "stake_invalid_text")}>
+                  <p className={clsxp(classPrefix, 'stake_invalid_text')}>
                     {invalidText}
                   </p>
                 )}
@@ -482,12 +482,12 @@ export const Stake = () => {
                   {insufficientBalance && (
                     <a
                       href={env.GET_ACS_URL}
-                      target="_blank"
-                      rel="noopener"
+                      target='_blank'
+                      rel='noopener'
                       className={clsxp(
                         classPrefix,
-                        "stake_button",
-                        "stake_button_invalid"
+                        'stake_button',
+                        'stake_button_invalid'
                       )}
                     >
                       Get ACS/SOL on access
@@ -495,16 +495,16 @@ export const Stake = () => {
                   )}
                   {!insufficientBalance && (
                     <button
-                      className={clsxp(classPrefix, "stake_button")}
+                      className={clsxp(classPrefix, 'stake_button')}
                       onClick={handle}
                     >
                       Lock
                     </button>
                   )}
 
-                  <div className={clsxp(classPrefix, "stake_fees_root")}>
+                  <div className={clsxp(classPrefix, 'stake_fees_root')}>
                     <div
-                      className={clsxp(classPrefix, "stake_fee_with_tooltip")}
+                      className={clsxp(classPrefix, 'stake_fee_with_tooltip')}
                     >
                       <div>Protocol fee: {formatACSCurrency(fee)} ACS</div>
                       <Tooltip
@@ -522,7 +522,7 @@ export const Stake = () => {
             bondAccount === undefined ||
             stakedPool == null ||
             balance === undefined) && (
-            <div className={clsxp(classPrefix, "stake_loader")}>
+            <div className={clsxp(classPrefix, 'stake_loader')}>
               <Loading />
             </div>
           )}

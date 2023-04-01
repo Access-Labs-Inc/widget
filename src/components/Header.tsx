@@ -1,10 +1,10 @@
-import { h, ComponentChildren } from "preact";
-import { useState, useMemo, useCallback, useContext } from "preact/hooks";
-import { Copy, ArrowUpRight } from "phosphor-react";
-import { ConfigContext } from "../AppContext";
+import { h, ComponentChildren } from 'preact';
+import { useState, useMemo, useCallback, useContext } from 'preact/hooks';
+import { Copy, ArrowUpRight } from 'phosphor-react';
+import { ConfigContext } from '../AppContext';
 
-import { useWallet } from "./wallet-adapter/useWallet";
-import { clsxp } from "../libs/utils";
+import { useWallet } from './wallet-adapter/useWallet';
+import { clsxp } from '../libs/utils';
 
 export const Header = ({ children }: { children: ComponentChildren }) => {
   const { classPrefix } = useContext(ConfigContext);
@@ -27,30 +27,30 @@ export const Header = ({ children }: { children: ComponentChildren }) => {
   }, [base58]);
 
   return (
-    <div className={clsxp(classPrefix, "header_content")}>
+    <div className={clsxp(classPrefix, 'header_content')}>
       <div
         onClick={copyAddress}
-        className={clsxp(classPrefix, "header_dropdown_copy")}
+        className={clsxp(classPrefix, 'header_dropdown_copy')}
       >
         {copied ? (
-          <div className={clsxp(classPrefix, "header_copied_text")}>
+          <div className={clsxp(classPrefix, 'header_copied_text')}>
             Copied!
           </div>
         ) : (
-          <div className={clsxp(classPrefix, "header_copy_text_wrap")}>
-            <div className={clsxp(classPrefix, "header_copy_text")}>
-              <div className={clsxp(classPrefix, "header_copy_text_base58")}>
+          <div className={clsxp(classPrefix, 'header_copy_text_wrap')}>
+            <div className={clsxp(classPrefix, 'header_copy_text')}>
+              <div className={clsxp(classPrefix, 'header_copy_text_base58')}>
                 {shortBase58}
               </div>
-              <Copy color="white" />
+              <Copy color='white' />
             </div>
             <a
-              className={clsxp(classPrefix, "header_explorer")}
+              className={clsxp(classPrefix, 'header_explorer')}
               href={`https://explorer.solana.com/address/${base58}`}
-              rel="nofollow noopener"
-              target="_blank"
+              rel='nofollow noopener'
+              target='_blank'
             >
-              <ArrowUpRight color="white" />
+              <ArrowUpRight color='white' />
             </a>
           </div>
         )}

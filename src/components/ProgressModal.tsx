@@ -1,11 +1,11 @@
-import { Fragment, h } from "preact";
+import { Fragment, h } from 'preact';
 
-import { RouteLink } from "../layout/Router";
+import { RouteLink } from '../layout/Router';
 
-import { ProgressStep } from "./ProgressStep";
-import { useContext } from "preact/hooks";
-import { ConfigContext } from "../AppContext";
-import { clsxp } from "../libs/utils";
+import { ProgressStep } from './ProgressStep';
+import { useContext } from 'preact/hooks';
+import { ConfigContext } from '../AppContext';
+import { clsxp } from '../libs/utils';
 
 const getStepState = (
   current: string,
@@ -17,12 +17,12 @@ const getStepState = (
   const currentStepIndex = stepOrder.indexOf(current);
   const stepIndex = stepOrder.indexOf(step);
   if (stepIndex < currentStepIndex || current === doneStep) {
-    return "complete";
+    return 'complete';
   }
   if (stepIndex === currentStepIndex) {
-    return "current";
+    return 'current';
   }
-  return "";
+  return '';
 };
 
 const ProgressModal = ({
@@ -37,18 +37,18 @@ const ProgressModal = ({
   const { classPrefix } = useContext(ConfigContext);
   return (
     <Fragment>
-      <div className={clsxp(classPrefix, "process_modal_title")}>
+      <div className={clsxp(classPrefix, 'process_modal_title')}>
         Steps to complete
       </div>
-      <div className={clsxp(classPrefix, "process_modal_subtitle")}>
+      <div className={clsxp(classPrefix, 'process_modal_subtitle')}>
         We need you to sign these
         <br /> transactions to stake
       </div>
       <nav
-        className={clsxp(classPrefix, "process_modal_steps")}
-        aria-label="Progress"
+        className={clsxp(classPrefix, 'process_modal_steps')}
+        aria-label='Progress'
       >
-        <ol className={clsxp(classPrefix, "process_modal_steps_list")}>
+        <ol className={clsxp(classPrefix, 'process_modal_steps_list')}>
           {stepOrder.map((step) => (
             <ProgressStep
               name={step}
@@ -59,13 +59,13 @@ const ProgressModal = ({
         </ol>
         <RouteLink
           disabled={working !== doneStepName}
-          href="/"
+          href='/'
           className={clsxp(
             classPrefix,
-            "process_modal_button",
+            'process_modal_button',
             working !== doneStepName
-              ? "process_modal_button_disabled"
-              : "process_modal_button_selected"
+              ? 'process_modal_button_disabled'
+              : 'process_modal_button_selected'
           )}
         >
           Close

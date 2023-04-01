@@ -1,46 +1,46 @@
-import { Fragment, h } from "preact";
-import BN from "bn.js";
+import { Fragment, h } from 'preact';
+import BN from 'bn.js';
 import {
   BondAccount,
   CentralState,
   StakeAccount,
   StakePool,
-} from "../libs/ap/state";
-import { claimBondRewards, claimRewards } from "../libs/ap/bindings";
+} from '../libs/ap/state';
+import { claimBondRewards, claimRewards } from '../libs/ap/bindings';
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
-import { useContext, useEffect, useMemo, useState } from "preact/hooks";
+} from '@solana/spl-token';
+import { PublicKey } from '@solana/web3.js';
+import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 
-import { Header } from "../components/Header";
-import { RouteLink } from "../layout/Router";
-import { ConfigContext } from "../AppContext";
-import { useConnection } from "../components/wallet-adapter/useConnection";
-import { useWallet } from "../components/wallet-adapter/useWallet";
+import { Header } from '../components/Header';
+import { RouteLink } from '../layout/Router';
+import { ConfigContext } from '../AppContext';
+import { useConnection } from '../components/wallet-adapter/useConnection';
+import { useWallet } from '../components/wallet-adapter/useWallet';
 import {
   calculateRewardForStaker,
   getBondAccounts,
   getStakeAccounts,
-} from "../libs/program";
-import { sendTx } from "../libs/transactions";
-import Loading from "../components/Loading";
-import { clsxp, formatPenyACSCurrency } from "../libs/utils";
-import env from "../libs/env";
-import { ProgressModal } from "../components/ProgressModal";
-import { useFeePayer } from "../hooks/useFeePayer";
-import { WalletAdapterProps } from "@solana/wallet-adapter-base";
+} from '../libs/program';
+import { sendTx } from '../libs/transactions';
+import Loading from '../components/Loading';
+import { clsxp, formatPenyACSCurrency } from '../libs/utils';
+import env from '../libs/env';
+import { ProgressModal } from '../components/ProgressModal';
+import { useFeePayer } from '../hooks/useFeePayer';
+import { WalletAdapterProps } from '@solana/wallet-adapter-base';
 
-const CLAIM_BOND_REWARDS_STEP = "Claim airdrop rewards";
-const CLAIM_STAKE_REWARDS_STEP = "Claim stake rewards";
-const DONE_STEP = "Done";
-const IDLE_STEP = "Idle";
+const CLAIM_BOND_REWARDS_STEP = 'Claim airdrop rewards';
+const CLAIM_STAKE_REWARDS_STEP = 'Claim stake rewards';
+const DONE_STEP = 'Done';
+const IDLE_STEP = 'Idle';
 
 interface FeePaymentData {
   feePayerPubKey: string;
-  sendTransaction: WalletAdapterProps["sendTransaction"];
+  sendTransaction: WalletAdapterProps['sendTransaction'];
 }
 
 export const Claim = () => {
@@ -238,7 +238,7 @@ export const Claim = () => {
         });
       }
 
-      const claimEvent = new CustomEvent("claim", {
+      const claimEvent = new CustomEvent('claim', {
         detail: {
           address: publicKey.toBase58(),
           locked: claimableStakeAmount,
@@ -262,16 +262,16 @@ export const Claim = () => {
   };
 
   return (
-    <div className={clsxp(classPrefix, "claim_root")}>
+    <div className={clsxp(classPrefix, 'claim_root')}>
       {stakeModalOpen && error && (
         <Fragment>
-          <div className={clsxp(classPrefix, "claim_title_error")}>
+          <div className={clsxp(classPrefix, 'claim_title_error')}>
             Error occured:
           </div>
-          <div className={clsxp(classPrefix, "claim_subtitle_error")}>
+          <div className={clsxp(classPrefix, 'claim_subtitle_error')}>
             {error}
           </div>
-          <RouteLink className={clsxp(classPrefix, "claim_button")} href="/">
+          <RouteLink className={clsxp(classPrefix, 'claim_button')} href='/'>
             Close
           </RouteLink>
         </Fragment>
@@ -287,8 +287,8 @@ export const Claim = () => {
         <Fragment>
           <Header>
             <RouteLink
-              href="/"
-              className={clsxp(classPrefix, "claim_cancel_link")}
+              href='/'
+              className={clsxp(classPrefix, 'claim_cancel_link')}
             >
               Cancel
             </RouteLink>
@@ -296,10 +296,10 @@ export const Claim = () => {
 
           {stakedAccount?.stakeAmount && stakedPool ? (
             <Fragment>
-              <div className={clsxp(classPrefix, "claim_title")}>
+              <div className={clsxp(classPrefix, 'claim_title')}>
                 Claim on &apos;{poolName}&apos;
               </div>
-              <div className={clsxp(classPrefix, "claim_claim_amount")}>
+              <div className={clsxp(classPrefix, 'claim_claim_amount')}>
                 {formatPenyACSCurrency(claimableAmount)} ACS
               </div>
 
@@ -307,8 +307,8 @@ export const Claim = () => {
                 <button
                   className={clsxp(
                     classPrefix,
-                    "claim_button",
-                    claimableAmount <= 0 && "claim_button_disabled"
+                    'claim_button',
+                    claimableAmount <= 0 && 'claim_button_disabled'
                   )}
                   onClick={handle}
                 >
@@ -317,7 +317,7 @@ export const Claim = () => {
               </div>
             </Fragment>
           ) : (
-            <div className={clsxp(classPrefix, "claim_loader")}>
+            <div className={clsxp(classPrefix, 'claim_loader')}>
               <Loading />
             </div>
           )}
