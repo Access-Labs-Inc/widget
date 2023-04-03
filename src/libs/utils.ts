@@ -1,3 +1,5 @@
+import { ClassValue, clsx } from 'clsx';
+
 export const formatACSCurrency = (amount: number) => {
   const amountAsACS = amount;
   return parseFloat(
@@ -18,4 +20,8 @@ export const formatPenyACSCurrency = (amount: number) => {
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function clsxp(prefix: string, ...args: ClassValue[]) {
+  return clsx(args.filter(Boolean).map((arg) => `${prefix}${arg}`));
 }

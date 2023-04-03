@@ -1,9 +1,11 @@
-import tw, { css } from 'twin.macro';
 import { Fragment, h } from 'preact';
 
 import { RouteLink } from '../layout/Router';
 
 import { ProgressStep } from './ProgressStep';
+import { useContext } from 'preact/hooks';
+import { ConfigContext } from '../AppContext';
+import { clsxp } from '../libs/utils';
 
 const getStepState = (
   current: string,
@@ -23,21 +25,6 @@ const getStepState = (
   return '';
 };
 
-const styles = {
-  button: tw`w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0`,
-  title: tw`my-8 mt-16 text-white text-2xl text-center`,
-  subtitle: tw`text-white text-center text-stone-400`,
-  steps: tw`flex flex-col justify-start my-4`,
-  stepsList: tw`space-y-4 list-none mb-10`,
-  disabledButtonStyles: tw`bg-stone-600 cursor-not-allowed`,
-};
-
-const hoverButtonStyles = css`
-  &:hover {
-    ${tw`bg-indigo-300 text-stone-800`}
-  }
-`;
-
 const ProgressModal = ({
   working,
   stepOrder,
@@ -47,15 +34,21 @@ const ProgressModal = ({
   stepOrder: string[];
   doneStepName: string;
 }) => {
+  const { classPrefix } = useContext(ConfigContext);
   return (
     <Fragment>
-      <div css={styles.title}>Steps to complete</div>
-      <div css={styles.subtitle}>
+      <div className={clsxp(classPrefix, 'process_modal_title')}>
+        Steps to complete
+      </div>
+      <div className={clsxp(classPrefix, 'process_modal_subtitle')}>
         We need you to sign these
         <br /> transactions to stake
       </div>
-      <nav css={styles.steps} aria-label='Progress'>
-        <ol css={styles.stepsList}>
+      <nav
+        className={clsxp(classPrefix, 'process_modal_steps')}
+        aria-label='Progress'
+      >
+        <ol className={clsxp(classPrefix, 'process_modal_steps_list')}>
           {stepOrder.map((step) => (
             <ProgressStep
               name={step}
@@ -67,12 +60,13 @@ const ProgressModal = ({
         <RouteLink
           disabled={working !== doneStepName}
           href='/'
-          css={[
-            styles.button,
+          className={clsxp(
+            classPrefix,
+            'process_modal_button',
             working !== doneStepName
-              ? styles.disabledButtonStyles
-              : hoverButtonStyles,
-          ]}
+              ? 'process_modal_button_disabled'
+              : 'process_modal_button_selected'
+          )}
         >
           Close
         </RouteLink>

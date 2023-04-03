@@ -1,4 +1,3 @@
-import tw from 'twin.macro';
 import { h } from 'preact';
 import {
   useCallback,
@@ -24,21 +23,19 @@ import { BondAccount, StakeAccount } from '../libs/ap/state';
 import env from '../libs/env';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import { getBondAccounts } from '../libs/program';
-
-const styles = {
-  wallet_adapter_dropdown_wrapper: tw`relative inline-block text-left font-sans`,
-  wallet_adapter_button_trigger: tw`bg-stone-400 text-stone-800 border-0 py-3 px-5 text-xl rounded-full`,
-  wallet_adapter_button_trigger_active: tw`bg-indigo-400`,
-  wallet_adapter_dropdown: tw`absolute mt-2 w-80 px-6 py-4 top-[100%] bg-stone-800 text-white rounded-[1rem] opacity-0`,
-  wallet_adapter_dropdown_active: tw`visible opacity-100`,
-};
+import { clsxp } from '../libs/utils';
 
 const Main = () => {
   const { publicKey, wallet, connected } = useWallet();
   const [active, setActive] = useState(false);
   const ref = useRef<HTMLUListElement>(null);
-  const { disconnectButtonClass, connectedButtonClass, element, poolId } =
-    useContext(ConfigContext);
+  const {
+    disconnectButtonClass,
+    connectedButtonClass,
+    element,
+    poolId,
+    classPrefix,
+  } = useContext(ConfigContext);
   const { connection } = useConnection();
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey]);
@@ -133,39 +130,39 @@ const Main = () => {
 
   if (!wallet) {
     return (
-      <div css={styles.wallet_adapter_dropdown_wrapper}>
-        <WalletModalButton externalButtonClass={disconnectButtonClass} />
+      <div className={clsxp(classPrefix, 'wallet_adapter_dropdown_wrapper')}>
+        <WalletModalButton />
       </div>
     );
   }
   if (!base58) {
     return (
-      <div css={styles.wallet_adapter_dropdown_wrapper}>
-        <WalletConnectButton externalButtonClass={disconnectButtonClass} />
+      <div className={clsxp(classPrefix, 'wallet_adapter_dropdown_wrapper')}>
+        <WalletConnectButton />
       </div>
     );
   }
 
   return (
-    <div css={styles.wallet_adapter_dropdown_wrapper}>
+    <div className={clsxp(classPrefix, 'wallet_adapter_dropdown_wrapper')}>
       <Button
         aria-expanded={active}
-        cssClass={[
-          styles.wallet_adapter_button_trigger,
-          styles.wallet_adapter_button_trigger_active,
-        ]}
-        externalButtonClass={connectedButtonClass}
+        className={clsxp(
+          classPrefix,
+          'wallet_adapter_button_trigger',
+          active && 'wallet_adapter_button_trigger_active'
+        )}
         style={{ pointerEvents: active ? 'none' : 'auto' }}
         onClick={toggleDropdown}
       >
         {content}
       </Button>
       <div
-        css={[
-          styles.wallet_adapter_dropdown,
-          active && styles.wallet_adapter_dropdown_active,
-        ]}
-        ref={ref}
+        className={clsxp(
+          classPrefix,
+          'wallet_adapter_dropdown',
+          active && 'wallet_adapter_dropdown_active'
+        )}
       >
         <Router
           routes={{

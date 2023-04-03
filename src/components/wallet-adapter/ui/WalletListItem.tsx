@@ -1,31 +1,29 @@
-import { h } from 'preact';
-import { WalletReadyState } from '@solana/wallet-adapter-base';
-import type { Wallet } from '../useWallet';
-import type { FunctionalComponent } from 'preact';
+import { h } from "preact";
+import type { Wallet } from "../useWallet";
+import type { FunctionalComponent } from "preact";
 
-import { Button } from './Button';
-import { WalletIcon } from './WalletIcon';
-import tw from 'twin.macro';
+import { Button } from "./Button";
+import { WalletIcon } from "./WalletIcon";
+import { useContext } from "preact/hooks";
+import { ConfigContext } from "../../../AppContext";
+import { clsxp } from "../../../libs/utils";
 
 export interface WalletListItemProps {
-  handleClick: any;
+  handleClick: (e: MouseEvent) => void;
   tabIndex?: number;
   wallet: Wallet;
 }
-
-const styles = {
-  wallet_list_item: tw`text-white w-full text-left mt-4 text-xl bg-stone-700 rounded-full font-normal py-3 px-6`,
-};
 
 export const WalletListItem: FunctionalComponent<WalletListItemProps> = ({
   handleClick,
   tabIndex,
   wallet,
 }) => {
+  const { classPrefix } = useContext(ConfigContext);
   return (
     <li>
       <Button
-        cssClass={styles.wallet_list_item}
+        className={clsxp(classPrefix, "wallet_list_item")}
         onClick={handleClick}
         startIcon={<WalletIcon wallet={wallet} />}
         tabIndex={tabIndex}

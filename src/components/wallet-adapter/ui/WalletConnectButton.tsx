@@ -1,13 +1,10 @@
 import { useWallet } from "../useWallet";
 import { type FunctionalComponent, h } from "preact";
-import { useCallback, useMemo } from "preact/hooks";
+import { useCallback, useContext, useMemo } from "preact/hooks";
 import type { ButtonProps } from "./Button";
 import { Button } from "./Button";
-import tw from "twin.macro";
-
-const styles = {
-  wallet_adapter_button_trigger: tw`bg-yellow-600 text-stone-800 border-0 py-3 px-5 text-xl rounded-full`,
-};
+import { ConfigContext } from "../../../AppContext";
+import { clsxp } from "../../../libs/utils";
 
 export const WalletConnectButton: FunctionalComponent<ButtonProps> = ({
   children,
@@ -15,6 +12,7 @@ export const WalletConnectButton: FunctionalComponent<ButtonProps> = ({
   onClick,
   ...props
 }) => {
+  const { classPrefix } = useContext(ConfigContext);
   const { wallet, connect, connecting, connected } = useWallet();
 
   const handleClick = useCallback(
@@ -36,7 +34,7 @@ export const WalletConnectButton: FunctionalComponent<ButtonProps> = ({
 
   return (
     <Button
-      cssClass={styles.wallet_adapter_button_trigger}
+      className={clsxp(classPrefix, "wallet_adapter_button_trigger")}
       disabled={disabled || !wallet || connecting || connected}
       onClick={handleClick}
       {...props}

@@ -1,0 +1,489 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* >> components/wallet-adapter/ */
+
+.acs__wallet_adapter_dropdown {
+  @apply absolute mt-2 w-80 px-6 py-4 top-[100%] bg-stone-800 text-white rounded-[1rem] opacity-0;
+}
+
+.acs__wallet_adapter_dropdown_wrapper {
+  @apply relative inline-block text-left font-sans;
+}
+
+button.acs__wallet_adapter_button_trigger {
+  @apply bg-stone-400 text-stone-800 border-0 py-3 px-5 text-xl rounded-full;
+}
+
+.acs__wallet_adapter_button_trigger_active {
+  @apply bg-indigo-400;
+}
+
+.acs__wallet_adapter_dropdown_active {
+  @apply absolute visible opacity-100;
+}
+
+.acs__wallet_adapter_button {
+  @apply bg-red-500 border-0 cursor-pointer flex items-center rounded-[4px];
+}
+
+.acs__wallet_adapter_button_start_icon {
+  @apply flex items-center justify-center w-[24px] h-[24px] ml-2;
+}
+
+.acs__wallet_adapter_button_end_icon {
+  @apply flex items-center justify-center w-[24px] h-[24px] mr-2;
+}
+
+.acs__wallet_adapter_wallet_icon {
+  @apply w-8 h-8 mr-8;
+}
+
+.acs__wallet_list_item {
+  @apply text-white w-full text-left mt-4 text-xl bg-stone-700 rounded-full font-normal py-3 px-6 flex;
+}
+
+/* >> components/wallet-adapter/WalletModal.tsx */
+
+.acs__wallet_adapter_modal {
+  @apply absolute left-0 top-[110%] text-white;
+}
+
+.acs__wallet_adapter_modal_title {
+  @apply text-2xl font-sans font-semibold text-center pb-2 px-10;
+}
+
+.acs__wallet_adapter_modal_title_para {
+  @apply text-sm font-sans w-80 py-0 text-center;
+}
+
+.acs__wallet_adapter_modal_wrapper {
+  @apply relative flex flex-col items-center justify-center pb-2;
+}
+
+.acs__wallet_adapter_modal_container {
+  @apply rounded-[1rem] bg-stone-800 p-3 content-center items-center z-10;
+}
+
+.acs__wallet_adapter_modal_button_close {
+  @apply absolute top-4 right-4 p-3 cursor-pointer bg-stone-800 border-0 fill-[#fff];
+}
+
+.acs__wallet_adapter_modal_list {
+  @apply list-none m-0 p-0 w-full;
+}
+
+.acs__wallet_adapter_modal_list_more {
+  @apply cursor-pointer text-white bg-transparent border-0 px-4 py-2 mt-2 text-sm text-center self-center;
+}
+
+.acs__wallet_adapter_modal_list_more_icon_rotate {
+  @apply transform rotate-0 pl-2;
+}
+
+.acs__wallet_adapter_modal_list_more_icon_rotate_expanded {
+  @apply pl-2 transform rotate-180;
+}
+
+.acs__wallet_adapter_modal_middle {
+  @apply flex flex-col align-middle justify-center;
+}
+
+.acs__wallet_adapter_modal_middle_button {
+  @apply w-full block rounded-full mt-2 px-6 py-3 bg-stone-700 border-0 text-white cursor-pointer;
+}
+
+/* >> libs/rc-input-number/InputNumber.tsx */
+
+.acs__rc_input_number_root {
+  @apply text-xl w-auto pl-8 py-4 border-0 rounded-[0.5rem] bg-stone-900 text-stone-200 outline-none;
+}
+
+.acs__rc_input_number_root_focused {
+  @apply block text-xl pl-8 py-4 border-0 rounded-[0.5rem] bg-stone-900 text-stone-200 outline-none ring-stone-900;
+}
+
+.acs__rc_input_number_root_disabled {
+  @apply block bg-stone-500;
+}
+
+.acs__rc_input_number_root_readonly {
+  @apply border-2 border-indigo-500;
+}
+
+.acs__rc_input_number_root_nan {
+  @apply border-2 border-red-500;
+}
+
+.acs__rc_input_number_root_out_of_range {
+  @apply border-2 border-red-500;
+}
+
+.acs__rc_input_number_wrap {
+  @apply w-auto overflow-hidden;
+}
+
+.acs__rc_input_number_input {
+  @apply text-stone-200 bg-stone-900 outline-none ring-stone-800 border-0 text-3xl;
+}
+
+/* >> components/Tooltip.tsx */
+
+.acs__tooltip_root {
+  @apply relative flex flex-row items-center justify-center;
+}
+
+.acs__tooltip_wrapper {
+  @apply absolute bottom-0 mb-6 hidden w-80 flex-col items-center group-hover:flex;
+}
+
+.acs__tooltip_message {
+  @apply relative z-10 rounded-md bg-stone-500 p-2 text-xs leading-none text-white shadow-lg;
+}
+
+.acs__tooltip_arrow {
+  @apply -mt-2 h-3 w-3 rotate-45 bg-stone-500;
+}
+
+/* >> components/ProcessStep.tsx */
+
+.acs__process_step_root {
+  @apply flex items-center;
+}
+
+.acs__process_step_completed_icon_wrap {
+  @apply relative ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500;
+}
+
+.acs__process_step_completed_icon {
+  @apply h-full w-full text-stone-300 font-bold;
+}
+
+.acs__process_step_completed_text {
+  @apply ml-3 text-xl font-medium text-green-500;
+}
+
+.acs__process_step_current_icon {
+  @apply ml-1 h-6 w-6 animate-spin text-indigo-500;
+}
+
+.acs__process_step_current_icon_circle {
+  @apply opacity-25;
+}
+
+.acs__process_step_current_icon_path {
+  @apply opacity-75;
+}
+
+.acs__process_step_current_text {
+  @apply ml-3 text-xl font-medium text-indigo-600;
+}
+
+.acs__process_step_pending_icon_wrap {
+  @apply relative ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-stone-500;
+}
+
+.acs__process_step_pending_icon {
+  @apply h-full w-full text-stone-800;
+}
+
+.acs__process_step_pending_text {
+  @apply ml-3 text-xl font-bold text-stone-600;
+}
+
+/* >> components/ProcessModal.tsx */
+
+.acs__process_modal_title {
+  @apply my-8 mt-16 text-white text-2xl text-center;
+}
+
+.acs__process_modal_subtitle {
+  @apply text-center text-stone-400;
+}
+
+.acs__process_modal_steps {
+  @apply flex flex-col justify-start my-4;
+}
+
+.acs__process_modal_steps_list {
+  @apply space-y-4 list-none mb-10;
+}
+
+.acs__process_modal_button {
+  @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0;
+}
+
+.acs__process_modal_button:hover,
+.acs__process_modal_button_selected {
+  @apply bg-indigo-300 text-stone-800;
+}
+
+.acs__process_modal_button:disabled,
+.acs__process_modal_button_disabled {
+  @apply bg-stone-600 cursor-not-allowed;
+}
+
+/* >> components/NumberInputWithSlider.tsx */
+
+.acs__number_input_with_slider_root {
+  @apply relative my-6;
+}
+
+.acs__number_input_with_slider_slider {
+  @apply mt-4 block border-0 mx-1;
+}
+
+.acs__number_input_with_slider_minmax {
+  @apply absolute top-0 right-0 mt-4 mr-8 text-2xl font-bold hover:cursor-pointer text-indigo-200;
+}
+
+/* >> components/Loading.tsx */
+
+.acs__loading {
+  @apply h-12 w-12 animate-spin text-indigo-500;
+}
+
+.acs__loading_circle {
+  @apply opacity-25;
+}
+
+.acs__loading_path {
+  @apply opacity-75;
+}
+
+/* >> components/Header.tsx */
+
+.acs__header_content {
+  @apply flex items-center justify-between;
+}
+
+.acs__header_dropdown_copy {
+  @apply flex items-center cursor-pointer;
+}
+
+.acs__header_copy_text_wrap {
+  @apply flex items-center cursor-pointer;
+}
+
+.acs__header_copy_text {
+  @apply flex items-center cursor-pointer;
+}
+
+.acs__header_copy_text_base58 {
+  @apply mr-2;
+}
+
+.acs__header_copied_text {
+  @apply flex items-center cursor-pointer text-green-400;
+}
+
+.acs__header_explorer {
+  @apply mx-1 text-white no-underline;
+}
+
+/* >> routes/Actions.tsx */
+
+.acs__actions_root {
+  @apply h-[31em] flex flex-col justify-between;
+}
+
+.acs__actions_links_wrapper {
+  @apply my-4 mt-8 flex flex-col gap-3;
+}
+
+.acs__actions_actions_disconnect {
+  @apply self-end cursor-pointer text-red-400 no-underline;
+}
+
+.acs__actions_logo {
+  @apply mt-8 flex items-center justify-center;
+}
+
+.acs__actions_button {
+  @apply rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center text-indigo-500 bg-stone-700;
+}
+
+.acs__actions_button:hover,
+.acs__actions_button_selected {
+  @apply bg-indigo-500 text-stone-800;
+}
+
+.acs__actions_button:disabled,
+.acs__actions_button_disabled:hover,
+.acs__actions_button_disabled {
+  @apply bg-stone-500 text-stone-300 cursor-not-allowed;
+}
+
+.acs__actions_balance {
+  @apply text-center text-stone-400;
+}
+
+.acs__actions_staked_amount {
+  @apply text-xl text-white text-center my-3;
+}
+
+.acs__actions_loader {
+  @apply: flex justify-center content-center;
+}
+
+.acs__actions_blink {
+  @apply: animate-pulse;
+}
+
+/* >> routes/Claim.tsx */
+
+.acs__claim_root {
+  @apply h-[31em] flex flex-col justify-between;
+}
+
+.acs__claim_cancel_link {
+  @apply self-end cursor-pointer text-blue-400 no-underline;
+}
+
+.acs__claim_button {
+  @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 mb-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0;
+}
+
+.acs__claim_button:hover {
+  @apply bg-indigo-300 text-stone-800;
+}
+
+.acs__claim_button:hover:disabled,
+.acs__claim_button:disabled {
+  @apply bg-stone-600 cursor-not-allowed;
+}
+
+.acs__claim_title {
+  @apply my-8 mt-16 text-white text-2xl text-center;
+}
+
+.acs__claim_title_error {
+  @apply mt-8 text-red-500 text-2xl text-center;
+}
+
+.acs__claim_subtitle {
+  @apply text-center text-stone-400;
+}
+
+.acs__claim_subtitle_error {
+  @apply text-red-500 text-center;
+}
+
+.acs__claim_claim_amount {
+  @apply mb-40 text-4xl text-center text-green-400;
+}
+
+.acs__claim_loader {
+  @apply flex justify-center content-center mb-56;
+}
+
+.acs__claim_steps {
+  @apply flex flex-col justify-start my-4;
+}
+
+.acs__claim_steps_list {
+  @apply space-y-4 list-none mb-10;
+}
+
+.acs__claim_invalid {
+  @apply bg-red-400;
+}
+
+/* >> routes/Stake.tsx */
+
+.acs__stake_root {
+  @apply h-[31em] flex flex-col justify-between;
+}
+
+.acs__stake_cancel_link {
+  @apply self-end cursor-pointer text-blue-400 no-underline;
+}
+
+.acs__stake_button {
+  @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0;
+}
+
+.acs__stake_button:hover {
+  @apply bg-indigo-300 text-stone-800;
+}
+
+.acs__stake_button:disabled,
+.acs__stake_button:disabled:hover,
+.acs__stake_button_disabled {
+  @apply bg-stone-600 cursor-not-allowed;
+}
+
+.acs__stake_title {
+  @apply my-8 mt-16 text-white text-3xl text-center;
+}
+
+.acs__stake_title_error {
+  @apply mt-8 text-red-500 text-2xl text-center;
+}
+
+.acs__stake_subtitle {
+  @apply text-center text-stone-400;
+}
+
+.acs__stake_subtitle_error {
+  @apply text-red-500 text-center;
+}
+
+.acs__stake_fees_root {
+  @apply mt-2 text-center text-xs text-stone-400;
+}
+
+.acs__stake_fee_with_tooltip {
+  @apply flex justify-center;
+}
+
+.acs__stake_loader {
+  @apply flex justify-center content-center mb-56;
+}
+
+.acs__stake_steps {
+  @apply flex flex-col justify-start my-4;
+}
+
+.acs__stake_steps_list {
+  @apply space-y-4 list-none mb-10;
+}
+
+.acs__stake_invalid {
+  @apply bg-red-400;
+}
+
+.acs__stake_invalid_text {
+  @apply mt-1 text-center text-red-500;
+}
+
+/* >> routes/Unstake.tsx */
+
+.acs__unstake_root {
+  @apply h-[31em] flex flex-col justify-between;
+}
+
+.acs__unstake_cancel_link {
+  @apply self-end cursor-pointer text-blue-400 no-underline;
+}
+
+.acs__unstake_button {
+  @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700;
+}
+
+.acs__unstake_button:hover {
+  @apply bg-indigo-300 text-stone-800;
+}
+
+.acs__unstake_title {
+  @apply text-white text-2xl text-center;
+}
+
+.acs__unstake_subtitle {
+  @apply text-center text-stone-400 my-14;
+}
+
+.acs__unstake_footnote {
+  @apply flex justify-center text-sm text-indigo-500 mt-2 mb-2;
+}

@@ -1,6 +1,11 @@
-import tw from "twin.macro";
 import { h, Ref } from "preact";
-import { useCallback, useMemo, useRef, useState } from "preact/hooks";
+import {
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from "preact/hooks";
 import { ChangeEventHandler, forwardRef } from "preact/compat";
 import KeyCode from "rc-util/lib/KeyCode";
 import { useLayoutUpdateEffect } from "rc-util/lib/hooks/useLayoutEffect";
@@ -18,6 +23,8 @@ import {
 } from "./utils/numberUtil";
 import useCursor from "./hooks/useCursor";
 import useFrame from "./hooks/useFrame";
+import { ConfigContext } from "../../AppContext";
+import { clsxp } from "../utils";
 
 /**
  * We support `stringMode` which need handle correct type when user call in onChange
@@ -30,17 +37,6 @@ import useFrame from "./hooks/useFrame";
  *    III. if min > 0, round up with precision. Example: min= 3.5, precision=0  afterFormat: 4
  *    IV. if min < 0, round down with precision. Example: max= -3.5, precision=0  afterFormat: -3
  */
-
-const styles = {
-  root: tw`text-xl w-auto pl-8 py-4 border-0 rounded-[0.5rem] bg-stone-900 text-stone-200 outline-none`,
-  rootFocused: tw`block text-xl pl-8 py-4 border-0 rounded-[0.5rem] bg-stone-900 text-stone-200 outline-none ring-stone-900`,
-  rootDisabled: tw`block bg-stone-500`,
-  rootReadonly: tw`border-2 border-indigo-500`,
-  rootNaN: tw`border-2 border-red-500`,
-  rootOutOfRange: tw`border-2 border-red-500`,
-  wrap: tw`w-auto overflow-hidden`,
-  input: tw`text-stone-200 bg-stone-900 outline-none ring-stone-800 border-0 text-3xl`,
-};
 
 const getDecimalValue = (stringMode: boolean, decimalValue: DecimalClass) => {
   if (stringMode || decimalValue.isEmpty()) {
@@ -516,19 +512,22 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
     }
   }, [inputValue]);
 
+  const { classPrefix } = useContext(ConfigContext);
+
   // ============================ Render ============================
   return (
     <div
-      css={[
-        styles.root,
-        focus && styles.rootFocused,
-        disabled && styles.rootDisabled,
-        readOnly && styles.rootReadonly,
-        decimalValue.isNaN() && styles.rootNaN,
+      className={clsxp(
+        classPrefix,
+        "rc_input_number_root",
+        focus && "rc_input_number_root_focused",
+        disabled && "rc_input_number_root_disabled",
+        readOnly && "rc_input_number_root_readonly",
+        decimalValue.isNaN() && "rc_input_number_root_nan",
         !decimalValue.isInvalidate() &&
           !isInRange(decimalValue) &&
-          styles.rootOutOfRange,
-      ]}
+          "rc_input_number_root_out_of_range"
+      )}
       style={style}
       onFocus={() => {
         setFocus(true);
@@ -539,21 +538,21 @@ const InputNumber = forwardRef((props: any, ref: Ref<any>) => {
       onCompositionStart={onCompositionStart}
       onCompositionEnd={onCompositionEnd}
     >
-      <div css={styles.wrap}>
+      <div className={clsxp(classPrefix, "rc_input_number_wrap")}>
         <input
           autoComplete="off"
           role="input"
-          aria-valuemin={min as any}
-          aria-valuemax={max as any}
+          aria-valuemin={min as number}
+          aria-valuemax={max as number}
           aria-valuenow={
             decimalValue.isInvalidate()
               ? null
-              : (decimalValue.toString() as any)
+              : (decimalValue.toString() as string)
           }
           step={step}
           {...inputProps}
           ref={composeRef(inputRef, ref as any)}
-          css={styles.input}
+          className={clsxp(classPrefix, "rc_input_number_input")}
           value={inputValue}
           onChange={onInternalInput}
           disabled={disabled}

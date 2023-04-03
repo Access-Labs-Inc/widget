@@ -1,4 +1,3 @@
-import tw, { css } from 'twin.macro';
 import { h } from 'preact';
 import {
   useCallback,
@@ -7,7 +6,7 @@ import {
   useMemo,
   useState,
 } from 'preact/hooks';
-import { Loader, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
 import {
@@ -18,34 +17,15 @@ import {
 } from '../libs/program';
 import { ConfigContext } from '../AppContext';
 import { BondAccount, StakeAccount, StakePool } from '../libs/ap/state';
-import { formatPenyACSCurrency } from '../libs/utils';
+import { clsxp, formatPenyACSCurrency } from '../libs/utils';
 import { RouteLink } from '../layout/Router';
 import { Header } from '../components/Header';
 import { useWallet } from '../components/wallet-adapter/useWallet';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import env from '../libs/env';
 
-const styles = {
-  root: tw`h-[31em] flex flex-col justify-between`,
-  links_wrapper: tw`block my-4 mt-8 flex flex-col gap-3`,
-  actions_disconnect: tw`self-end cursor-pointer text-red-400 no-underline`,
-  logo: tw`mt-8 flex items-center justify-center`,
-  button: tw`rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center text-indigo-500 bg-stone-700`,
-  balance: tw`text-white text-center text-stone-400`,
-  stakedAmount: tw`text-xl text-white text-center my-3`,
-  disabledButtonStyles: tw`bg-stone-500 text-stone-300 cursor-not-allowed`,
-  loader: tw`flex justify-center content-center`,
-  blink: tw`animate-pulse`,
-};
-
-const hoverButtonStyles = css`
-  &:hover {
-    ${tw`bg-indigo-500 text-stone-800`}
-  }
-`;
-
 export const Actions = () => {
-  const { poolId } = useContext(ConfigContext);
+  const { poolId, classPrefix } = useContext(ConfigContext);
   const { connection } = useConnection();
   const { publicKey, disconnect, disconnecting, connected } = useWallet();
   const [balance, setBalance] = useState<BN | null>(null);
@@ -168,21 +148,26 @@ export const Actions = () => {
   }, [disconnect]);
 
   return (
-    <div css={styles.root}>
+    <div className={clsxp(classPrefix, 'actions_root')}>
       {connected && disconnecting && (
         <Header>
-          <div css={styles.actions_disconnect}>Disconnecting...</div>
+          <div className={clsxp(classPrefix, 'actions_actions_disconnect')}>
+            Disconnecting...
+          </div>
         </Header>
       )}
       {connected && !disconnecting && (
         <Header>
-          <div onClick={disconnectHandler} css={styles.actions_disconnect}>
+          <div
+            className={clsxp(classPrefix, 'actions_actions_disconnect')}
+            onClick={disconnectHandler}
+          >
             Disconnect
           </div>
         </Header>
       )}
 
-      <div css={styles.logo}>
+      <div className={clsxp(classPrefix, 'actions_logo')}>
         <svg
           width='48'
           height='48'
@@ -199,11 +184,12 @@ export const Actions = () => {
 
       <div>
         <div
-          css={[
-            styles.stakedAmount,
+          className={clsxp(
+            classPrefix,
+            'actions_staked_amount',
             (stakedAccount === undefined || bondAccount === undefined) &&
-              styles.blink,
-          ]}
+              'actions_blink'
+          )}
         >
           {formatPenyACSCurrency(
             (stakedAccount?.stakeAmount.toNumber() ?? 0) +
@@ -211,39 +197,69 @@ export const Actions = () => {
           )}{' '}
           ACS locked
         </div>
-        <div css={[styles.balance, balance === undefined && styles.blink]}>
+        <div
+          className={clsxp(
+            classPrefix,
+            'actions_balance',
+            balance === undefined && 'actions_blink'
+          )}
+        >
           {formatPenyACSCurrency(balance?.toNumber() ?? 0)} ACS available
         </div>
         <div
-          css={[
-            styles.balance,
+          className={clsxp(
+            classPrefix,
+            'actions_balance',
             (stakedAccount === undefined || bondAccount === undefined) &&
-              styles.blink,
-          ]}
+              'actions_blink'
+          )}
         >
           {formatPenyACSCurrency(claimableAmount ?? 0)} ACS claimable
         </div>
       </div>
 
-      <div css={styles.links_wrapper}>
-        <RouteLink css={[styles.button, hoverButtonStyles]} href='/stake'>
+      <div className={clsxp(classPrefix, 'actions_links_wrapper')}>
+        <RouteLink
+          className={clsxp(classPrefix, 'actions_button')}
+          href='/stake'
+        >
           Lock
         </RouteLink>
         {stakedAccount && stakedAccount.stakeAmount.toNumber() > 0 ? (
-          <RouteLink css={[styles.button, hoverButtonStyles]} href='/unstake'>
+          <RouteLink
+            className={clsxp(classPrefix, 'actions_button')}
+            href='/unstake'
+          >
             Unlock ACS
           </RouteLink>
         ) : (
-          <span css={[styles.button, styles.disabledButtonStyles]}>
+          <span
+            className={clsxp(
+              classPrefix,
+              'actions_button',
+              'actions_button_disabled'
+            )}
+          >
             Unlock ACS
           </span>
         )}
         {claimableAmount && claimableAmount > 0 ? (
-          <RouteLink css={[styles.button, hoverButtonStyles]} href='/claim'>
+          <RouteLink
+            className={clsxp(classPrefix, 'actions_button')}
+            href='/claim'
+          >
             Claim
           </RouteLink>
         ) : (
-          <span css={[styles.button, styles.disabledButtonStyles]}>Claim</span>
+          <span
+            className={clsxp(
+              classPrefix,
+              'actions_button',
+              'actions_button_disabled'
+            )}
+          >
+            Claim
+          </span>
         )}
       </div>
     </div>

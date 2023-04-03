@@ -8,35 +8,8 @@ In order to embed the widget add the following snippet at any location on the ho
 
 ```html
 <head>
-  <style>
-    .disconnectButton {
-        background-color: #4CAF50; /* Green */
-        border: none;
-        color: white;
-        padding: 6px 20px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        margin: 4px 2px;
-        cursor: pointer;
-      }
-      .disconnectButton:hover {
-        background-color: red;
-      }
-      .connectedButton {
-        background-color: blue;
-        border: none;
-        color: white;
-        padding: 4px 10px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        margin: 4px 2px;
-        cursor: pointer;
-      }
-  </style>
+  <!-- Import the styles from us or provide your own -->
+  <link rel="stylesheet" href="https://d3bgshfwq8wmv6.cloudfront.net/acs-widget-staging/main.css" /> 
 </head>
 <body>
   ...
@@ -52,8 +25,6 @@ In order to embed the widget add the following snippet at any location on the ho
       element: document.getElementById('acs'),
       poolId: 'Fxh4hDFHJuTfD3Eq4en36dTk8QvbsSMoTE5Y2hVX3qVt',
       poolName: "The Block",
-      disconnectButtonClass: "disconnectButton",
-      connectedButtonClass: "connectedButton"
     });
     // Here's how you listen for connected wallet and you'll receive:
     // { address: string; locked: number, airdrop: number }
@@ -65,17 +36,25 @@ In order to embed the widget add the following snippet at any location on the ho
     document.querySelector("#acs").addEventListener("connected", (event) => {
       console.log("Connected to the wallet: " + JSON.stringify(event.detail));
     });
+    document.querySelector("#acs").addEventListener("lock", (event) => {
+      console.log("Connected to the wallet with address: " + JSON.stringify(event.detail));
+    });
+    document.querySelector("#acs").addEventListener("claim", (event) => {
+      console.log("Connected to the wallet with address: " + JSON.stringify(event.detail));
+    });
   </script>
 </body>
 ```
 
 You can find a full list of configurations in `AppConfigurations` interface.
 To make it work for you own pool, make sure you're change the `poolId` and `poolName`.
-You can optionally add `connectButtonClass` to provide CSS styling for the button when disconnected and `connectButtonClass` when connected.
+You can optionally change CSS class prefix `classPrefix` to provide your CSS styling for the app and prevent collision with your names. (By default our classPrefix is set to "acs__" which should be enough to not colide with anyone).
 
 ## Production builds
 
-For production use this URL: `https://d3bgshfwq8wmv6.cloudfront.net/acs-widget/widget.js`
+For production use these URLs:
+- `https://d3bgshfwq8wmv6.cloudfront.net/acs-widget/widget.js`
+- `https://d3bgshfwq8wmv6.cloudfront.net/acs-widget/main.css`
 
 ## Develop
 

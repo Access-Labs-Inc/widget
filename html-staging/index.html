@@ -5,42 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ACS Widget dev page</title>
     <link rel="icon" href="./favicon.ico" />
-    <style>
-      .disconnectButton {
-        background-color: #4CAF50; /* Green */
-        border: none;
-        color: white;
-        padding: 6px 20px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        margin: 4px 2px;
-        cursor: pointer;
-      }
-      .disconnectButton:hover {
-        background-color: red;
-      }
-      .connectedButton {
-        background-color: blue;
-        border: none;
-        color: white;
-        padding: 4px 10px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        margin: 4px 2px;
-        cursor: pointer;
-      }
-    </style>
+    <link rel="stylesheet" href="./main.css" />
   </head>
 
   <body>
-    <h1>ACS Widget dev page</h1>
-    <h2>The shown widget is for demonstration purpose only</h2>
+    <div style="padding: 2rem;">
+      <h1>ACS Widget dev page</h1>
+      <h2>The shown widget is for demonstration purpose only</h2>
 
-    <div id="acs"></div>
+      <div id="acs"></div>
+    </div>
 
     <script>
       (function (w, d, s, o, f, js, fjs) {
@@ -53,8 +27,6 @@
         debug: true,
         poolId: 'B4tMZMB9ULTqr1e1Li4u1XE8Tcs3ZFgnxhLZKtED9Ekd',
         poolName: "The Block",
-        disconnectButtonClass: "disconnectButton",
-        connectedButtonClass: "connectedButton"
       });
     </script>
   </body>

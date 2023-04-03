@@ -1,9 +1,10 @@
-import tw from 'twin.macro';
 import { FunctionalComponent, h } from 'preact';
-import { useRef } from 'preact/hooks';
+import { useContext, useRef } from 'preact/hooks';
 import RcInputNumber from '../libs/rc-input-number';
 import RcSlider from 'react-input-slider';
 import { formatACSCurrency } from '../libs/utils';
+import { ConfigContext } from '../AppContext';
+import { clsxp } from '../libs/utils';
 
 export interface InputProps {
   invalid?: boolean;
@@ -35,16 +36,10 @@ function setNativeValue(
   }
 }
 
-const styles = {
-  root: tw`relative my-6`,
-  slider: tw`mt-4 block border-0 mx-1`,
-  thumb: tw`cursor-pointer rounded-full border-4 border-stone-800 bg-indigo-500 px-2.5`,
-  minMax: tw`absolute top-0 right-0 mt-4 mr-8 text-2xl font-bold hover:cursor-pointer text-indigo-200`,
-};
-
 export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
   props
 ) => {
+  const { classPrefix } = useContext(ConfigContext);
   const { min, max, onChangeOfValue, value } = props;
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -81,7 +76,7 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
   };
 
   return (
-    <div css={styles.root}>
+    <div className={clsxp(classPrefix, 'number_input_with_slider_root')}>
       <RcInputNumber
         min={Number(min)}
         max={Number(max)}
@@ -89,10 +84,10 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
         ref={inputRef}
         defaultValue={Number(value)}
         value={Number(value)}
-        formatter={(newValue: any) => formatACSCurrency(newValue)}
+        formatter={(newValue: number) => formatACSCurrency(newValue)}
         onChange={handleChange}
       />
-      <div css={styles.slider}>
+      <div className={clsxp(classPrefix, 'number_input_with_slider_slider')}>
         <RcSlider
           xmin={Number(min)}
           xmax={Number(max)}
@@ -116,7 +111,7 @@ export const NumberInputWithSlider: FunctionalComponent<InputProps> = (
           }}
         />
       </div>
-      <div css={styles.minMax}>
+      <div className={clsxp(classPrefix, 'number_input_with_slider_minmax')}>
         {value === max && max && min && max > min ? (
           <span onClick={changeToMin}>Min</span>
         ) : null}
