@@ -1,5 +1,4 @@
 const path = require("path");
-const glob = require("glob");
 const webpack = require("webpack");
 const Dotenv = require("dotenv-webpack");
 
@@ -7,10 +6,8 @@ const CopyPlugin = require("copy-webpack-plugin");
 const StatoscopeWebpackPlugin = require("@statoscope/webpack-plugin").default;
 const { DuplicatesPlugin } = require("inspectpack/plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const { PurgeCSSPlugin } = require("purgecss-webpack-plugin");
 
 const bundleOutputDir = "./dist";
-const ALL_FILES = glob.sync(path.join(__dirname, "src/*.tsx"));
 
 module.exports = (env) => {
   console.log("ENVs", env);
