@@ -247,7 +247,7 @@ export const Stake = () => {
         stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
       } catch {
         setWorking(CREATE_STAKING_ACCOUNT_STEP);
-        const txs = [];
+        const statxs = [];
         if (feePayer.toBase58() !== publicKey.toBase58()) {
           const from = publicKey;
           const to = feePayer;
@@ -273,7 +273,7 @@ export const Stake = () => {
             [],
             TOKEN_PROGRAM_ID,
           );
-          txs.push(transferIx);
+          statxs.push(transferIx);
         }
         const ixAccount = await createStakeAccount(
           new PublicKey(poolId),
@@ -281,9 +281,8 @@ export const Stake = () => {
           feePayer,
           env.PROGRAM_ID
         );
-        txs.push(ixAccount)
-        console.log("TXes: ", txs)
-        await sendTx(connection, feePayer, txs, sendTransaction, {
+        statxs.push(ixAccount);
+        await sendTx(connection, feePayer, statxs, sendTransaction, {
           skipPreflight: true,
         });
 
