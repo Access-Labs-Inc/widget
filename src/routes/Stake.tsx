@@ -17,6 +17,7 @@ import {
   getAssociatedTokenAddress,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
+  createTransferInstruction,
 } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
@@ -188,8 +189,10 @@ export const Stake = () => {
     })();
   }, [poolId]);
 
+  const ACCOUNT_CREATION_ACS_PRICE = 30 * 10 ** 6;
+
   const fee = useMemo(() => {
-    return Number(stakeAmount) * feePercentageFraction;
+    return Number(stakeAmount) * feePercentageFraction + 30;
   }, [stakeAmount, feePercentageFraction]);
 
   const handle = async () => {
@@ -244,13 +247,43 @@ export const Stake = () => {
         stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
       } catch {
         setWorking(CREATE_STAKING_ACCOUNT_STEP);
+        const txs = [];
+        if (feePayer.toBase58() !== publicKey.toBase58()) {
+          const from = publicKey;
+          const to = feePayer;
+          const sourceATA = await getAssociatedTokenAddress(
+            env.TOKEN_MINT,
+            from,
+            false,
+            TOKEN_PROGRAM_ID,
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+          );
+          const destinationATA = await getAssociatedTokenAddress(
+            env.TOKEN_MINT,
+            to,
+            false,
+            TOKEN_PROGRAM_ID,
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+          );
+          const transferIx = createTransferInstruction(
+            sourceATA,
+            destinationATA,
+            from,
+            ACCOUNT_CREATION_ACS_PRICE,
+            [],
+            TOKEN_PROGRAM_ID,
+          );
+          txs.push(transferIx);
+        }
         const ixAccount = await createStakeAccount(
           new PublicKey(poolId),
           publicKey,
           feePayer,
           env.PROGRAM_ID
         );
-        await sendTx(connection, feePayer, [ixAccount], sendTransaction, {
+        txs.push(ixAccount)
+        console.log("TXes: ", txs)
+        await sendTx(connection, feePayer, txs, sendTransaction, {
           skipPreflight: true,
         });
 
@@ -262,7 +295,7 @@ export const Stake = () => {
         let attempts = 0;
         while (stakeAccount == null && attempts < 20) {
           // eslint-disable-next-line no-await-in-loop
-          await sleep(1000);
+          await sleep(2000);
           console.log('Sleeping...');
           // eslint-disable-next-line no-await-in-loop
           try {
@@ -275,8 +308,7 @@ export const Stake = () => {
       }
 
       if (stakeAccount == null) {
-        // last attempt or throw error
-        stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
+        throw new Error('Stake account not created on time... please try again to lock tokens.');
       }
 
       const stakerAta = await getAssociatedTokenAddress(
@@ -380,29 +412,31 @@ export const Stake = () => {
     minPoolStakeAmount,
   ]);
 
-  console.log('Min stake: ', minStakeAmount);
+  const transactionFeeSOL = stakedAccount ? 0.000005 : 0.0015;
+  const transactionFeeMicroACS = stakedAccount ? 0 : 30;
 
   const maxStakeAmount = useMemo(() => {
-    return Number(balance) / (1 + feePercentageFraction);
-  }, [balance, feePercentageFraction]);
+    return (Number(balance) / (1 + feePercentageFraction)) - transactionFeeMicroACS;
+  }, [balance, feePercentageFraction, transactionFeeMicroACS]);
 
   const insufficientBalance = useMemo(() => {
     return (
-      minStakeAmount + minStakeAmount * feePercentageFraction > (balance ?? 0)
+      minStakeAmount + transactionFeeMicroACS + minStakeAmount * feePercentageFraction > (balance ?? 0)
     );
-  }, [balance, minStakeAmount, feePercentageFraction]);
+  }, [balance, minStakeAmount, feePercentageFraction, transactionFeeMicroACS]);
 
-  const insufficientSolBalance = useMemo(() => solBalance === 0, [solBalance]);
+  const insufficientSolBalance = useMemo(() => solBalance < transactionFeeSOL, [solBalance, transactionFeeMicroACS]);
 
   const invalidText = useMemo(() => {
     if (insufficientBalance) {
-      return `Insufficient balance for locking. You need min. of ${minStakeAmount} ACS + ${
-        minStakeAmount * feePercentageFraction
-      } Protocol Fee.`;
+      return `Insufficient balance for locking.
+        You need min. of ${formatACSCurrency(minStakeAmount + minStakeAmount * feePercentageFraction)} ACS +
+        ${formatACSCurrency(transactionFeeMicroACS)} ACS protocol fee.`;
     }
     return null;
   }, [
     insufficientBalance,
+    transactionFeeMicroACS,
     minStakeAmount,
     feePercentageFraction,
     stakedAccount?.stakeAmount,
@@ -513,7 +547,7 @@ export const Stake = () => {
                         <Info size={16} />
                       </Tooltip>
                     </div>
-                    <div>Transaction fee: 0.000005 SOL ~ $0.00024</div>
+                    <div>Transaction fee: {transactionFeeSOL} SOL</div>
                   </div>
                 </div>
               </Fragment>
