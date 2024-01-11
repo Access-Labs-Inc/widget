@@ -1,24 +1,6 @@
 import { Fragment, h } from 'preact';
 import { Info } from 'phosphor-react';
-import {
-  BondAccount,
-  CentralStateV2,
-  StakeAccount,
-  StakePool,
-} from '@accessprotocol/js'
-import {
-  claimRewards,
-  crank,
-  createStakeAccount,
-  stake,
-} from '@accessprotocol/js'
-import {
-  TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddress,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccountInstruction,
-  createTransferInstruction,
-} from '@solana/spl-token';
+import { BondAccount, fullLock, StakeAccount, StakePool, } from '@accessprotocol/js'
 import { PublicKey } from '@solana/web3.js';
 import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 
@@ -27,32 +9,22 @@ import { RouteLink } from '../layout/Router';
 import { ConfigContext } from '../AppContext';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import { useWallet } from '../components/wallet-adapter/useWallet';
-import {
-  calculateRewardForStaker,
-  getBondAccounts,
-  getStakeAccounts,
-  getUserACSBalance,
-} from '../libs/program';
+import { getBondAccounts, getStakeAccounts, getUserACSBalance, } from '../libs/program';
 import { Tooltip } from '../components/Tooltip';
 import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
 import { sendTx } from '../libs/transactions';
 import Loading from '../components/Loading';
 import { ProgressModal } from '../components/ProgressModal';
-import { clsxp, formatACSCurrency, sleep } from '../libs/utils';
+import { clsxp, formatACSCurrency } from '../libs/utils';
 import { useFeePayer } from '../hooks/useFeePayer';
 import { WalletAdapterProps } from '@solana/wallet-adapter-base';
 import env from '../libs/env';
-import BN from 'bn.js';
 
 interface FeePaymentData {
   feePayerPubKey: string;
   sendTransaction: WalletAdapterProps['sendTransaction'];
 }
 
-const CRANK_STEP = 'Preprocessing';
-const CREATE_STAKING_ACCOUNT_STEP = 'Create locking account';
-const CLAIM_REWARDS_STEP = 'Claim rewards';
-const STAKE_STEP = 'Lock ACS';
 const DONE_STEP = 'Done';
 const IDLE_STEP = 'Idle';
 
@@ -91,17 +63,6 @@ export const Stake = () => {
 
   const feePercentage = 2;
   const feePercentageFraction = feePercentage / 100;
-
-  const claimableStakeAmount = useMemo(() => {
-    if (!(stakedAccount && stakedPool)) {
-      return null;
-    }
-    return calculateRewardForStaker(
-      stakedPool.currentDayIdx - stakedAccount.lastClaimedOffset.toNumber(),
-      stakedPool,
-      stakedAccount.stakeAmount as BN
-    );
-  }, [stakedAccount, stakedPool]);
 
   useEffect(() => {
     if (!(publicKey && connection)) {
@@ -189,7 +150,7 @@ export const Stake = () => {
     })();
   }, [poolId]);
 
-  const ACCOUNT_CREATION_ACS_PRICE = 30 * 10 ** 6;
+  const ACCOUNT_CREATION_ACS_PRICE = 50
 
   const fee = useMemo(() => {
     return Number(stakeAmount) * feePercentageFraction + 30;
@@ -216,162 +177,18 @@ export const Stake = () => {
     try {
       openStakeModal();
 
-      const [centralKey] = CentralStateV2.getKey(env.PROGRAM_ID);
-      const centralState = await CentralStateV2.retrieve(connection, centralKey);
-      const txs = [];
-
-      let hasCranked = false;
-      if (
-        centralState.lastSnapshotOffset.toNumber() > stakedPool.currentDayIdx ||
-        centralState.creationTime.toNumber() +
-          86400 * (stakedPool.currentDayIdx + 1) <
-          Date.now() / 1000
-      ) {
-        setWorking(CRANK_STEP);
-        const crankIx = crank(new PublicKey(poolId), env.PROGRAM_ID);
-        await sendTx(connection, feePayer, [crankIx], sendTransaction, {
-          skipPreflight: true,
-        });
-        hasCranked = true;
-      }
-
-      // Check if stake account exists
-      const [stakeKey] = StakeAccount.getKey(
-        env.PROGRAM_ID,
-        publicKey,
-        new PublicKey(poolId)
-      );
-
-      let stakeAccount;
-      try {
-        stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
-      } catch {
-        setWorking(CREATE_STAKING_ACCOUNT_STEP);
-        const statxs = [];
-        if (feePayer.toBase58() !== publicKey.toBase58()) {
-          const from = publicKey;
-          const to = feePayer;
-          const sourceATA = await getAssociatedTokenAddress(
-            env.TOKEN_MINT,
-            from,
-            false,
-            TOKEN_PROGRAM_ID,
-            ASSOCIATED_TOKEN_PROGRAM_ID,
-          );
-          const destinationATA = await getAssociatedTokenAddress(
-            env.TOKEN_MINT,
-            to,
-            false,
-            TOKEN_PROGRAM_ID,
-            ASSOCIATED_TOKEN_PROGRAM_ID,
-          );
-          const transferIx = createTransferInstruction(
-            sourceATA,
-            destinationATA,
-            from,
-            ACCOUNT_CREATION_ACS_PRICE,
-            [],
-            TOKEN_PROGRAM_ID,
-          );
-          statxs.push(transferIx);
-        }
-        const ixAccount = createStakeAccount(
-          new PublicKey(poolId),
-          publicKey,
-          feePayer,
-          env.PROGRAM_ID
-        );
-        statxs.push(ixAccount);
-        await sendTx(connection, feePayer, statxs, sendTransaction, {
-          skipPreflight: true,
-        });
-
-        try {
-          stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
-        } catch (e) {
-          console.warn('Stake account not ready yet.');
-        }
-        let attempts = 0;
-        while (stakeAccount == null && attempts < 20) {
-          // eslint-disable-next-line no-await-in-loop
-          await sleep(2000);
-          console.log('Sleeping...');
-          // eslint-disable-next-line no-await-in-loop
-          try {
-            stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
-          } catch (e) {
-            console.warn('Stake account not ready yet attempt: ', attempts);
-          }
-          attempts += 1;
-        }
-      }
-
-      if (stakeAccount == null) {
-        throw new Error('Stake account not created on time... please try again to lock tokens.');
-      }
-
-      const stakerAta = await getAssociatedTokenAddress(
-        centralState.tokenMint,
-        publicKey,
-        true,
-        TOKEN_PROGRAM_ID,
-        ASSOCIATED_TOKEN_PROGRAM_ID
-      );
-
-      const stakerAtaAccount = await connection.getAccountInfo(stakerAta);
-      if (stakerAtaAccount == null) {
-        const ataix = createAssociatedTokenAccountInstruction(
-          feePayer,
-          stakerAta,
-          publicKey,
-          centralState.tokenMint,
-          TOKEN_PROGRAM_ID,
-          ASSOCIATED_TOKEN_PROGRAM_ID
-        );
-        txs.push(ataix);
-      }
-
-      if (
-        stakeAccount.stakeAmount.toNumber() > 0 &&
-        (stakeAccount.lastClaimedOffset.toNumber() < stakedPool.currentDayIdx ||
-          hasCranked)
-      ) {
-        setWorking(CLAIM_REWARDS_STEP);
-        const ix = await claimRewards(
-          connection,
-          stakeKey,
-          stakerAta,
-          env.PROGRAM_ID,
-        );
-
-        await sendTx(connection, feePayer, [ix], sendTransaction, {
-          skipPreflight: true,
-        });
-
-        const claimEvent = new CustomEvent('claim', {
-          detail: {
-            address: publicKey.toBase58(),
-            locked: claimableStakeAmount,
-          },
-          bubbles: true,
-          cancelable: true,
-          composed: false, // if you want to listen on parent turn this on
-        });
-        element?.dispatchEvent(claimEvent);
-      }
-
-      setWorking(STAKE_STEP);
-      const ixStake = await stake(
+      const ixs = await fullLock(
         connection,
-        stakeKey,
-        stakerAta,
-        Number(stakeAmount) * 10 ** 6,
-        env.PROGRAM_ID
-      );
-      txs.push(ixStake);
+        publicKey,
+        new PublicKey(poolId),
+        feePayer,
+        Number(stakeAmount),
+        Date.now() / 1000,
+        ACCOUNT_CREATION_ACS_PRICE,
+        env.PROGRAM_ID)
 
-      await sendTx(connection, feePayer, txs, sendTransaction, {
-        skipPreflight: true,
+      await sendTx(connection, feePayer, ixs, sendTransaction, {
+        skipPreflight: false,
       });
 
       const lockedEvent = new CustomEvent('lock', {
@@ -458,12 +275,6 @@ export const Stake = () => {
       {stakeModalOpen && !error && (
         <ProgressModal
           working={working}
-          stepOrder={[
-            CRANK_STEP,
-            CREATE_STAKING_ACCOUNT_STEP,
-            CLAIM_REWARDS_STEP,
-            STAKE_STEP,
-          ]}
           doneStepName={DONE_STEP}
         />
       )}
@@ -542,7 +353,7 @@ export const Stake = () => {
                       <Tooltip
                         message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
                       >
-                        <Info size={16} />
+                        <Info size={16}/>
                       </Tooltip>
                     </div>
                     <div>Transaction fee: {transactionFeeSOL} SOL</div>
@@ -555,7 +366,7 @@ export const Stake = () => {
             stakedPool == null ||
             balance === undefined) && (
             <div className={clsxp(classPrefix, 'stake_loader')}>
-              <Loading />
+              <Loading/>
             </div>
           )}
         </Fragment>

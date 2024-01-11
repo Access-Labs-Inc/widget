@@ -206,8 +206,8 @@ button.acs__wallet_adapter_button_trigger {
   @apply flex flex-col justify-start my-4;
 }
 
-.acs__process_modal_steps_list {
-  @apply space-y-4 list-none mb-10;
+.acs__process_modal_steps_load {
+  @apply mx-auto pb-20;
 }
 
 .acs__process_modal_button {
