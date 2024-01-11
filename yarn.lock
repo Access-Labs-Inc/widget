@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@accessprotocol/js@2.0.0-alpha.25":
-  version "2.0.0-alpha.25"
-  resolved "https://registry.yarnpkg.com/@accessprotocol/js/-/js-2.0.0-alpha.25.tgz#897419a727521bb69c8960fd46beefb870131650"
-  integrity sha512-AxK4QtElay0j3g8nEL0yOS6n3wMzWB60i4PJLFfZ09d92UrPtMbxnd3JTKrofSdRSoGjPYpqyqgzH1Wf6KmN3Q==
+"@accessprotocol/js@2.0.0-alpha.26":
+  version "2.0.0-alpha.26"
+  resolved "https://registry.yarnpkg.com/@accessprotocol/js/-/js-2.0.0-alpha.26.tgz#479733f2be2eaa57e40860e8a2565267dcc0f650"
+  integrity sha512-nSBAwEC7L2PIMXb5cSz6pQcJPyBfJt49ffBpPlCwUesXEyRmKA6uZSnyg13p1P6EeP6nsF28HHWoC8zA0p7IBw==
   dependencies:
     "@solana/spl-token" "^0.3.7"
     "@solana/web3.js" "^1.66.2"

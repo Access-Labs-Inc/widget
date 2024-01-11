@@ -48,6 +48,7 @@ export const Stake = () => {
   const [working, setWorking] = useState(IDLE_STEP);
   const [balance, setBalance] = useState<number | null | undefined>(undefined);
   const [solBalance, setSolBalance] = useState<number>(0);
+  const [forever, setForever] = useState<boolean>(false);
   const [stakedAccount, setStakedAccount] = useState<
     StakeAccount | undefined | null
   >(undefined);
@@ -185,7 +186,11 @@ export const Stake = () => {
         Number(stakeAmount),
         Date.now() / 1000,
         ACCOUNT_CREATION_ACS_PRICE,
-        env.PROGRAM_ID)
+        env.PROGRAM_ID,
+        undefined,
+        stakedPool,
+        forever ? 0 : -1,
+        )
 
       await sendTx(connection, feePayer, ixs, sendTransaction, {
         skipPreflight: false,
@@ -293,22 +298,37 @@ export const Stake = () => {
             bondAccount !== undefined &&
             balance !== undefined && (
               <Fragment>
-                <div className={clsxp(classPrefix, 'stake_title')}>
-                  {poolName}
+              <div className={clsxp(classPrefix, 'stake_title')}>
+                {poolName}
+              </div>
+              {!insufficientBalance ? (
+                <div className={clsxp(classPrefix, 'stake_subtitle')}>
+                  Both {poolName} and you will get ACS rewards
+                  split equally.
                 </div>
-                {!insufficientBalance ? (
-                  <div className={clsxp(classPrefix, 'stake_subtitle')}>
-                    Both {poolName} and you will receive a ACS inflation rewards
-                    split equally.
-                  </div>
-                ) : (
-                  <p className={clsxp(classPrefix, 'stake_invalid_text')}>
-                    {invalidText}
-                  </p>
-                )}
+              ) : (
+                <p className={clsxp(classPrefix, 'stake_invalid_text')}>
+                  {invalidText}
+                </p>
+              )}
 
-                <div>
-                  {!insufficientBalance && (
+              <div>
+                {insufficientBalance && (
+                  <a
+                    href={env.GET_ACS_URL}
+                    target='_blank'
+                    rel='noopener'
+                    className={clsxp(
+                      classPrefix,
+                      'stake_button',
+                      'stake_button_invalid'
+                    )}
+                  >
+                    Get ACS/SOL on access
+                  </a>
+                )}
+                {!insufficientBalance && (
+                  <>
                     <NumberInputWithSlider
                       min={insufficientBalance ? 0 : minStakeAmount}
                       max={maxStakeAmount}
@@ -320,45 +340,39 @@ export const Stake = () => {
                         setStakeAmount(value);
                       }}
                     />
-                  )}
-
-                  {insufficientBalance && (
-                    <a
-                      href={env.GET_ACS_URL}
-                      target='_blank'
-                      rel='noopener'
-                      className={clsxp(
-                        classPrefix,
-                        'stake_button',
-                        'stake_button_invalid'
-                      )}
-                    >
-                      Get ACS/SOL on access
-                    </a>
-                  )}
-                  {!insufficientBalance && (
+                    <div className={clsxp(classPrefix, 'stake_checkbox')}>
+                        <input
+                          type="checkbox"
+                          onChange={() => {
+                            setForever(!forever);
+                          }}
+                          checked={forever}
+                        />
+                        <span>Lock forever?</span>
+                    </div>
                     <button
                       className={clsxp(classPrefix, 'stake_button')}
                       onClick={handle}
                     >
-                      Lock
+                      { forever ? 'Lock forever' : 'Lock' }
                     </button>
-                  )}
+                  </>
+                )}
 
-                  <div className={clsxp(classPrefix, 'stake_fees_root')}>
-                    <div
-                      className={clsxp(classPrefix, 'stake_fee_with_tooltip')}
+                <div className={clsxp(classPrefix, 'stake_fees_root')}>
+                  <div
+                    className={clsxp(classPrefix, 'stake_fee_with_tooltip')}
+                  >
+                    <div>Protocol fee: {formatACSCurrency(fee)} ACS</div>
+                    <Tooltip
+                      message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
                     >
-                      <div>Protocol fee: {formatACSCurrency(fee)} ACS</div>
-                      <Tooltip
-                        message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
-                      >
-                        <Info size={16}/>
-                      </Tooltip>
-                    </div>
-                    <div>Transaction fee: {transactionFeeSOL} SOL</div>
+                      <Info size={16}/>
+                    </Tooltip>
                   </div>
+                  <div>Transaction fee: {transactionFeeSOL} SOL</div>
                 </div>
+              </div>
               </Fragment>
             )}
           {(stakedAccount === undefined ||

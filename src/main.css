@@ -227,7 +227,7 @@ button.acs__wallet_adapter_button_trigger {
 /* >> components/NumberInputWithSlider.tsx */
 
 .acs__number_input_with_slider_root {
-  @apply relative my-6;
+  @apply relative mt-6 mb-2;
 }
 
 .acs__number_input_with_slider_slider {
@@ -404,6 +404,10 @@ button.acs__wallet_adapter_button_trigger {
   @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0;
 }
 
+.acs__stake_checkbox {
+  @apply w-full flex gap-3 pb-3 items-center justify-center text-red-300
+}
+
 .acs__stake_button:hover {
   @apply bg-indigo-300 text-stone-800;
 }
@@ -415,7 +419,7 @@ button.acs__wallet_adapter_button_trigger {
 }
 
 .acs__stake_title {
-  @apply my-8 mt-16 text-white text-3xl text-center;
+  @apply my-8 mt-7 text-white text-3xl text-center;
 }
 
 .acs__stake_title_error {
