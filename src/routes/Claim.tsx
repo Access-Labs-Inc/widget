@@ -2,11 +2,11 @@ import { Fragment, h } from 'preact';
 import BN from 'bn.js';
 import {
   BondAccount,
-  CentralState,
+  CentralStateV2,
   StakeAccount,
   StakePool,
-} from '../libs/ap/state';
-import { claimBondRewards, claimRewards } from '../libs/ap/bindings';
+} from '@accessprotocol/js';
+import { claimBondRewards, claimRewards } from '@accessprotocol/js'
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
@@ -177,7 +177,7 @@ export const Claim = () => {
 
     let feePayer = publicKey;
     let sendTransaction = sendTransactionWithFeesUnpaid;
-    if (publicKey != null && feePaymentState != null) {
+    if (feePaymentState != null) {
       feePayer = new PublicKey(feePaymentState.feePayerPubKey);
       sendTransaction = feePaymentState.sendTransaction;
     }
@@ -185,8 +185,8 @@ export const Claim = () => {
     try {
       openStakeModal();
 
-      const [centralKey] = await CentralState.getKey(env.PROGRAM_ID);
-      const centralState = await CentralState.retrieve(connection, centralKey);
+      const [centralKey] = await CentralStateV2.getKey(env.PROGRAM_ID);
+      const centralState = await CentralStateV2.retrieve(connection, centralKey);
 
       const [stakeKey] = await StakeAccount.getKey(
         env.PROGRAM_ID,
@@ -215,7 +215,6 @@ export const Claim = () => {
           stakeKey,
           stakerAta,
           env.PROGRAM_ID,
-          true
         );
 
         await sendTx(connection, feePayer, [ix], sendTransaction, {
@@ -230,7 +229,6 @@ export const Claim = () => {
           bondKey,
           stakerAta,
           env.PROGRAM_ID,
-          true
         );
 
         await sendTx(connection, feePayer, [ix], sendTransaction, {

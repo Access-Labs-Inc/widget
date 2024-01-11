@@ -2,16 +2,16 @@ import { Fragment, h } from 'preact';
 import { Info } from 'phosphor-react';
 import {
   BondAccount,
-  CentralState,
+  CentralStateV2,
   StakeAccount,
   StakePool,
-} from '../libs/ap/state';
+} from '@accessprotocol/js'
 import {
   claimRewards,
   crank,
   createStakeAccount,
   stake,
-} from '../libs/ap/bindings';
+} from '@accessprotocol/js'
 import {
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
@@ -49,7 +49,7 @@ interface FeePaymentData {
   sendTransaction: WalletAdapterProps['sendTransaction'];
 }
 
-const CRANK_STEP = 'Crank';
+const CRANK_STEP = 'Preprocessing';
 const CREATE_STAKING_ACCOUNT_STEP = 'Create locking account';
 const CLAIM_REWARDS_STEP = 'Claim rewards';
 const STAKE_STEP = 'Lock ACS';
@@ -216,8 +216,8 @@ export const Stake = () => {
     try {
       openStakeModal();
 
-      const [centralKey] = await CentralState.getKey(env.PROGRAM_ID);
-      const centralState = await CentralState.retrieve(connection, centralKey);
+      const [centralKey] = CentralStateV2.getKey(env.PROGRAM_ID);
+      const centralState = await CentralStateV2.retrieve(connection, centralKey);
       const txs = [];
 
       let hasCranked = false;
@@ -228,15 +228,15 @@ export const Stake = () => {
           Date.now() / 1000
       ) {
         setWorking(CRANK_STEP);
-        const crankTx = await crank(new PublicKey(poolId), env.PROGRAM_ID);
-        await sendTx(connection, feePayer, [crankTx], sendTransaction, {
+        const crankIx = crank(new PublicKey(poolId), env.PROGRAM_ID);
+        await sendTx(connection, feePayer, [crankIx], sendTransaction, {
           skipPreflight: true,
         });
         hasCranked = true;
       }
 
       // Check if stake account exists
-      const [stakeKey] = await StakeAccount.getKey(
+      const [stakeKey] = StakeAccount.getKey(
         env.PROGRAM_ID,
         publicKey,
         new PublicKey(poolId)
@@ -275,7 +275,7 @@ export const Stake = () => {
           );
           statxs.push(transferIx);
         }
-        const ixAccount = await createStakeAccount(
+        const ixAccount = createStakeAccount(
           new PublicKey(poolId),
           publicKey,
           feePayer,
@@ -342,7 +342,6 @@ export const Stake = () => {
           stakeKey,
           stakerAta,
           env.PROGRAM_ID,
-          true
         );
 
         await sendTx(connection, feePayer, [ix], sendTransaction, {

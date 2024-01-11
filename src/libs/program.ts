@@ -1,4 +1,4 @@
-import { CentralState, StakePool } from './ap/state';
+import { CentralStateV2, StakePool } from '@accessprotocol/js';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
@@ -18,6 +18,7 @@ import BN from 'bn.js';
  * This function can be used to find all stake accounts of a user
  * @param connection The Solana RPC connection
  * @param owner The owner of the stake accounts to retrieve
+ * @param programId The program ID
  * @returns
  */
 export const getStakeAccounts = async (
@@ -112,8 +113,8 @@ export const getUserACSBalance = async (
   publicKey: PublicKey,
   programId: PublicKey
 ): Promise<BN> => {
-  const [centralKey] = await CentralState.getKey(programId);
-  const centralState = await CentralState.retrieve(connection, centralKey);
+  const [centralKey] = await CentralStateV2.getKey(programId);
+  const centralState = await CentralStateV2.retrieve(connection, centralKey);
   const userAta: PublicKey = await getAssociatedTokenAddress(
     centralState.tokenMint,
     publicKey,

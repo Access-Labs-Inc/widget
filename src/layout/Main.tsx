@@ -19,7 +19,7 @@ import { WalletConnectButton } from '../components/wallet-adapter/ui/WalletConne
 import { WalletModalButton } from '../components/wallet-adapter/ui/WalletModalButton';
 import { useWallet } from '../components/wallet-adapter/useWallet';
 import { ConfigContext } from '../AppContext';
-import { BondAccount, StakeAccount } from '../libs/ap/state';
+import { BondAccount, StakeAccount } from '@accessprotocol/js';
 import env from '../libs/env';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import { getBondAccounts } from '../libs/program';

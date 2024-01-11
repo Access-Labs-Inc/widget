@@ -1,22 +1,11 @@
 import { h } from 'preact';
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'preact/hooks';
+import { useCallback, useContext, useEffect, useMemo, useState, } from 'preact/hooks';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
-import {
-  calculateRewardForStaker,
-  getBondAccounts,
-  getStakeAccounts,
-  getUserACSBalance,
-} from '../libs/program';
+import { calculateRewardForStaker, getBondAccounts, getStakeAccounts, getUserACSBalance, } from '../libs/program';
 import { ConfigContext } from '../AppContext';
-import { BondAccount, StakeAccount, StakePool } from '../libs/ap/state';
+import { BondAccount, StakeAccount, StakePool } from '@accessprotocol/js';
 import { clsxp, formatPenyACSCurrency } from '../libs/utils';
 import { RouteLink } from '../layout/Router';
 import { Header } from '../components/Header';
@@ -188,7 +177,7 @@ export const Actions = () => {
             classPrefix,
             'actions_staked_amount',
             (stakedAccount === undefined || bondAccount === undefined) &&
-              'actions_blink'
+            'actions_blink'
           )}
         >
           {formatPenyACSCurrency(
@@ -211,7 +200,7 @@ export const Actions = () => {
             classPrefix,
             'actions_balance',
             (stakedAccount === undefined || bondAccount === undefined) &&
-              'actions_blink'
+            'actions_blink'
           )}
         >
           {formatPenyACSCurrency(claimableAmount ?? 0)} ACS claimable
