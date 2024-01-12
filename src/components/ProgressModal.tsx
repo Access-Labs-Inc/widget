@@ -21,14 +21,16 @@ const ProgressModal = ({
         Sign a transaction
       </div>
       <div className={clsxp(classPrefix, 'process_modal_subtitle')}>
-        We need you to sign a transaction to lock your funds.
+        { working === doneStepName ?
+          'Transaction sent successfully.' :
+          'We need you to sign a transaction to lock your funds.' }
       </div>
       <nav
         className={clsxp(classPrefix, 'process_modal_steps')}
         aria-label='Progress'
       >
         <div className={clsxp(classPrefix, 'process_modal_steps_load')}>
-        <Loading />
+          {  working !== doneStepName && <Loading />}
         </div>
         <RouteLink
           disabled={working !== doneStepName}
