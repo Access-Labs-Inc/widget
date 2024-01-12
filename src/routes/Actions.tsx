@@ -5,7 +5,7 @@ import BN from 'bn.js';
 
 import { calculateRewardForStaker, getBondAccounts, getStakeAccounts, getUserACSBalance, } from '../libs/program';
 import { ConfigContext } from '../AppContext';
-import { BondAccount, StakeAccount, StakePool } from '@accessprotocol/js';
+import { BondAccount, BondV2Account, getBondV2Accounts, StakeAccount, StakePool } from '@accessprotocol/js';
 import { clsxp, formatPenyACSCurrency } from '../libs/utils';
 import { RouteLink } from '../layout/Router';
 import { Header } from '../components/Header';
@@ -21,9 +21,8 @@ export const Actions = () => {
   const [stakedAccount, setStakedAccount] = useState<
     StakeAccount | null | undefined
   >(undefined);
-  const [bondAccount, setBondAccount] = useState<
-    BondAccount | null | undefined
-  >(undefined);
+  const [bondAccounts, setBondAccounts] = useState<BondAccount[]>([]);
+  const [bondV2Accounts, setBondV2Accounts] = useState<BondV2Account[]>([]);
   const [stakePool, setStakePool] = useState<StakePool | undefined>(undefined);
 
   useEffect(() => {
@@ -84,19 +83,32 @@ export const Actions = () => {
         env.PROGRAM_ID
       );
       if (bondAccounts != null && bondAccounts.length > 0) {
-        const bAccount = bondAccounts.find((st) => {
-          const sa = BondAccount.deserialize(st.account.data);
-          return sa.stakePool.toBase58() === poolId;
-        });
-        if (bAccount) {
-          const ba = BondAccount.deserialize(bAccount.account.data);
-          setBondAccount(ba);
-        } else {
-          setBondAccount(null);
-        }
+        const bAccounts = bondAccounts.filter((st) => {
+          const ba = BondAccount.deserialize(st.account.data);
+          return ba.stakePool.toBase58() === poolId;
+        }).map((bAccount) => BondAccount.deserialize(bAccount.account.data));
+        setBondAccounts(bAccounts);
       } else {
-        setBondAccount(null);
+        setBondAccounts([]);
       }
+    })();
+  }, [publicKey, connection, poolId]);
+
+  useEffect(() => {
+    if (!(publicKey && poolId && connection)) {
+      return;
+    }
+    (async () => {
+      const bondV2Accounts = await getBondV2Accounts(
+        connection,
+        publicKey,
+        env.PROGRAM_ID
+      );
+
+      setBondV2Accounts(
+        bondV2Accounts.map((bAccount: any) => BondV2Account.deserialize(bAccount.account.data))
+          .filter((bAccount: BondV2Account) => bAccount.pool.toBase58() === poolId)
+      )
     })();
   }, [publicKey, connection, poolId]);
 
@@ -104,29 +116,42 @@ export const Actions = () => {
     if (!(stakedAccount && stakePool)) {
       return null;
     }
-    const reward = calculateRewardForStaker(
+    return calculateRewardForStaker(
       stakePool.currentDayIdx - stakedAccount.lastClaimedOffset.toNumber(),
       stakePool,
       stakedAccount.stakeAmount as BN
     );
-    return reward;
   }, [stakedAccount, stakePool]);
 
   const claimableBondAmount = useMemo(() => {
-    if (!(bondAccount && stakePool)) {
+    if (bondAccounts.length === 0 || !stakePool) {
       return null;
     }
-    const reward = calculateRewardForStaker(
-      stakePool.currentDayIdx - bondAccount.lastClaimedOffset.toNumber(),
-      stakePool,
-      bondAccount.totalStaked as BN
-    );
-    return reward;
-  }, [bondAccount, stakePool]);
+
+    return bondAccounts.reduce((acc, ba) =>
+      acc + calculateRewardForStaker(
+        stakePool.currentDayIdx - ba.lastClaimedOffset.toNumber(),
+        stakePool,
+        ba.totalStaked as BN
+      ), 0);
+  }, [bondAccounts, stakePool]);
+
+  const claimableBondV2Amount = useMemo(() => {
+    if (bondV2Accounts.length === 0 || !stakePool) {
+      return null;
+    }
+
+    return bondV2Accounts.reduce((acc, ba) =>
+      acc + calculateRewardForStaker(
+        stakePool.currentDayIdx - ba.lastClaimedOffset.toNumber(),
+        stakePool,
+        ba.amount as BN
+      ), 0);
+  }, [bondV2Accounts, stakePool]);
 
   const claimableAmount = useMemo(() => {
-    return (claimableBondAmount ?? 0) + (claimableStakeAmount ?? 0);
-  }, [claimableBondAmount, claimableStakeAmount]);
+    return (claimableBondAmount ?? 0) + (claimableStakeAmount ?? 0) + (claimableBondV2Amount ?? 0);
+  }, [claimableBondAmount, claimableStakeAmount, claimableBondV2Amount]);
 
   const disconnectHandler = useCallback(async () => {
     try {
@@ -176,15 +201,18 @@ export const Actions = () => {
           className={clsxp(
             classPrefix,
             'actions_staked_amount',
-            (stakedAccount === undefined || bondAccount === undefined) &&
+            (stakedAccount === undefined || bondAccounts === undefined) &&
             'actions_blink'
           )}
         >
-          {formatPenyACSCurrency(
-            (stakedAccount?.stakeAmount.toNumber() ?? 0) +
-              (bondAccount?.totalStaked.toNumber() ?? 0)
-          )}{' '}
-          ACS locked
+          <div>
+            {formatPenyACSCurrency(
+              (stakedAccount?.stakeAmount.toNumber() ?? 0) +
+              (bondAccounts?.reduce((acc, ba) => acc + ba.totalStaked.toNumber(), 0) ?? 0) +
+              (bondV2Accounts?.reduce((acc, ba) => acc + ba.amount.toNumber(), 0) ?? 0)
+            )}{' '}
+            ACS locked
+          </div>
         </div>
         <div
           className={clsxp(
@@ -199,7 +227,7 @@ export const Actions = () => {
           className={clsxp(
             classPrefix,
             'actions_balance',
-            (stakedAccount === undefined || bondAccount === undefined) &&
+            (stakedAccount === undefined || bondAccounts === undefined) &&
             'actions_blink'
           )}
         >
