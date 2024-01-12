@@ -342,52 +342,27 @@ button.acs__wallet_adapter_button_trigger {
 }
 
 .acs__claim_button {
-  @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 mb-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0;
+  @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700;
 }
 
 .acs__claim_button:hover {
   @apply bg-indigo-300 text-stone-800;
 }
 
-.acs__claim_button:hover:disabled,
-.acs__claim_button:disabled {
-  @apply bg-stone-600 cursor-not-allowed;
-}
-
 .acs__claim_title {
-  @apply my-8 mt-16 text-white text-2xl text-center;
-}
-
-.acs__claim_title_error {
-  @apply mt-8 text-red-500 text-2xl text-center;
+  @apply text-white text-2xl text-center;
 }
 
 .acs__claim_subtitle {
-  @apply text-center text-stone-400;
-}
-
-.acs__claim_subtitle_error {
-  @apply text-red-500 text-center;
+  @apply text-center text-stone-400 mb-14;
 }
 
 .acs__claim_claim_amount {
-  @apply mb-40 text-4xl text-center text-green-400;
+  @apply text-4xl text-center text-green-400;
 }
 
-.acs__claim_loader {
-  @apply flex justify-center content-center mb-56;
-}
-
-.acs__claim_steps {
-  @apply flex flex-col justify-start my-4;
-}
-
-.acs__claim_steps_list {
-  @apply space-y-4 list-none mb-10;
-}
-
-.acs__claim_invalid {
-  @apply bg-red-400;
+.acs__claim_footnote {
+  @apply flex justify-center text-sm text-indigo-500 mt-2 mb-2;
 }
 
 /* >> routes/Stake.tsx */
