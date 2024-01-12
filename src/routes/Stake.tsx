@@ -1,6 +1,13 @@
 import { Fragment, h } from 'preact';
 import { Info } from 'phosphor-react';
-import { BondAccount, fullLock, StakeAccount, StakePool, } from '@accessprotocol/js'
+import {
+  BondV2Account,
+  CentralStateV2,
+  fullLock,
+  getBondV2Accounts,
+  StakeAccount,
+  StakePool,
+} from '@accessprotocol/js'
 import { PublicKey } from '@solana/web3.js';
 import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 
@@ -9,7 +16,7 @@ import { RouteLink } from '../layout/Router';
 import { ConfigContext } from '../AppContext';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import { useWallet } from '../components/wallet-adapter/useWallet';
-import { getBondAccounts, getStakeAccounts, getUserACSBalance, } from '../libs/program';
+import { getStakeAccounts, getUserACSBalance, } from '../libs/program';
 import { Tooltip } from '../components/Tooltip';
 import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
 import { sendTx } from '../libs/transactions';
@@ -27,6 +34,25 @@ interface FeePaymentData {
 
 const DONE_STEP = 'Done';
 const IDLE_STEP = 'Idle';
+
+const ACCOUNT_CREATION_ACS_PRICE = 50
+
+const calculateFees = (amount: number,
+                       feeBasisPoints: number,
+                       forever: boolean,
+                       stakeAccount?: StakeAccount | null,
+                       bondV2Accounts?: BondV2Account[],
+) => {
+  let accountCreationFee = ACCOUNT_CREATION_ACS_PRICE;
+  if ((!forever && stakeAccount) || (forever && bondV2Accounts && bondV2Accounts.length > 0)) {
+    accountCreationFee = 0;
+  }
+  let protocolFee = amount * (feeBasisPoints / 10000);
+  if (forever) {
+    protocolFee = 0;
+  }
+  return protocolFee + accountCreationFee;
+}
 
 export const Stake = () => {
   const { poolId, poolName, element, classPrefix } = useContext(ConfigContext);
@@ -47,46 +73,31 @@ export const Stake = () => {
 
   const [working, setWorking] = useState(IDLE_STEP);
   const [balance, setBalance] = useState<number | null | undefined>(undefined);
-  const [solBalance, setSolBalance] = useState<number>(0);
   const [forever, setForever] = useState<boolean>(false);
-  const [stakedAccount, setStakedAccount] = useState<
+  const [stakeAccount, setStakeAccount] = useState<
     StakeAccount | undefined | null
   >(undefined);
-  const [bondAccount, setBondAccount] = useState<
-    BondAccount | null | undefined
-  >(undefined);
-  const [stakedPool, setStakedPool] = useState<StakePool | null>(null);
+  const [bondV2Accounts, setBondV2Accounts] = useState<BondV2Account[]>([]);
+  const [stakedPool, setStakePool] = useState<StakePool | null>(null);
   const [stakeAmount, setStakeAmount] = useState<number>(0);
+  const [feeBasisPoints, setFeeBasisPoints] = useState<number>(0);
   const [stakeModalOpen, setStakeModal] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const openStakeModal = () => setStakeModal(true);
 
-  const feePercentage = 2;
-  const feePercentageFraction = feePercentage / 100;
-
+  // set stake pool
   useEffect(() => {
-    if (!(publicKey && connection)) {
+    if (!poolId) {
       return;
     }
     (async () => {
-      const b = await connection.getBalance(publicKey);
-      setSolBalance(b / 10 ** 9);
+      const sp = await StakePool.retrieve(connection, new PublicKey(poolId));
+      setStakePool(sp);
     })();
-  }, [publicKey, connection, setSolBalance]);
+  }, [poolId]);
 
-  useEffect(() => {
-    if (!(publicKey && connection)) {
-      return;
-    }
-    (async () => {
-      const b = await getUserACSBalance(connection, publicKey, env.PROGRAM_ID);
-      const acsBalance = (b?.toNumber() || 0) / 10 ** 6;
-      setBalance(acsBalance);
-      setStakeAmount(acsBalance / (1 + feePercentageFraction));
-    })();
-  }, [publicKey, connection, getUserACSBalance]);
-
+  // set stake account
   useEffect(() => {
     if (!(publicKey && poolId && connection)) {
       return;
@@ -104,64 +115,73 @@ export const Stake = () => {
         });
         if (sAccount) {
           const sa = StakeAccount.deserialize(sAccount.account.data);
-          setStakedAccount(sa);
+          setStakeAccount(sa);
         } else {
-          setStakedAccount(null);
+          setStakeAccount(null);
         }
         return;
       }
-      setStakedAccount(null);
+      setStakeAccount(null);
     })();
-  }, [publicKey, connection, poolId, setStakedAccount]);
+  }, [publicKey, connection, poolId, setStakeAccount]);
 
+  // set bond account
   useEffect(() => {
-    if (!(publicKey && poolId)) {
+    if (!(publicKey && poolId && connection)) {
       return;
     }
     (async () => {
-      const bondAccounts = await getBondAccounts(
+      const bondV2Accounts = await getBondV2Accounts(
         connection,
         publicKey,
         env.PROGRAM_ID
       );
-      if (bondAccounts != null && bondAccounts.length > 0) {
-        const bAccount = bondAccounts.find((st) => {
-          const sa = BondAccount.deserialize(st.account.data);
-          return sa.stakePool.toBase58() === poolId;
-        });
-        if (bAccount) {
-          const ba = BondAccount.deserialize(bAccount.account.data);
-          setBondAccount(ba);
-        } else {
-          setBondAccount(null);
-        }
-      } else {
-        setBondAccount(null);
-      }
-    })();
-  }, [publicKey, connection, poolId, setBondAccount]);
 
+      setBondV2Accounts(
+        bondV2Accounts.map((bAccount: any) => BondV2Account.deserialize(bAccount.account.data))
+          .filter((bAccount: BondV2Account) => bAccount.pool.toBase58() === poolId)
+      )
+    })();
+  }, [publicKey, connection, poolId]);
+
+  // set fee basis points from the central state
   useEffect(() => {
-    if (!poolId) {
+    if (!(publicKey && connection)) {
       return;
     }
     (async () => {
-      const sp = await StakePool.retrieve(connection, new PublicKey(poolId));
-      setStakedPool(sp);
+      const cs = await CentralStateV2.retrieve(
+        connection,
+        CentralStateV2.getKey(env.PROGRAM_ID)[0],
+      );
+      setFeeBasisPoints(cs.feeBasisPoints)
     })();
-  }, [poolId]);
+  }, [connection, setFeeBasisPoints]);
 
-  const ACCOUNT_CREATION_ACS_PRICE = 50
-
-  const fee = useMemo(() => {
-    return Number(stakeAmount) * feePercentageFraction + 30;
-  }, [stakeAmount, feePercentageFraction]);
+  // set ACS balance and initial stake amount
+  useEffect(() => {
+    if (!(publicKey && connection)) {
+      return;
+    }
+    (async () => {
+      const b = await getUserACSBalance(connection, publicKey, env.PROGRAM_ID);
+      const acsBalance = (b?.toNumber() || 0) / 10 ** 6;
+      setBalance(acsBalance);
+      const maxStakeAmount = Math.floor(acsBalance - calculateFees(
+        acsBalance,
+        feeBasisPoints,
+        false,
+        stakeAccount,
+        undefined,
+      ));
+      setStakeAmount(maxStakeAmount);
+    })();
+  }, [publicKey, connection, stakeAccount, getUserACSBalance]);
 
   const handle = async () => {
     let feePayer = publicKey;
     let sendTransaction = sendTransactionWithFeesUnpaid;
     if (
-      insufficientSolBalance &&
       publicKey != null &&
       feePaymentState != null
     ) {
@@ -185,12 +205,12 @@ export const Stake = () => {
         feePayer,
         Number(stakeAmount),
         Date.now() / 1000,
-        ACCOUNT_CREATION_ACS_PRICE,
+        feePayer.toBase58() === publicKey.toBase58() ? 0: ACCOUNT_CREATION_ACS_PRICE,
         env.PROGRAM_ID,
         undefined,
         stakedPool,
         forever ? 0 : -1,
-        )
+      )
 
       await sendTx(connection, feePayer, ixs, sendTransaction, {
         skipPreflight: false,
@@ -218,48 +238,66 @@ export const Stake = () => {
     }
   };
 
-  const minPoolStakeAmount = useMemo(() => {
-    return (stakedPool?.minimumStakeAmount.toNumber() ?? 0) / 10 ** 6;
-  }, [stakedPool?.minimumStakeAmount]);
-
   const minStakeAmount = useMemo(() => {
-    const stakedAmount = Number(stakedAccount?.stakeAmount ?? 0) / 10 ** 6;
-    const airdropAmount = Number(bondAccount?.totalStaked ?? 0) / 10 ** 6;
-    return Math.max(minPoolStakeAmount - stakedAmount - airdropAmount, 1);
+    const stakedAmount = Number(stakeAccount?.stakeAmount ?? 0) / 10 ** 6;
+    const minPoolStakeAmount = (stakedPool?.minimumStakeAmount.toNumber() ?? 0) / 10 ** 6
+    const bondV2Amount = Number(bondV2Accounts.reduce((acc, ba) => acc + ba.amount.toNumber(), 0)) / 10 ** 6;
+    const relevantLock = forever ? bondV2Amount : stakedAmount;
+    if (minPoolStakeAmount > stakeAmount) {
+      setStakeAmount(minPoolStakeAmount);
+    }
+    return Math.max(minPoolStakeAmount - relevantLock, 1);
   }, [
-    stakedAccount?.stakeAmount,
-    bondAccount?.totalStaked,
-    minPoolStakeAmount,
+    stakedPool,
+    stakeAccount?.stakeAmount,
+    forever,
   ]);
 
-  const transactionFeeSOL = stakedAccount ? 0.000005 : 0.0015;
-  const transactionFeeMicroACS = stakedAccount ? 0 : 30;
-
   const maxStakeAmount = useMemo(() => {
-    return (Number(balance) / (1 + feePercentageFraction)) - transactionFeeMicroACS;
-  }, [balance, feePercentageFraction, transactionFeeMicroACS]);
+    const newMax = Number(balance) - calculateFees(
+      Number(balance),
+      feeBasisPoints,
+      forever,
+      stakeAccount,
+      bondV2Accounts,
+    );
+    if (newMax < stakeAmount) {
+      setStakeAmount(newMax);
+    }
+    return newMax;
+  }, [balance, feeBasisPoints, forever, stakeAccount, bondV2Accounts]);
+
+  const fee = useMemo(() => {
+    return calculateFees(
+      stakeAmount,
+      feeBasisPoints,
+      forever,
+      stakeAccount,
+      bondV2Accounts,
+    );
+  }, [stakeAmount, feeBasisPoints, forever, stakeAccount, bondV2Accounts]);
 
   const insufficientBalance = useMemo(() => {
     return (
-      minStakeAmount + transactionFeeMicroACS + minStakeAmount * feePercentageFraction > (balance ?? 0)
+      minStakeAmount + ACCOUNT_CREATION_ACS_PRICE + minStakeAmount * (feeBasisPoints || 0) / 10000 > (balance ?? 0)
     );
-  }, [balance, minStakeAmount, feePercentageFraction, transactionFeeMicroACS]);
-
-  const insufficientSolBalance = useMemo(() => solBalance < transactionFeeSOL, [solBalance, transactionFeeMicroACS]);
+  }, [balance, minStakeAmount, feeBasisPoints]);
 
   const invalidText = useMemo(() => {
     if (insufficientBalance) {
       return `Insufficient balance for locking.
-        You need min. of ${formatACSCurrency(minStakeAmount + minStakeAmount * feePercentageFraction)} ACS +
-        ${formatACSCurrency(transactionFeeMicroACS)} ACS protocol fee.`;
+        You need min. of ${formatACSCurrency(
+        minStakeAmount +
+        minStakeAmount * (feeBasisPoints || 0) / 1000) +
+      ACCOUNT_CREATION_ACS_PRICE
+      } ACS (including ACS fees).`;
     }
     return null;
   }, [
     insufficientBalance,
-    transactionFeeMicroACS,
     minStakeAmount,
-    feePercentageFraction,
-    stakedAccount?.stakeAmount,
+    feeBasisPoints,
+    stakeAccount?.stakeAmount,
   ]);
 
   return (
@@ -294,89 +332,99 @@ export const Stake = () => {
             </RouteLink>
           </Header>
 
-          {stakedAccount !== undefined &&
-            bondAccount !== undefined &&
+          {stakeAccount !== undefined &&
+            bondV2Accounts !== undefined &&
             balance !== undefined && (
               <Fragment>
-              <div className={clsxp(classPrefix, 'stake_title')}>
-                {poolName}
-              </div>
-              {!insufficientBalance ? (
-                <div className={clsxp(classPrefix, 'stake_subtitle')}>
-                  Both {poolName} and you will get ACS rewards
-                  split equally.
+                <div className={clsxp(classPrefix, 'stake_title')}>
+                  {poolName}
                 </div>
-              ) : (
-                <p className={clsxp(classPrefix, 'stake_invalid_text')}>
-                  {invalidText}
-                </p>
-              )}
-
-              <div>
-                {insufficientBalance && (
-                  <a
-                    href={env.GET_ACS_URL}
-                    target='_blank'
-                    rel='noopener'
-                    className={clsxp(
-                      classPrefix,
-                      'stake_button',
-                      'stake_button_invalid'
-                    )}
-                  >
-                    Get ACS/SOL on access
-                  </a>
+                {!insufficientBalance ? (
+                  <div className={clsxp(classPrefix, 'stake_subtitle')}>
+                    Both {poolName} and you will get ACS rewards
+                    split equally.
+                  </div>
+                ) : (
+                  <p className={clsxp(classPrefix, 'stake_invalid_text')}>
+                    {invalidText}
+                  </p>
                 )}
-                {!insufficientBalance && (
-                  <>
-                    <NumberInputWithSlider
-                      min={insufficientBalance ? 0 : minStakeAmount}
-                      max={maxStakeAmount}
-                      value={stakeAmount}
-                      disabled={insufficientBalance}
-                      invalid={insufficientBalance}
-                      invalidText={invalidText}
-                      onChangeOfValue={(value) => {
-                        setStakeAmount(value);
-                      }}
-                    />
-                    <div className={clsxp(classPrefix, 'stake_checkbox')}>
+
+                <div>
+                  {insufficientBalance && (
+                    <a
+                      href={env.GET_ACS_URL}
+                      target='_blank'
+                      rel='noopener'
+                      className={clsxp(
+                        classPrefix,
+                        'stake_button',
+                        'stake_button_invalid'
+                      )}
+                    >
+                      Get ACS/SOL on access
+                    </a>
+                  )}
+                  {!insufficientBalance && (
+                    <>
+                      <NumberInputWithSlider
+                        min={insufficientBalance ? 0 : minStakeAmount}
+                        max={maxStakeAmount}
+                        value={stakeAmount}
+                        disabled={insufficientBalance}
+                        invalid={insufficientBalance}
+                        invalidText={invalidText}
+                        onChangeOfValue={(value) => {
+                          setStakeAmount(value);
+                        }}
+                      />
+                      <div className={clsxp(classPrefix, 'stake_checkbox')}>
                         <input
                           type="checkbox"
                           onChange={() => {
+
                             setForever(!forever);
                           }}
                           checked={forever}
                         />
                         <span>Lock forever?</span>
-                    </div>
-                    <button
-                      className={clsxp(classPrefix, 'stake_button')}
-                      onClick={handle}
-                    >
-                      { forever ? 'Lock forever' : 'Lock' }
-                    </button>
-                  </>
-                )}
+                      </div>
+                      {!forever ?
+                        (<button
+                          className={clsxp(classPrefix, 'stake_button')}
+                          disabled={stakeAmount < minStakeAmount}
+                          onClick={handle}
+                        >
+                          Lock
+                        </button>) : (<button
+                          className={clsxp(classPrefix, 'forever_stake_button')}
+                          disabled={stakeAmount < minStakeAmount}
+                          onClick={handle}
+                        >
+                          Lock forever
+                        </button>)
+                      }
+                    </>
+                  )}
 
-                <div className={clsxp(classPrefix, 'stake_fees_root')}>
-                  <div
-                    className={clsxp(classPrefix, 'stake_fee_with_tooltip')}
-                  >
-                    <div>Protocol fee: {formatACSCurrency(fee)} ACS</div>
-                    <Tooltip
-                      message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
+                  <div className={clsxp(classPrefix, 'stake_fees_root')}>
+                    <div
+                      className={clsxp(classPrefix, 'stake_fee_with_tooltip')}
                     >
-                      <Info size={16}/>
-                    </Tooltip>
+                      <div>Fees: {formatACSCurrency(fee)} ACS</div>
+                      <Tooltip
+                        message={`A ${(feeBasisPoints || 0) / 10000}% is fee deducted from your staked amount and is burned by the protocol.`}
+                      >
+                        <Info size={16}/>
+                      </Tooltip>
+                    </div>
+                    {/*<div>Transaction fee: {transactionFeeSOL} SOL</div>*/}
                   </div>
-                  <div>Transaction fee: {transactionFeeSOL} SOL</div>
                 </div>
-              </div>
               </Fragment>
             )}
-          {(stakedAccount === undefined ||
-            bondAccount === undefined ||
+          {(stakeAccount === undefined ||
+            bondV2Accounts === undefined ||
             stakedPool == null ||
             balance === undefined) && (
             <div className={clsxp(classPrefix, 'stake_loader')}>

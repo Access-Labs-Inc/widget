@@ -379,6 +379,10 @@ button.acs__wallet_adapter_button_trigger {
   @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0;
 }
 
+.acs__forever_stake_button {
+  @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0;
+}
+
 .acs__stake_checkbox {
   @apply w-full flex gap-3 pb-3 items-center justify-center text-red-300
 }
@@ -387,9 +391,18 @@ button.acs__wallet_adapter_button_trigger {
   @apply bg-indigo-300 text-stone-800;
 }
 
+.acs__forever_stake_button:hover {
+  @apply bg-indigo-300 text-stone-800;
+}
+
+
 .acs__stake_button:disabled,
 .acs__stake_button:disabled:hover,
-.acs__stake_button_disabled {
+.acs__stake_button_disabled,
+.acs__forever_stake_button:disabled,
+.acs__forever_stake_button:disabled:hover,
+.acs__forever_stake_button_disabled
+{
   @apply bg-stone-600 cursor-not-allowed;
 }
 

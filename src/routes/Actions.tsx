@@ -82,15 +82,10 @@ export const Actions = () => {
         publicKey,
         env.PROGRAM_ID
       );
-      if (bondAccounts != null && bondAccounts.length > 0) {
-        const bAccounts = bondAccounts.filter((st) => {
-          const ba = BondAccount.deserialize(st.account.data);
-          return ba.stakePool.toBase58() === poolId;
-        }).map((bAccount) => BondAccount.deserialize(bAccount.account.data));
-        setBondAccounts(bAccounts);
-      } else {
-        setBondAccounts([]);
-      }
+      setBondAccounts(
+        bondAccounts.map((bAccount: any) => BondAccount.deserialize(bAccount.account.data))
+          .filter((bAccount: BondAccount) => bAccount.stakePool.toBase58() === poolId)
+      )
     })();
   }, [publicKey, connection, poolId]);
 
