@@ -5,7 +5,7 @@ import { RouteLink } from '../layout/Router';
 import { useContext } from 'preact/hooks';
 import { ConfigContext } from '../AppContext';
 import { clsxp } from '../libs/utils';
-import Loading from "./Loading";
+import Loading from './Loading';
 
 const ProgressModal = ({
   working,

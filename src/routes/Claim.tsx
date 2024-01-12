@@ -6,12 +6,12 @@ import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 import { ConfigContext } from '../AppContext';
 import env from '../libs/env';
 import { clsxp, formatPenyACSCurrency } from '../libs/utils';
-import { BondAccount, BondV2Account, getBondV2Accounts, StakeAccount, StakePool } from "@accessprotocol/js";
-import { calculateRewardForStaker, getBondAccounts, getStakeAccounts } from "../libs/program";
-import { PublicKey } from "@solana/web3.js";
-import BN from "bn.js";
-import { useWallet } from "../components/wallet-adapter/useWallet";
-import { useConnection } from "../components/wallet-adapter/useConnection";
+import { BondAccount, BondV2Account, getBondV2Accounts, StakeAccount, StakePool } from '@accessprotocol/js';
+import { calculateRewardForStaker, getBondAccounts, getStakeAccounts } from '../libs/program';
+import { PublicKey } from '@solana/web3.js';
+import BN from 'bn.js';
+import { useWallet } from '../components/wallet-adapter/useWallet';
+import { useConnection } from '../components/wallet-adapter/useConnection';
 
 export const Claim = () => {
   const { poolId, classPrefix } = useContext(ConfigContext);
@@ -66,17 +66,17 @@ export const Claim = () => {
       return;
     }
     (async () => {
-      const bondAccounts = await getBondAccounts(
+      const bAccounts = await getBondAccounts(
         connection,
         publicKey,
         env.PROGRAM_ID
       );
-      if (bondAccounts != null && bondAccounts.length > 0) {
-        const bAccounts = bondAccounts.filter((st) => {
+      if (bAccounts != null && bAccounts.length > 0) {
+        const bas = bAccounts.filter((st) => {
           const ba = BondAccount.deserialize(st.account.data);
           return ba.stakePool.toBase58() === poolId;
         }).map((bAccount) => BondAccount.deserialize(bAccount.account.data));
-        setBondAccounts(bAccounts);
+        setBondAccounts(bas);
       } else {
         setBondAccounts([]);
       }
@@ -88,16 +88,16 @@ export const Claim = () => {
       return;
     }
     (async () => {
-      const bondV2Accounts = await getBondV2Accounts(
+      const bV2Accounts = await getBondV2Accounts(
         connection,
         publicKey,
         env.PROGRAM_ID
       );
 
       setBondV2Accounts(
-        bondV2Accounts.map((bAccount: any) => BondV2Account.deserialize(bAccount.account.data))
+        bV2Accounts.map((bAccount: any) => BondV2Account.deserialize(bAccount.account.data))
           .filter((bAccount: BondV2Account) => bAccount.pool.toBase58() === poolId)
-      )
+      );
     })();
   }, [publicKey, connection, poolId]);
 
@@ -141,7 +141,6 @@ export const Claim = () => {
   const claimableAmount = useMemo(() => {
     return (claimableBondAmount ?? 0) + (claimableStakeAmount ?? 0) + (claimableBondV2Amount ?? 0);
   }, [claimableBondAmount, claimableStakeAmount, claimableBondV2Amount]);
-
 
   return (
     <div className={clsxp(classPrefix, 'claim_root')}>

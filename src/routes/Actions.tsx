@@ -77,15 +77,15 @@ export const Actions = () => {
       return;
     }
     (async () => {
-      const bondAccounts = await getBondAccounts(
+      const bAccounts = await getBondAccounts(
         connection,
         publicKey,
         env.PROGRAM_ID
       );
       setBondAccounts(
-        bondAccounts.map((bAccount: any) => BondAccount.deserialize(bAccount.account.data))
+        bAccounts.map((bAccount: any) => BondAccount.deserialize(bAccount.account.data))
           .filter((bAccount: BondAccount) => bAccount.stakePool.toBase58() === poolId)
-      )
+      );
     })();
   }, [publicKey, connection, poolId]);
 
@@ -94,16 +94,16 @@ export const Actions = () => {
       return;
     }
     (async () => {
-      const bondV2Accounts = await getBondV2Accounts(
+      const bV2Accounts = await getBondV2Accounts(
         connection,
         publicKey,
         env.PROGRAM_ID
       );
 
       setBondV2Accounts(
-        bondV2Accounts.map((bAccount: any) => BondV2Account.deserialize(bAccount.account.data))
+        bV2Accounts.map((bAccount: any) => BondV2Account.deserialize(bAccount.account.data))
           .filter((bAccount: BondV2Account) => bAccount.pool.toBase58() === poolId)
-      )
+      );
     })();
   }, [publicKey, connection, poolId]);
 
@@ -162,7 +162,7 @@ export const Actions = () => {
     }
     return bondAccounts.find((ba) => {
       return ba.unlockStartDate.toNumber() <= Date.now() / 1000;
-    })
+    });
   }, [stakePool, bondAccounts]);
 
   const hasUnlockableBondsV2 = useMemo(() => {
@@ -170,9 +170,11 @@ export const Actions = () => {
       return [];
     }
     return bondV2Accounts.find((ba) => {
-      if (!ba.unlockTimestamp) return false;
+      if (!ba.unlockTimestamp) {
+        return false;
+      }
       return ba.unlockTimestamp.toNumber() <= Date.now() / 1000;
-    })
+    });
   }, [stakePool, bondV2Accounts]);
 
   return (

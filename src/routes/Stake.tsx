@@ -7,7 +7,7 @@ import {
   getBondV2Accounts,
   StakeAccount,
   StakePool,
-} from '@accessprotocol/js'
+} from '@accessprotocol/js';
 import { PublicKey } from '@solana/web3.js';
 import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 
@@ -35,7 +35,7 @@ interface FeePaymentData {
 const DONE_STEP = 'Done';
 const IDLE_STEP = 'Idle';
 
-const ACCOUNT_CREATION_ACS_PRICE = 50
+const ACCOUNT_CREATION_ACS_PRICE = 50;
 
 const calculateFees = (amount: number,
                        feeBasisPoints: number,
@@ -52,7 +52,7 @@ const calculateFees = (amount: number,
     protocolFee = 0;
   }
   return protocolFee + accountCreationFee;
-}
+};
 
 export const Stake = () => {
   const { poolId, poolName, element, classPrefix } = useContext(ConfigContext);
@@ -131,16 +131,16 @@ export const Stake = () => {
       return;
     }
     (async () => {
-      const bondV2Accounts = await getBondV2Accounts(
+      const bV2Accounts = await getBondV2Accounts(
         connection,
         publicKey,
         env.PROGRAM_ID
       );
 
       setBondV2Accounts(
-        bondV2Accounts.map((bAccount: any) => BondV2Account.deserialize(bAccount.account.data))
+        bV2Accounts.map((bAccount: any) => BondV2Account.deserialize(bAccount.account.data))
           .filter((bAccount: BondV2Account) => bAccount.pool.toBase58() === poolId)
-      )
+      );
     })();
   }, [publicKey, connection, poolId]);
 
@@ -154,7 +154,7 @@ export const Stake = () => {
         connection,
         CentralStateV2.getKey(env.PROGRAM_ID)[0],
       );
-      setFeeBasisPoints(cs.feeBasisPoints)
+      setFeeBasisPoints(cs.feeBasisPoints);
     })();
   }, [connection, setFeeBasisPoints]);
 
@@ -167,14 +167,14 @@ export const Stake = () => {
       const b = await getUserACSBalance(connection, publicKey, env.PROGRAM_ID);
       const acsBalance = (b?.toNumber() || 0) / 10 ** 6;
       setBalance(acsBalance);
-      const maxStakeAmount = Math.floor(acsBalance - calculateFees(
+      const max = Math.floor(acsBalance - calculateFees(
         acsBalance,
         feeBasisPoints,
         false,
         stakeAccount,
         undefined,
       ));
-      setStakeAmount(maxStakeAmount);
+      setStakeAmount(max);
     })();
   }, [publicKey, connection, stakeAccount, getUserACSBalance]);
 
@@ -210,7 +210,7 @@ export const Stake = () => {
         undefined,
         stakedPool,
         forever ? 0 : -1,
-      )
+      );
 
       await sendTx(connection, feePayer, ixs, sendTransaction, {
         skipPreflight: false,
@@ -240,7 +240,7 @@ export const Stake = () => {
 
   const minStakeAmount = useMemo(() => {
     const stakedAmount = Number(stakeAccount?.stakeAmount ?? 0) / 10 ** 6;
-    const minPoolStakeAmount = (stakedPool?.minimumStakeAmount.toNumber() ?? 0) / 10 ** 6
+    const minPoolStakeAmount = (stakedPool?.minimumStakeAmount.toNumber() ?? 0) / 10 ** 6;
     const bondV2Amount = Number(bondV2Accounts.reduce((acc, ba) => acc + ba.amount.toNumber(), 0)) / 10 ** 6;
     const relevantLock = forever ? bondV2Amount : stakedAmount;
     if (minPoolStakeAmount > stakeAmount) {
@@ -380,7 +380,7 @@ export const Stake = () => {
                       />
                       <div className={clsxp(classPrefix, 'stake_checkbox')}>
                         <input
-                          type="checkbox"
+                          type='checkbox'
                           onChange={() => {
 
                             setForever(!forever);
