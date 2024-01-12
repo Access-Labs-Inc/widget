@@ -161,6 +161,25 @@ export const Actions = () => {
     }
   }, [disconnect]);
 
+  const hasUnlockableBonds = useMemo(() => {
+    if (!stakePool || !bondAccounts) {
+      return [];
+    }
+    return bondAccounts.find((ba) => {
+      return ba.unlockStartDate.toNumber() <= Date.now() / 1000;
+    })
+  }, [stakePool, bondAccounts]);
+
+  const hasUnlockableBondsV2 = useMemo(() => {
+    if (!stakePool || !bondV2Accounts) {
+      return [];
+    }
+    return bondV2Accounts.find((ba) => {
+      if (!ba.unlockTimestamp) return false;
+      return ba.unlockTimestamp.toNumber() <= Date.now() / 1000;
+    })
+  }, [stakePool, bondV2Accounts]);
+
   return (
     <div className={clsxp(classPrefix, 'actions_root')}>
       {connected && disconnecting && (
@@ -231,7 +250,7 @@ export const Actions = () => {
             'actions_blink'
           )}
         >
-          {formatPenyACSCurrency(claimableAmount ?? 0)} ACS claimable
+          {formatPenyACSCurrency(claimableAmount ?? 0)} ACS rewards
         </div>
       </div>
 
@@ -242,7 +261,7 @@ export const Actions = () => {
         >
           Lock
         </RouteLink>
-        {stakedAccount && stakedAccount.stakeAmount.toNumber() > 0 ? (
+        {(stakedAccount && stakedAccount.stakeAmount.toNumber() > 0) || hasUnlockableBonds || hasUnlockableBondsV2 ? (
           <RouteLink
             className={clsxp(classPrefix, 'actions_button')}
             href='/unstake'
@@ -275,7 +294,7 @@ export const Actions = () => {
               'actions_button_disabled'
             )}
           >
-            Claim
+            Claim rewards
           </span>
         )}
       </div>
