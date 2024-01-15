@@ -131,7 +131,11 @@ button.acs__wallet_adapter_button_trigger {
 /* >> components/Tooltip.tsx */
 
 .acs__tooltip_root {
-  @apply relative flex flex-row items-center justify-center;
+  @apply relative flex flex-row items-center justify-center px-2;
+}
+
+.acs__tooltip_root:hover .acs__tooltip_wrapper {
+  @apply cursor-pointer flex visible;
 }
 
 .acs__tooltip_wrapper {

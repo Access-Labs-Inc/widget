@@ -205,7 +205,7 @@ export const Stake = () => {
         feePayer,
         Number(stakeAmount),
         Date.now() / 1000,
-        feePayer.toBase58() === publicKey.toBase58() ? 0: ACCOUNT_CREATION_ACS_PRICE,
+        feePayer.toBase58() === publicKey.toBase58() ? 0 : ACCOUNT_CREATION_ACS_PRICE,
         env.PROGRAM_ID,
         undefined,
         stakedPool,
@@ -387,7 +387,17 @@ export const Stake = () => {
                           }}
                           checked={forever}
                         />
-                        <span>Lock forever?</span>
+                        <span
+                          className='-mr-3'
+                        >Lock forever</span>
+                        <Tooltip
+                          messages={['Retain your subscription forever.',
+                            'You will be able to claim your rewards ,',
+                            'but you will not be able to unlock your funds.'
+                          ]}
+                        >
+                          <Info size={16}/>
+                        </Tooltip>
                       </div>
                       {!forever ?
                         (<button
@@ -411,14 +421,22 @@ export const Stake = () => {
                     <div
                       className={clsxp(classPrefix, 'stake_fee_with_tooltip')}
                     >
-                      <div>Fees: {formatACSCurrency(fee)} ACS</div>
-                      <Tooltip
-                        message={`A ${(feeBasisPoints || 0) / 10000}% is fee deducted from your staked amount and is burned by the protocol.`}
-                      >
-                        <Info size={16}/>
-                      </Tooltip>
+                      {fee > 0 ? (
+                        <>
+                          <div>Fees: {formatACSCurrency(fee)} ACS</div>
+                          <Tooltip
+                            messages={[
+                              `${(!forever) ? `Protocol fee (${feeBasisPoints / 100} %): ${stakeAmount * (feeBasisPoints / 10000)} ACS` : ''}`,
+                              `${(!forever && !stakeAccount) || (forever && (!bondV2Accounts || bondV2Accounts.length === 0)) ? 'Account creation fee: 50 ACS' : ''}`
+                            ]}
+                          >
+                            <Info size={16}/>
+                          </Tooltip>
+                        </>
+                      ) : (
+                        <div>No additional fees</div>
+                      )}
                     </div>
-                    {/*<div>Transaction fee: {transactionFeeSOL} SOL</div>*/}
                   </div>
                 </div>
               </Fragment>
