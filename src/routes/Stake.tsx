@@ -23,7 +23,7 @@ import Loading from '../components/Loading';
 import { ProgressModal } from '../components/ProgressModal';
 import { clsxp, formatACSCurrency } from '../libs/utils';
 import env from '../libs/env';
-import { useFeePayer } from "../hooks/useFeePayer";
+import { useFeePayer } from '../hooks/useFeePayer';
 
 const DONE_STEP = 'Done';
 const IDLE_STEP = 'Idle';

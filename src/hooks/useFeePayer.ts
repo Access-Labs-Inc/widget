@@ -1,18 +1,18 @@
 import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import env from '../libs/env';
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useState } from 'preact/hooks';
 
 export const useFeePayer = () => {
   const [feePayerPubKey, setFeePayerPubKey] = useState<PublicKey | null>(null);
   useEffect(() => {
     const fetchFeePayerPubKey = async () => {
-      const feePayerPubKey = await fetch(env.FEE_PAYER_URL, {
+      const feePayer = await fetch(env.FEE_PAYER_URL, {
         method: 'GET',
         headers: new Headers({
           Accept: 'application/vnd.github.cloak-preview',
         }),
       }).then((res) => res.text());
-      setFeePayerPubKey(new PublicKey(feePayerPubKey));
+      setFeePayerPubKey(new PublicKey(feePayer));
     };
     fetchFeePayerPubKey();
   }, []);
