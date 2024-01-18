@@ -19,18 +19,11 @@ import { useWallet } from '../components/wallet-adapter/useWallet';
 import { getStakeAccounts, getUserACSBalance, } from '../libs/program';
 import { Tooltip } from '../components/Tooltip';
 import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
-import { sendTx } from '../libs/transactions';
 import Loading from '../components/Loading';
 import { ProgressModal } from '../components/ProgressModal';
 import { clsxp, formatACSCurrency } from '../libs/utils';
-import { useFeePayer } from '../hooks/useFeePayer';
-import { WalletAdapterProps } from '@solana/wallet-adapter-base';
 import env from '../libs/env';
-
-interface FeePaymentData {
-  feePayerPubKey: string;
-  sendTransaction: WalletAdapterProps['sendTransaction'];
-}
+import { useFeePayer } from "../hooks/useFeePayer";
 
 const DONE_STEP = 'Done';
 const IDLE_STEP = 'Idle';
@@ -57,20 +50,9 @@ const calculateFees = (amount: number,
 export const Stake = () => {
   const { poolId, poolName, element, classPrefix } = useContext(ConfigContext);
   const { connection } = useConnection();
-  const { publicKey, sendTransaction: sendTransactionWithFeesUnpaid } =
+  const { publicKey, signTransaction } =
     useWallet();
-
-  const [feePaymentState, setFeePayer] = useState<FeePaymentData | undefined>();
-
-  useEffect(() => {
-    (async () => {
-      const { feePayerPubKey: pubkey, sendTransaction } = await useFeePayer({
-        sendTransaction: sendTransactionWithFeesUnpaid,
-      });
-      setFeePayer({ feePayerPubKey: pubkey, sendTransaction });
-    })();
-  }, [publicKey]);
-
+  const { feePayerPubKey, sendTxThroughGoApi } = useFeePayer();
   const [working, setWorking] = useState(IDLE_STEP);
   const [balance, setBalance] = useState<number | null | undefined>(undefined);
   const [forever, setForever] = useState<boolean>(false);
@@ -179,18 +161,8 @@ export const Stake = () => {
   }, [publicKey, connection, stakeAccount, getUserACSBalance]);
 
   const handle = async () => {
-    let feePayer = publicKey;
-    let sendTransaction = sendTransactionWithFeesUnpaid;
     if (
-      publicKey != null &&
-      feePaymentState != null
-    ) {
-      feePayer = new PublicKey(feePaymentState.feePayerPubKey);
-      sendTransaction = feePaymentState.sendTransaction;
-    }
-
-    if (
-      !(publicKey && poolId && connection && feePayer && balance && stakedPool)
+      !(publicKey && poolId && connection && feePayerPubKey && balance && stakedPool)
     ) {
       return;
     }
@@ -202,19 +174,18 @@ export const Stake = () => {
         connection,
         publicKey,
         new PublicKey(poolId),
-        feePayer,
+        feePayerPubKey,
         Number(stakeAmount),
         Date.now() / 1000,
-        feePayer.toBase58() === publicKey.toBase58() ? 0 : ACCOUNT_CREATION_ACS_PRICE,
+        ACCOUNT_CREATION_ACS_PRICE,
         env.PROGRAM_ID,
         undefined,
         stakedPool,
         forever ? 0 : -1,
       );
 
-      await sendTx(connection, feePayer, ixs, sendTransaction, {
-        skipPreflight: false,
-      });
+      const sx = await sendTxThroughGoApi(connection, ixs, signTransaction);
+      console.log('SIGNATURE:', sx);
 
       const lockedEvent = new CustomEvent('lock', {
         detail: {
@@ -389,7 +360,7 @@ export const Stake = () => {
                         />
                         <span
                           className='-mr-3'
-                        >Lock forever</span>
+                        >Forever Lock</span>
                         <Tooltip
                           messages={['Retain your subscription forever.',
                             'You will be able to claim your rewards ,',
@@ -411,7 +382,7 @@ export const Stake = () => {
                           disabled={stakeAmount < minStakeAmount}
                           onClick={handle}
                         >
-                          Lock forever
+                          Forever Lock
                         </button>)
                       }
                     </>
