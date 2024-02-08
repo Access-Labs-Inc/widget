@@ -177,7 +177,7 @@ export const Stake = () => {
         feePayerPubKey,
         Number(stakeAmount),
         Date.now() / 1000,
-        ACCOUNT_CREATION_ACS_PRICE,
+        ACCOUNT_CREATION_ACS_PRICE * 1e6,
         env.PROGRAM_ID,
         undefined,
         stakedPool,
