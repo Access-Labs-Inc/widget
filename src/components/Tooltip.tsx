@@ -4,19 +4,30 @@ import { ConfigContext } from '../AppContext';
 import { clsxp } from '../libs/utils';
 
 export const Tooltip = ({
-  message,
-  children,
-}: {
-  message: string;
+                          messages,
+                          children,
+                        }: {
+  messages: string[];
   children: ComponentChildren;
 }) => {
   const { classPrefix } = useContext(ConfigContext);
+
   return (
     <div className={clsxp(classPrefix, 'group', 'tooltip_root')}>
       {children}
       <div className={clsxp(classPrefix, 'tooltip_wrapper')}>
-        <span className={clsxp(classPrefix, 'tooltip_message')}>{message}</span>
-        <div className={clsxp(classPrefix, 'tooltip_arrow')} />
+        <div className={clsxp(classPrefix, 'tooltip_message')}>
+          <div className='flex flex-col gap-2'>
+            {messages
+              .filter((message) => message != null && message !== '')
+              .map((message, i) => (
+                <div
+                  id={`tooltip_message_${i}`}
+                >{message}</div>
+              ))}
+          </div>
+        </div>
+        <div className={clsxp(classPrefix, 'tooltip_arrow')}/>
       </div>
     </div>
   );

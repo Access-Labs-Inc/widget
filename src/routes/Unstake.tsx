@@ -24,7 +24,7 @@ export const Unstake = () => {
 
       <div className={clsxp(classPrefix, 'unstake_title')}>Unlock ACS</div>
       <div className={clsxp(classPrefix, 'unstake_subtitle')}>
-        ACS unlocking is currently only possible in the access app.
+        ACS unlocking is currently only possible in the Access app.
       </div>
 
       <div>
@@ -34,11 +34,11 @@ export const Unstake = () => {
           target='_blank'
           rel='noopener'
         >
-          Unlock ACS on access
+          Unlock ACS on Access
         </a>
 
         <div className={clsxp(classPrefix, 'unstake_footnote')}>
-          This will direct you to accessprotocol.co
+          This will redirect you to accessprotocol.co
         </div>
       </div>
     </div>

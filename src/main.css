@@ -131,7 +131,11 @@ button.acs__wallet_adapter_button_trigger {
 /* >> components/Tooltip.tsx */
 
 .acs__tooltip_root {
-  @apply relative flex flex-row items-center justify-center;
+  @apply relative flex flex-row items-center justify-center px-2;
+}
+
+.acs__tooltip_root:hover .acs__tooltip_wrapper {
+  @apply cursor-pointer flex visible;
 }
 
 .acs__tooltip_wrapper {
@@ -206,8 +210,8 @@ button.acs__wallet_adapter_button_trigger {
   @apply flex flex-col justify-start my-4;
 }
 
-.acs__process_modal_steps_list {
-  @apply space-y-4 list-none mb-10;
+.acs__process_modal_steps_load {
+  @apply mx-auto pb-20;
 }
 
 .acs__process_modal_button {
@@ -227,7 +231,7 @@ button.acs__wallet_adapter_button_trigger {
 /* >> components/NumberInputWithSlider.tsx */
 
 .acs__number_input_with_slider_root {
-  @apply relative my-6;
+  @apply relative mt-6 mb-2;
 }
 
 .acs__number_input_with_slider_slider {
@@ -342,52 +346,27 @@ button.acs__wallet_adapter_button_trigger {
 }
 
 .acs__claim_button {
-  @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 mb-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0;
+  @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700;
 }
 
 .acs__claim_button:hover {
   @apply bg-indigo-300 text-stone-800;
 }
 
-.acs__claim_button:hover:disabled,
-.acs__claim_button:disabled {
-  @apply bg-stone-600 cursor-not-allowed;
-}
-
 .acs__claim_title {
-  @apply my-8 mt-16 text-white text-2xl text-center;
-}
-
-.acs__claim_title_error {
-  @apply mt-8 text-red-500 text-2xl text-center;
+  @apply text-white text-2xl text-center;
 }
 
 .acs__claim_subtitle {
-  @apply text-center text-stone-400;
-}
-
-.acs__claim_subtitle_error {
-  @apply text-red-500 text-center;
+  @apply text-center text-stone-400 mb-14;
 }
 
 .acs__claim_claim_amount {
-  @apply mb-40 text-4xl text-center text-green-400;
+  @apply text-4xl text-center text-green-400;
 }
 
-.acs__claim_loader {
-  @apply flex justify-center content-center mb-56;
-}
-
-.acs__claim_steps {
-  @apply flex flex-col justify-start my-4;
-}
-
-.acs__claim_steps_list {
-  @apply space-y-4 list-none mb-10;
-}
-
-.acs__claim_invalid {
-  @apply bg-red-400;
+.acs__claim_footnote {
+  @apply flex justify-center text-sm text-indigo-500 mt-2 mb-2;
 }
 
 /* >> routes/Stake.tsx */
@@ -404,18 +383,35 @@ button.acs__wallet_adapter_button_trigger {
   @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0;
 }
 
+.acs__forever_stake_button {
+  @apply w-full rounded-full cursor-pointer no-underline font-bold py-4 block text-xl text-center bg-indigo-500 text-stone-700 border-0;
+}
+
+.acs__stake_checkbox {
+  @apply w-full flex gap-3 pb-3 items-center justify-center text-red-300
+}
+
 .acs__stake_button:hover {
   @apply bg-indigo-300 text-stone-800;
 }
 
+.acs__forever_stake_button:hover {
+  @apply bg-indigo-300 text-stone-800;
+}
+
+
 .acs__stake_button:disabled,
 .acs__stake_button:disabled:hover,
-.acs__stake_button_disabled {
+.acs__stake_button_disabled,
+.acs__forever_stake_button:disabled,
+.acs__forever_stake_button:disabled:hover,
+.acs__forever_stake_button_disabled
+{
   @apply bg-stone-600 cursor-not-allowed;
 }
 
 .acs__stake_title {
-  @apply my-8 mt-16 text-white text-3xl text-center;
+  @apply my-8 mt-7 text-white text-3xl text-center;
 }
 
 .acs__stake_title_error {

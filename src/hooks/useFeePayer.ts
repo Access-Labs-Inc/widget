@@ -1,29 +1,52 @@
-import { SendTransactionOptions } from '@solana/wallet-adapter-base';
-import { Connection, Transaction, TransactionSignature } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import env from '../libs/env';
+import { useEffect, useState } from 'preact/hooks';
 
-export const useFeePayer = async (props: {
-  sendTransaction: (
-    transaction: Transaction,
+export const useFeePayer = () => {
+  const [feePayerPubKey, setFeePayerPubKey] = useState<PublicKey | null>(null);
+  useEffect(() => {
+    const fetchFeePayerPubKey = async () => {
+      const feePayer = await fetch(env.FEE_PAYER_URL, {
+        method: 'GET',
+        headers: new Headers({
+          Accept: 'application/vnd.github.cloak-preview',
+        }),
+      }).then((res) => res.text());
+      setFeePayerPubKey(new PublicKey(feePayer));
+    };
+    fetchFeePayerPubKey();
+  }, []);
+
+  const sendTxThroughGoApi = async (
     connection: Connection,
-    options?: SendTransactionOptions
-  ) => Promise<TransactionSignature>;
-}) => {
-  const sendTransaction = async (
-    transaction: Transaction,
-    connection: Connection,
-    options?: SendTransactionOptions
+    instructions: TransactionInstruction[],
+    signTransaction: ((tx: Transaction) => Promise<Transaction>) | undefined,
   ) => {
+    if (!signTransaction) {
+      throw new Error('No sign transaction function provided.');
+    }
+    if (!feePayerPubKey) {
+      throw new Error('Fee payer public key not available.');
+    }
+
+    const blockhash = (await connection.getLatestBlockhash('max')).blockhash;
+
+    const tx = new Transaction();
+    tx.add(...instructions);
+    tx.feePayer = new PublicKey(feePayerPubKey);
+    tx.recentBlockhash = blockhash;
+    const signedTx = await signTransaction(tx);
+
     const response = await fetch(env.FEE_PAYER_URL, {
       method: 'POST',
       headers: new Headers({
         'Content-Type': 'text/plain',
       }),
-      body: transaction
+      body: JSON.stringify([signedTx
         .serialize({
           requireAllSignatures: false,
         })
-        .toString('hex'),
+        .toString('hex')]),
     })
       .then((res) => {
         if (!res.ok) {
@@ -36,21 +59,11 @@ export const useFeePayer = async (props: {
       throw new Error('Failed to sign transaction on backend');
     }
 
-    const tx = Transaction.from(Buffer.from(response, 'base64'));
-    return tx.compileMessage().header.numRequiredSignatures === 1
-      ? connection.sendRawTransaction(tx.serialize(), options)
-      : props.sendTransaction(tx, connection, options);
+    return response.toString();
   };
-
-  const feePayerPubKey = await fetch(env.FEE_PAYER_URL, {
-    method: 'GET',
-    headers: new Headers({
-      Accept: 'application/vnd.github.cloak-preview',
-    }),
-  }).then((res) => res.text());
 
   return {
     feePayerPubKey,
-    sendTransaction,
+    sendTxThroughGoApi,
   };
 };

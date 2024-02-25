@@ -1,24 +1,13 @@
 import { Fragment, h } from 'preact';
 import { Info } from 'phosphor-react';
 import {
-  BondAccount,
-  CentralState,
+  BondV2Account,
+  CentralStateV2,
+  fullLock,
+  getBondV2Accounts,
   StakeAccount,
   StakePool,
-} from '../libs/ap/state';
-import {
-  claimRewards,
-  crank,
-  createStakeAccount,
-  stake,
-} from '../libs/ap/bindings';
-import {
-  TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddress,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccountInstruction,
-  createTransferInstruction,
-} from '@solana/spl-token';
+} from '@accessprotocol/js';
 import { PublicKey } from '@solana/web3.js';
 import { useContext, useEffect, useMemo, useState } from 'preact/hooks';
 
@@ -27,104 +16,70 @@ import { RouteLink } from '../layout/Router';
 import { ConfigContext } from '../AppContext';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import { useWallet } from '../components/wallet-adapter/useWallet';
-import {
-  calculateRewardForStaker,
-  getBondAccounts,
-  getStakeAccounts,
-  getUserACSBalance,
-} from '../libs/program';
+import { getStakeAccounts, getUserACSBalance, } from '../libs/program';
 import { Tooltip } from '../components/Tooltip';
 import { NumberInputWithSlider } from '../components/NumberInputWithSlider';
-import { sendTx } from '../libs/transactions';
 import Loading from '../components/Loading';
 import { ProgressModal } from '../components/ProgressModal';
-import { clsxp, formatACSCurrency, sleep } from '../libs/utils';
-import { useFeePayer } from '../hooks/useFeePayer';
-import { WalletAdapterProps } from '@solana/wallet-adapter-base';
+import { clsxp, formatACSCurrency } from '../libs/utils';
 import env from '../libs/env';
-import BN from 'bn.js';
+import { useFeePayer } from '../hooks/useFeePayer';
 
-interface FeePaymentData {
-  feePayerPubKey: string;
-  sendTransaction: WalletAdapterProps['sendTransaction'];
-}
-
-const CRANK_STEP = 'Crank';
-const CREATE_STAKING_ACCOUNT_STEP = 'Create locking account';
-const CLAIM_REWARDS_STEP = 'Claim rewards';
-const STAKE_STEP = 'Lock ACS';
 const DONE_STEP = 'Done';
 const IDLE_STEP = 'Idle';
+
+const ACCOUNT_CREATION_ACS_PRICE = 50;
+
+const calculateFees = (amount: number,
+                       feeBasisPoints: number,
+                       forever: boolean,
+                       stakeAccount?: StakeAccount | null,
+                       bondV2Accounts?: BondV2Account[],
+) => {
+  let accountCreationFee = ACCOUNT_CREATION_ACS_PRICE;
+  if ((!forever && stakeAccount) || (forever && bondV2Accounts && bondV2Accounts.length > 0)) {
+    accountCreationFee = 0;
+  }
+  let protocolFee = amount * (feeBasisPoints / 10000);
+  if (forever) {
+    protocolFee = 0;
+  }
+  return protocolFee + accountCreationFee;
+};
 
 export const Stake = () => {
   const { poolId, poolName, element, classPrefix } = useContext(ConfigContext);
   const { connection } = useConnection();
-  const { publicKey, sendTransaction: sendTransactionWithFeesUnpaid } =
+  const { publicKey, signTransaction } =
     useWallet();
-
-  const [feePaymentState, setFeePayer] = useState<FeePaymentData | undefined>();
-
-  useEffect(() => {
-    (async () => {
-      const { feePayerPubKey: pubkey, sendTransaction } = await useFeePayer({
-        sendTransaction: sendTransactionWithFeesUnpaid,
-      });
-      setFeePayer({ feePayerPubKey: pubkey, sendTransaction });
-    })();
-  }, [publicKey]);
-
+  const { feePayerPubKey, sendTxThroughGoApi } = useFeePayer();
   const [working, setWorking] = useState(IDLE_STEP);
   const [balance, setBalance] = useState<number | null | undefined>(undefined);
-  const [solBalance, setSolBalance] = useState<number>(0);
-  const [stakedAccount, setStakedAccount] = useState<
+  const [forever, setForever] = useState<boolean>(false);
+  const [stakeAccount, setStakeAccount] = useState<
     StakeAccount | undefined | null
   >(undefined);
-  const [bondAccount, setBondAccount] = useState<
-    BondAccount | null | undefined
-  >(undefined);
-  const [stakedPool, setStakedPool] = useState<StakePool | null>(null);
+  const [bondV2Accounts, setBondV2Accounts] = useState<BondV2Account[]>([]);
+  const [stakedPool, setStakePool] = useState<StakePool | null>(null);
   const [stakeAmount, setStakeAmount] = useState<number>(0);
+  const [feeBasisPoints, setFeeBasisPoints] = useState<number>(0);
   const [stakeModalOpen, setStakeModal] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const openStakeModal = () => setStakeModal(true);
 
-  const feePercentage = 2;
-  const feePercentageFraction = feePercentage / 100;
-
-  const claimableStakeAmount = useMemo(() => {
-    if (!(stakedAccount && stakedPool)) {
-      return null;
-    }
-    return calculateRewardForStaker(
-      stakedPool.currentDayIdx - stakedAccount.lastClaimedOffset.toNumber(),
-      stakedPool,
-      stakedAccount.stakeAmount as BN
-    );
-  }, [stakedAccount, stakedPool]);
-
+  // set stake pool
   useEffect(() => {
-    if (!(publicKey && connection)) {
+    if (!poolId) {
       return;
     }
     (async () => {
-      const b = await connection.getBalance(publicKey);
-      setSolBalance(b / 10 ** 9);
+      const sp = await StakePool.retrieve(connection, new PublicKey(poolId));
+      setStakePool(sp);
     })();
-  }, [publicKey, connection, setSolBalance]);
+  }, [poolId]);
 
-  useEffect(() => {
-    if (!(publicKey && connection)) {
-      return;
-    }
-    (async () => {
-      const b = await getUserACSBalance(connection, publicKey, env.PROGRAM_ID);
-      const acsBalance = (b?.toNumber() || 0) / 10 ** 6;
-      setBalance(acsBalance);
-      setStakeAmount(acsBalance / (1 + feePercentageFraction));
-    })();
-  }, [publicKey, connection, getUserACSBalance]);
-
+  // set stake account
   useEffect(() => {
     if (!(publicKey && poolId && connection)) {
       return;
@@ -142,73 +97,72 @@ export const Stake = () => {
         });
         if (sAccount) {
           const sa = StakeAccount.deserialize(sAccount.account.data);
-          setStakedAccount(sa);
+          setStakeAccount(sa);
         } else {
-          setStakedAccount(null);
+          setStakeAccount(null);
         }
         return;
       }
-      setStakedAccount(null);
+      setStakeAccount(null);
     })();
-  }, [publicKey, connection, poolId, setStakedAccount]);
+  }, [publicKey, connection, poolId, setStakeAccount]);
 
+  // set bond account
   useEffect(() => {
-    if (!(publicKey && poolId)) {
+    if (!(publicKey && poolId && connection)) {
       return;
     }
     (async () => {
-      const bondAccounts = await getBondAccounts(
+      const bV2Accounts = await getBondV2Accounts(
         connection,
         publicKey,
         env.PROGRAM_ID
       );
-      if (bondAccounts != null && bondAccounts.length > 0) {
-        const bAccount = bondAccounts.find((st) => {
-          const sa = BondAccount.deserialize(st.account.data);
-          return sa.stakePool.toBase58() === poolId;
-        });
-        if (bAccount) {
-          const ba = BondAccount.deserialize(bAccount.account.data);
-          setBondAccount(ba);
-        } else {
-          setBondAccount(null);
-        }
-      } else {
-        setBondAccount(null);
-      }
-    })();
-  }, [publicKey, connection, poolId, setBondAccount]);
 
+      setBondV2Accounts(
+        bV2Accounts.map((bAccount: any) => BondV2Account.deserialize(bAccount.account.data))
+          .filter((bAccount: BondV2Account) => bAccount.pool.toBase58() === poolId)
+      );
+    })();
+  }, [publicKey, connection, poolId]);
+
+  // set fee basis points from the central state
   useEffect(() => {
-    if (!poolId) {
+    if (!(publicKey && connection)) {
       return;
     }
     (async () => {
-      const sp = await StakePool.retrieve(connection, new PublicKey(poolId));
-      setStakedPool(sp);
+      const cs = await CentralStateV2.retrieve(
+        connection,
+        CentralStateV2.getKey(env.PROGRAM_ID)[0],
+      );
+      setFeeBasisPoints(cs.feeBasisPoints);
     })();
-  }, [poolId]);
+  }, [connection, setFeeBasisPoints]);
 
-  const ACCOUNT_CREATION_ACS_PRICE = 30 * 10 ** 6;
-
-  const fee = useMemo(() => {
-    return Number(stakeAmount) * feePercentageFraction + 30;
-  }, [stakeAmount, feePercentageFraction]);
+  // set ACS balance and initial stake amount
+  useEffect(() => {
+    if (!(publicKey && connection)) {
+      return;
+    }
+    (async () => {
+      const b = await getUserACSBalance(connection, publicKey, env.PROGRAM_ID);
+      const acsBalance = (b?.toNumber() || 0) / 10 ** 6;
+      setBalance(acsBalance);
+      const max = Math.floor(acsBalance - calculateFees(
+        acsBalance,
+        feeBasisPoints,
+        false,
+        stakeAccount,
+        undefined,
+      ));
+      setStakeAmount(max);
+    })();
+  }, [publicKey, connection, stakeAccount, getUserACSBalance]);
 
   const handle = async () => {
-    let feePayer = publicKey;
-    let sendTransaction = sendTransactionWithFeesUnpaid;
     if (
-      insufficientSolBalance &&
-      publicKey != null &&
-      feePaymentState != null
-    ) {
-      feePayer = new PublicKey(feePaymentState.feePayerPubKey);
-      sendTransaction = feePaymentState.sendTransaction;
-    }
-
-    if (
-      !(publicKey && poolId && connection && feePayer && balance && stakedPool)
+      !(publicKey && poolId && connection && feePayerPubKey && balance && stakedPool)
     ) {
       return;
     }
@@ -216,164 +170,22 @@ export const Stake = () => {
     try {
       openStakeModal();
 
-      const [centralKey] = await CentralState.getKey(env.PROGRAM_ID);
-      const centralState = await CentralState.retrieve(connection, centralKey);
-      const txs = [];
-
-      let hasCranked = false;
-      if (
-        centralState.lastSnapshotOffset.toNumber() > stakedPool.currentDayIdx ||
-        centralState.creationTime.toNumber() +
-          86400 * (stakedPool.currentDayIdx + 1) <
-          Date.now() / 1000
-      ) {
-        setWorking(CRANK_STEP);
-        const crankTx = await crank(new PublicKey(poolId), env.PROGRAM_ID);
-        await sendTx(connection, feePayer, [crankTx], sendTransaction, {
-          skipPreflight: true,
-        });
-        hasCranked = true;
-      }
-
-      // Check if stake account exists
-      const [stakeKey] = await StakeAccount.getKey(
-        env.PROGRAM_ID,
-        publicKey,
-        new PublicKey(poolId)
-      );
-
-      let stakeAccount;
-      try {
-        stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
-      } catch {
-        setWorking(CREATE_STAKING_ACCOUNT_STEP);
-        const statxs = [];
-        if (feePayer.toBase58() !== publicKey.toBase58()) {
-          const from = publicKey;
-          const to = feePayer;
-          const sourceATA = await getAssociatedTokenAddress(
-            env.TOKEN_MINT,
-            from,
-            false,
-            TOKEN_PROGRAM_ID,
-            ASSOCIATED_TOKEN_PROGRAM_ID,
-          );
-          const destinationATA = await getAssociatedTokenAddress(
-            env.TOKEN_MINT,
-            to,
-            false,
-            TOKEN_PROGRAM_ID,
-            ASSOCIATED_TOKEN_PROGRAM_ID,
-          );
-          const transferIx = createTransferInstruction(
-            sourceATA,
-            destinationATA,
-            from,
-            ACCOUNT_CREATION_ACS_PRICE,
-            [],
-            TOKEN_PROGRAM_ID,
-          );
-          statxs.push(transferIx);
-        }
-        const ixAccount = await createStakeAccount(
-          new PublicKey(poolId),
-          publicKey,
-          feePayer,
-          env.PROGRAM_ID
-        );
-        statxs.push(ixAccount);
-        await sendTx(connection, feePayer, statxs, sendTransaction, {
-          skipPreflight: true,
-        });
-
-        try {
-          stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
-        } catch (e) {
-          console.warn('Stake account not ready yet.');
-        }
-        let attempts = 0;
-        while (stakeAccount == null && attempts < 20) {
-          // eslint-disable-next-line no-await-in-loop
-          await sleep(2000);
-          console.log('Sleeping...');
-          // eslint-disable-next-line no-await-in-loop
-          try {
-            stakeAccount = await StakeAccount.retrieve(connection, stakeKey);
-          } catch (e) {
-            console.warn('Stake account not ready yet attempt: ', attempts);
-          }
-          attempts += 1;
-        }
-      }
-
-      if (stakeAccount == null) {
-        throw new Error('Stake account not created on time... please try again to lock tokens.');
-      }
-
-      const stakerAta = await getAssociatedTokenAddress(
-        centralState.tokenMint,
-        publicKey,
-        true,
-        TOKEN_PROGRAM_ID,
-        ASSOCIATED_TOKEN_PROGRAM_ID
-      );
-
-      const stakerAtaAccount = await connection.getAccountInfo(stakerAta);
-      if (stakerAtaAccount == null) {
-        const ataix = createAssociatedTokenAccountInstruction(
-          feePayer,
-          stakerAta,
-          publicKey,
-          centralState.tokenMint,
-          TOKEN_PROGRAM_ID,
-          ASSOCIATED_TOKEN_PROGRAM_ID
-        );
-        txs.push(ataix);
-      }
-
-      if (
-        stakeAccount.stakeAmount.toNumber() > 0 &&
-        (stakeAccount.lastClaimedOffset.toNumber() < stakedPool.currentDayIdx ||
-          hasCranked)
-      ) {
-        setWorking(CLAIM_REWARDS_STEP);
-        const ix = await claimRewards(
-          connection,
-          stakeKey,
-          stakerAta,
-          env.PROGRAM_ID,
-          true
-        );
-
-        await sendTx(connection, feePayer, [ix], sendTransaction, {
-          skipPreflight: true,
-        });
-
-        const claimEvent = new CustomEvent('claim', {
-          detail: {
-            address: publicKey.toBase58(),
-            locked: claimableStakeAmount,
-          },
-          bubbles: true,
-          cancelable: true,
-          composed: false, // if you want to listen on parent turn this on
-        });
-        element?.dispatchEvent(claimEvent);
-      }
-
-      setWorking(STAKE_STEP);
-      const ixStake = await stake(
+      const ixs = await fullLock(
         connection,
-        stakeKey,
-        stakerAta,
-        Number(stakeAmount) * 10 ** 6,
-        env.PROGRAM_ID
+        publicKey,
+        new PublicKey(poolId),
+        feePayerPubKey,
+        Number(stakeAmount),
+        Date.now() / 1000,
+        ACCOUNT_CREATION_ACS_PRICE * 1e6,
+        env.PROGRAM_ID,
+        undefined,
+        stakedPool,
+        forever ? 0 : -1,
       );
-      txs.push(ixStake);
 
-      await sendTx(connection, feePayer, txs, sendTransaction, {
-        skipPreflight: true,
-      });
+      const sx = await sendTxThroughGoApi(connection, ixs, signTransaction);
+      console.log('SIGNATURE:', sx);
 
       const lockedEvent = new CustomEvent('lock', {
         detail: {
@@ -397,48 +209,66 @@ export const Stake = () => {
     }
   };
 
-  const minPoolStakeAmount = useMemo(() => {
-    return (stakedPool?.minimumStakeAmount.toNumber() ?? 0) / 10 ** 6;
-  }, [stakedPool?.minimumStakeAmount]);
-
   const minStakeAmount = useMemo(() => {
-    const stakedAmount = Number(stakedAccount?.stakeAmount ?? 0) / 10 ** 6;
-    const airdropAmount = Number(bondAccount?.totalStaked ?? 0) / 10 ** 6;
-    return Math.max(minPoolStakeAmount - stakedAmount - airdropAmount, 1);
+    const stakedAmount = Number(stakeAccount?.stakeAmount ?? 0) / 10 ** 6;
+    const minPoolStakeAmount = (stakedPool?.minimumStakeAmount.toNumber() ?? 0) / 10 ** 6;
+    const bondV2Amount = Number(bondV2Accounts.reduce((acc, ba) => acc + ba.amount.toNumber(), 0)) / 10 ** 6;
+    const relevantLock = forever ? bondV2Amount : stakedAmount;
+    if (minPoolStakeAmount > stakeAmount) {
+      setStakeAmount(minPoolStakeAmount);
+    }
+    return Math.max(minPoolStakeAmount - relevantLock, 1);
   }, [
-    stakedAccount?.stakeAmount,
-    bondAccount?.totalStaked,
-    minPoolStakeAmount,
+    stakedPool,
+    stakeAccount?.stakeAmount,
+    forever,
   ]);
 
-  const transactionFeeSOL = stakedAccount ? 0.000005 : 0.0015;
-  const transactionFeeMicroACS = stakedAccount ? 0 : 30;
-
   const maxStakeAmount = useMemo(() => {
-    return (Number(balance) / (1 + feePercentageFraction)) - transactionFeeMicroACS;
-  }, [balance, feePercentageFraction, transactionFeeMicroACS]);
+    const newMax = Number(balance) - calculateFees(
+      Number(balance),
+      feeBasisPoints,
+      forever,
+      stakeAccount,
+      bondV2Accounts,
+    );
+    if (newMax < stakeAmount) {
+      setStakeAmount(newMax);
+    }
+    return newMax;
+  }, [balance, feeBasisPoints, forever, stakeAccount, bondV2Accounts]);
+
+  const fee = useMemo(() => {
+    return calculateFees(
+      stakeAmount,
+      feeBasisPoints,
+      forever,
+      stakeAccount,
+      bondV2Accounts,
+    );
+  }, [stakeAmount, feeBasisPoints, forever, stakeAccount, bondV2Accounts]);
 
   const insufficientBalance = useMemo(() => {
     return (
-      minStakeAmount + transactionFeeMicroACS + minStakeAmount * feePercentageFraction > (balance ?? 0)
+      minStakeAmount + ACCOUNT_CREATION_ACS_PRICE + minStakeAmount * (feeBasisPoints || 0) / 10000 > (balance ?? 0)
     );
-  }, [balance, minStakeAmount, feePercentageFraction, transactionFeeMicroACS]);
-
-  const insufficientSolBalance = useMemo(() => solBalance < transactionFeeSOL, [solBalance, transactionFeeMicroACS]);
+  }, [balance, minStakeAmount, feeBasisPoints]);
 
   const invalidText = useMemo(() => {
     if (insufficientBalance) {
       return `Insufficient balance for locking.
-        You need min. of ${formatACSCurrency(minStakeAmount + minStakeAmount * feePercentageFraction)} ACS +
-        ${formatACSCurrency(transactionFeeMicroACS)} ACS protocol fee.`;
+        You need min. of ${formatACSCurrency(
+        minStakeAmount +
+        minStakeAmount * (feeBasisPoints || 0) / 1000) +
+      ACCOUNT_CREATION_ACS_PRICE
+      } ACS (including ACS fees).`;
     }
     return null;
   }, [
     insufficientBalance,
-    transactionFeeMicroACS,
     minStakeAmount,
-    feePercentageFraction,
-    stakedAccount?.stakeAmount,
+    feeBasisPoints,
+    stakeAccount?.stakeAmount,
   ]);
 
   return (
@@ -459,12 +289,6 @@ export const Stake = () => {
       {stakeModalOpen && !error && (
         <ProgressModal
           working={working}
-          stepOrder={[
-            CRANK_STEP,
-            CREATE_STAKING_ACCOUNT_STEP,
-            CLAIM_REWARDS_STEP,
-            STAKE_STEP,
-          ]}
           doneStepName={DONE_STEP}
         />
       )}
@@ -479,8 +303,8 @@ export const Stake = () => {
             </RouteLink>
           </Header>
 
-          {stakedAccount !== undefined &&
-            bondAccount !== undefined &&
+          {stakeAccount !== undefined &&
+            bondV2Accounts !== undefined &&
             balance !== undefined && (
               <Fragment>
                 <div className={clsxp(classPrefix, 'stake_title')}>
@@ -488,7 +312,7 @@ export const Stake = () => {
                 </div>
                 {!insufficientBalance ? (
                   <div className={clsxp(classPrefix, 'stake_subtitle')}>
-                    Both {poolName} and you will receive a ACS inflation rewards
+                    Both {poolName} and you will get ACS rewards
                     split equally.
                   </div>
                 ) : (
@@ -498,20 +322,6 @@ export const Stake = () => {
                 )}
 
                 <div>
-                  {!insufficientBalance && (
-                    <NumberInputWithSlider
-                      min={insufficientBalance ? 0 : minStakeAmount}
-                      max={maxStakeAmount}
-                      value={stakeAmount}
-                      disabled={insufficientBalance}
-                      invalid={insufficientBalance}
-                      invalidText={invalidText}
-                      onChangeOfValue={(value) => {
-                        setStakeAmount(value);
-                      }}
-                    />
-                  )}
-
                   {insufficientBalance && (
                     <a
                       href={env.GET_ACS_URL}
@@ -527,36 +337,87 @@ export const Stake = () => {
                     </a>
                   )}
                   {!insufficientBalance && (
-                    <button
-                      className={clsxp(classPrefix, 'stake_button')}
-                      onClick={handle}
-                    >
-                      Lock
-                    </button>
+                    <>
+                      <NumberInputWithSlider
+                        min={insufficientBalance ? 0 : minStakeAmount}
+                        max={maxStakeAmount}
+                        value={stakeAmount}
+                        disabled={insufficientBalance}
+                        invalid={insufficientBalance}
+                        invalidText={invalidText}
+                        onChangeOfValue={(value) => {
+                          setStakeAmount(value);
+                        }}
+                      />
+                      <div className={clsxp(classPrefix, 'stake_checkbox')}>
+                        <input
+                          type='checkbox'
+                          onChange={() => {
+
+                            setForever(!forever);
+                          }}
+                          checked={forever}
+                        />
+                        <span
+                          className='-mr-3'
+                        >Forever Lock</span>
+                        <Tooltip
+                          messages={['Retain your subscription forever.',
+                            'You will be able to claim your rewards ,',
+                            'but you will not be able to unlock your funds.'
+                          ]}
+                        >
+                          <Info size={16}/>
+                        </Tooltip>
+                      </div>
+                      {!forever ?
+                        (<button
+                          className={clsxp(classPrefix, 'stake_button')}
+                          disabled={stakeAmount < minStakeAmount}
+                          onClick={handle}
+                        >
+                          Lock
+                        </button>) : (<button
+                          className={clsxp(classPrefix, 'forever_stake_button')}
+                          disabled={stakeAmount < minStakeAmount}
+                          onClick={handle}
+                        >
+                          Forever Lock
+                        </button>)
+                      }
+                    </>
                   )}
 
                   <div className={clsxp(classPrefix, 'stake_fees_root')}>
                     <div
                       className={clsxp(classPrefix, 'stake_fee_with_tooltip')}
                     >
-                      <div>Protocol fee: {formatACSCurrency(fee)} ACS</div>
-                      <Tooltip
-                        message={`A ${feePercentage}% is fee deducted from your staked amount and is burned by the protocol.`}
-                      >
-                        <Info size={16} />
-                      </Tooltip>
+                      {fee > 0 ? (
+                        <>
+                          <div>Fees: {formatACSCurrency(fee)} ACS</div>
+                          <Tooltip
+                            messages={[
+                              `${(!forever) ? `Protocol fee (${feeBasisPoints / 100} %): ${stakeAmount * (feeBasisPoints / 10000)} ACS` : ''}`,
+                              `${(!forever && !stakeAccount) || (forever && (!bondV2Accounts || bondV2Accounts.length === 0)) ? 'Account creation fee: 50 ACS' : ''}`
+                            ]}
+                          >
+                            <Info size={16}/>
+                          </Tooltip>
+                        </>
+                      ) : (
+                        <div>No additional fees</div>
+                      )}
                     </div>
-                    <div>Transaction fee: {transactionFeeSOL} SOL</div>
                   </div>
                 </div>
               </Fragment>
             )}
-          {(stakedAccount === undefined ||
-            bondAccount === undefined ||
+          {(stakeAccount === undefined ||
+            bondV2Accounts === undefined ||
             stakedPool == null ||
             balance === undefined) && (
             <div className={clsxp(classPrefix, 'stake_loader')}>
-              <Loading />
+              <Loading/>
             </div>
           )}
         </Fragment>
