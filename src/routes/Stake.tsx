@@ -40,7 +40,7 @@ const calculateFees = (amount: number,
   if ((!forever && stakeAccount) || (forever && bondV2Accounts && bondV2Accounts.length > 0)) {
     accountCreationFee = 0;
   }
-  let protocolFee = forever ? 0 : amount * (feeBasisPoints / 10000);
+  const protocolFee = forever ? 0 : amount * (feeBasisPoints / 10000);
   return protocolFee + accountCreationFee;
 };
 
@@ -177,7 +177,6 @@ export const Stake = () => {
   }, [minStakeAmount, maxStakeAmount]);
 
   const fee = useMemo(() => {
-    debugger;
     return calculateFees(
       stakeAmount,
       feeBasisPoints,
