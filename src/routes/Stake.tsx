@@ -40,10 +40,7 @@ const calculateFees = (amount: number,
   if ((!forever && stakeAccount) || (forever && bondV2Accounts && bondV2Accounts.length > 0)) {
     accountCreationFee = 0;
   }
-  let protocolFee = amount * (feeBasisPoints / 10000);
-  if (forever) {
-    protocolFee = 0;
-  }
+  let protocolFee = forever ? 0 : amount * (feeBasisPoints / 10000);
   return protocolFee + accountCreationFee;
 };
 
@@ -77,7 +74,7 @@ export const Stake = () => {
       const sp = await StakePool.retrieve(connection, new PublicKey(poolId));
       setStakePool(sp);
     })();
-  }, [poolId]);
+  }, [poolId, setStakePool]);
 
   // set stake account
   useEffect(() => {
@@ -90,20 +87,20 @@ export const Stake = () => {
         publicKey,
         env.PROGRAM_ID
       );
-      if (stakedAccounts != null && stakedAccounts.length > 0) {
-        const sAccount = stakedAccounts.find((st) => {
-          const sa = StakeAccount.deserialize(st.account.data);
-          return sa.stakePool.toBase58() === poolId;
-        });
-        if (sAccount) {
-          const sa = StakeAccount.deserialize(sAccount.account.data);
-          setStakeAccount(sa);
-        } else {
-          setStakeAccount(null);
-        }
+      if (stakedAccounts === null || stakedAccounts.length === 0) {
+        setStakeAccount(null);
         return;
       }
-      setStakeAccount(null);
+      const sAccount = stakedAccounts.find((st) => {
+        const sa = StakeAccount.deserialize(st.account.data);
+        return sa.stakePool.toBase58() === poolId;
+      });
+      if (sAccount) {
+        const sa = StakeAccount.deserialize(sAccount.account.data);
+        setStakeAccount(sa);
+      } else {
+        setStakeAccount(null);
+      }
     })();
   }, [publicKey, connection, poolId, setStakeAccount]);
 
@@ -124,7 +121,7 @@ export const Stake = () => {
           .filter((bAccount: BondV2Account) => bAccount.pool.toBase58() === poolId)
       );
     })();
-  }, [publicKey, connection, poolId]);
+  }, [publicKey, connection, poolId, setBondV2Accounts]);
 
   // set fee basis points from the central state
   useEffect(() => {
@@ -140,7 +137,7 @@ export const Stake = () => {
     })();
   }, [connection, setFeeBasisPoints]);
 
-  // set ACS balance and initial stake amount
+  // set ACS balance
   useEffect(() => {
     if (!(publicKey && connection)) {
       return;
@@ -149,16 +146,69 @@ export const Stake = () => {
       const b = await getUserACSBalance(connection, publicKey, env.PROGRAM_ID);
       const acsBalance = (b?.toNumber() || 0) / 10 ** 6;
       setBalance(acsBalance);
-      const max = Math.floor(acsBalance - calculateFees(
-        acsBalance,
-        feeBasisPoints,
-        false,
-        stakeAccount,
-        undefined,
-      ));
-      setStakeAmount(max);
     })();
   }, [publicKey, connection, stakeAccount, getUserACSBalance]);
+
+  const minStakeAmount = useMemo(() => {
+    const stakedAmount = Number(stakeAccount?.stakeAmount ?? 0) / 10 ** 6;
+    const minPoolStakeAmount = (stakedPool?.minimumStakeAmount.toNumber() ?? 0) / 10 ** 6;
+    const bondV2Amount = Number(bondV2Accounts.reduce((acc, ba) => acc + ba.amount.toNumber(), 0)) / 10 ** 6;
+    const relevantLock = forever ? bondV2Amount : stakedAmount;
+    return Math.max(minPoolStakeAmount - relevantLock, 1);
+  }, [
+    stakedPool,
+    stakeAccount?.stakeAmount,
+    forever,
+  ]);
+
+  const maxStakeAmount = useMemo(() => {
+    const max =  Number(balance) - calculateFees(
+      Number(balance),
+      feeBasisPoints,
+      forever,
+      stakeAccount,
+      bondV2Accounts,
+    );
+    return max > 0 ? max : 0;
+  }, [balance, feeBasisPoints, forever, stakeAccount, bondV2Accounts]);
+
+  useEffect(() => {
+    setStakeAmount(Math.max(maxStakeAmount, minStakeAmount));
+  }, [minStakeAmount, maxStakeAmount]);
+
+  const fee = useMemo(() => {
+    debugger;
+    return calculateFees(
+      stakeAmount,
+      feeBasisPoints,
+      forever,
+      stakeAccount,
+      bondV2Accounts,
+    );
+  }, [stakeAmount, feeBasisPoints, forever, stakeAccount, bondV2Accounts]);
+
+  const insufficientBalance = useMemo(() => {
+    return (
+      minStakeAmount + fee > (balance ?? 0)
+    );
+  }, [balance, minStakeAmount, fee]);
+
+  console.log('minStakeAmount:', minStakeAmount);
+  console.log('fee', fee);
+
+  const invalidText = useMemo(() => {
+    if (insufficientBalance) {
+      return `Insufficient balance for locking.
+        You need min. of ${formatACSCurrency(
+        minStakeAmount + fee)
+      } ACS (including ACS fees).`;
+    }
+    return null;
+  }, [
+    insufficientBalance,
+    minStakeAmount,
+    fee,
+  ]);
 
   const handle = async () => {
     if (
@@ -208,68 +258,6 @@ export const Stake = () => {
       setWorking(DONE_STEP);
     }
   };
-
-  const minStakeAmount = useMemo(() => {
-    const stakedAmount = Number(stakeAccount?.stakeAmount ?? 0) / 10 ** 6;
-    const minPoolStakeAmount = (stakedPool?.minimumStakeAmount.toNumber() ?? 0) / 10 ** 6;
-    const bondV2Amount = Number(bondV2Accounts.reduce((acc, ba) => acc + ba.amount.toNumber(), 0)) / 10 ** 6;
-    const relevantLock = forever ? bondV2Amount : stakedAmount;
-    if (minPoolStakeAmount > stakeAmount) {
-      setStakeAmount(minPoolStakeAmount);
-    }
-    return Math.max(minPoolStakeAmount - relevantLock, 1);
-  }, [
-    stakedPool,
-    stakeAccount?.stakeAmount,
-    forever,
-  ]);
-
-  const maxStakeAmount = useMemo(() => {
-    const newMax = Number(balance) - calculateFees(
-      Number(balance),
-      feeBasisPoints,
-      forever,
-      stakeAccount,
-      bondV2Accounts,
-    );
-    if (newMax < stakeAmount) {
-      setStakeAmount(newMax);
-    }
-    return newMax;
-  }, [balance, feeBasisPoints, forever, stakeAccount, bondV2Accounts]);
-
-  const fee = useMemo(() => {
-    return calculateFees(
-      stakeAmount,
-      feeBasisPoints,
-      forever,
-      stakeAccount,
-      bondV2Accounts,
-    );
-  }, [stakeAmount, feeBasisPoints, forever, stakeAccount, bondV2Accounts]);
-
-  const insufficientBalance = useMemo(() => {
-    return (
-      minStakeAmount + ACCOUNT_CREATION_ACS_PRICE + minStakeAmount * (feeBasisPoints || 0) / 10000 > (balance ?? 0)
-    );
-  }, [balance, minStakeAmount, feeBasisPoints]);
-
-  const invalidText = useMemo(() => {
-    if (insufficientBalance) {
-      return `Insufficient balance for locking.
-        You need min. of ${formatACSCurrency(
-        minStakeAmount +
-        minStakeAmount * (feeBasisPoints || 0) / 1000) +
-      ACCOUNT_CREATION_ACS_PRICE
-      } ACS (including ACS fees).`;
-    }
-    return null;
-  }, [
-    insufficientBalance,
-    minStakeAmount,
-    feeBasisPoints,
-    stakeAccount?.stakeAmount,
-  ]);
 
   return (
     <div className={clsxp(classPrefix, 'stake_root')}>
