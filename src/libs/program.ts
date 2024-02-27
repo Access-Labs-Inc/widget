@@ -76,13 +76,14 @@ export const getBondAccounts = async (
   });
 };
 
-
 const calculateReward = (
   unclaimedDays: number,
   stakePool: StakePool,
   staker: boolean,
 ): BN => {
-  if (unclaimedDays <= 0) return new BN(0);
+  if (unclaimedDays <= 0) {
+    return new BN(0);
+  }
   const BUFF_LEN = 274;
   const nbDaysBehind =
     unclaimedDays > BUFF_LEN - 1 ? BUFF_LEN - 1 : unclaimedDays;
