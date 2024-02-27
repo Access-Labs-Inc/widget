@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@accessprotocol/js@2.0.0-alpha.30":
-  version "2.0.0-alpha.30"
-  resolved "https://registry.yarnpkg.com/@accessprotocol/js/-/js-2.0.0-alpha.30.tgz#d39f17511bf959db61bbc411f5a50ed387ad5bd2"
-  integrity sha512-MMU49BXAqMios61N3rTSDiHiKbNbfPVJLmGIWIu0ve5ZyZxp1SlWwPN9bldN6FFXQM/WiwnZItx9kOBVwla1EA==
+"@accessprotocol/js@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@accessprotocol/js/-/js-2.0.0.tgz#1fcbda37efb6e9d8cf72c6ae1e63d3a58d742d87"
+  integrity sha512-Ng+yxHADM3y6g8zT3SptIr/NZLNrRIeJbiN4vspJeYM94qyazWrptp2SaKwAIdJ5i0XxCJ9B2fdPWq27bZ6Hbg==
   dependencies:
     "@solana/spl-token" "^0.3.7"
     "@solana/web3.js" "^1.66.2"
@@ -4281,15 +4281,10 @@ camelcase@^6.0.0, camelcase@^6.2.0:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-6.3.0.tgz#5685b95eb209ac9c0c177467778c9c84df58ba9a"
   integrity sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==
 
-caniuse-lite@^1.0.30001400:
-  version "1.0.30001422"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001422.tgz#f2d7c6202c49a8359e6e35add894d88ef93edba1"
-  integrity sha512-hSesn02u1QacQHhaxl/kNMZwqVG35Sz/8DgvmgedxSH8z9UUpcDYSPYgsj3x5dQNRcNp6BwpSfQfVzYUTm+fog==
-
-caniuse-lite@^1.0.30001449, caniuse-lite@^1.0.30001464:
-  version "1.0.30001473"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001473.tgz#3859898b3cab65fc8905bb923df36ad35058153c"
-  integrity sha512-ewDad7+D2vlyy+E4UJuVfiBsU69IL+8oVmTuZnH5Q6CIUbxNfI50uVpRHbUPDD6SUaN2o0Lh4DhTrvLG/Tn1yg==
+caniuse-lite@^1.0.30001400, caniuse-lite@^1.0.30001449, caniuse-lite@^1.0.30001464:
+  version "1.0.30001591"
+  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001591.tgz"
+  integrity sha512-PCzRMei/vXjJyL5mJtzNiUCKP59dm8Apqc3PH8gJkMnMXZGox93RbE76jHsmLwmIo6/3nsYIpJtx0O7u5PqFuQ==
 
 case@^1.6.3:
   version "1.6.3"

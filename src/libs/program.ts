@@ -76,11 +76,13 @@ export const getBondAccounts = async (
   });
 };
 
+
 const calculateReward = (
   unclaimedDays: number,
   stakePool: StakePool,
-  staker: boolean
-) => {
+  staker: boolean,
+): BN => {
+  if (unclaimedDays <= 0) return new BN(0);
   const BUFF_LEN = 274;
   const nbDaysBehind =
     unclaimedDays > BUFF_LEN - 1 ? BUFF_LEN - 1 : unclaimedDays;
@@ -89,11 +91,11 @@ const calculateReward = (
   let i = (idx - nbDaysBehind) % BUFF_LEN;
 
   let reward = new BN(0);
-  while (i !== (idx + 1) % BUFF_LEN) {
+  while (i !== idx % BUFF_LEN) {
     const rewardForDday = staker
       ? ((stakePool.balances[i]?.stakersReward ?? new BN(0)) as BN)
       : stakePool.balances[i]?.poolReward ?? (new BN(0) as BN);
-    reward = reward.add(rewardForDday as BN);
+    reward = reward.add(rewardForDday);
     i = (i + 1) % BUFF_LEN;
   }
   return reward;
@@ -105,7 +107,7 @@ export const calculateRewardForStaker = (
   stakeAmount: BN
 ) => {
   const reward = calculateReward(unclaimedDays, stakePool, true);
-  return reward.mul(new BN(stakeAmount.toNumber())).iushrn(32).toNumber();
+  return reward.mul(stakeAmount).iushrn(31).addn(1).iushrn(1).toNumber();
 };
 
 export const getUserACSBalance = async (
@@ -113,7 +115,7 @@ export const getUserACSBalance = async (
   publicKey: PublicKey,
   programId: PublicKey
 ): Promise<BN> => {
-  const [centralKey] = await CentralStateV2.getKey(programId);
+  const [centralKey] = CentralStateV2.getKey(programId);
   const centralState = await CentralStateV2.retrieve(connection, centralKey);
   const userAta: PublicKey = await getAssociatedTokenAddress(
     centralState.tokenMint,

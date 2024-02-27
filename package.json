@@ -17,7 +17,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@accessprotocol/js": "2.0.0-alpha.33",
+    "@accessprotocol/js": "2.0.0",
     "@babel/core": "^7.8.3",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/plugin-proposal-object-rest-spread": "^7.8.3",
