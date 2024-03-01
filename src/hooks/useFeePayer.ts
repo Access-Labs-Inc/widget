@@ -1,7 +1,7 @@
 import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import env from '../libs/env';
 import { useEffect, useState } from 'preact/hooks';
-import { sleep } from "../libs/utils";
+import { sleep } from '../libs/utils';
 
 export const useFeePayer = () => {
   const [feePayerPubKey, setFeePayerPubKey] = useState<PublicKey | null>(null);
@@ -53,7 +53,7 @@ export const useFeePayer = () => {
           requireAllSignatures: false,
         })
         .toString('hex')]),
-    })
+    });
 
     if (!response.ok) {
       throw Error('Unable to sign request on the backend');
@@ -65,7 +65,9 @@ export const useFeePayer = () => {
 
     const sx = await connection.sendRawTransaction(Buffer.from(json[0], 'hex'));
     for (let i = 0; i < 12; i += 1) {
-      if (!sx) throw new Error('No transaction signature.');
+      if (!sx) {
+        throw new Error('No transaction signature.');
+      }
       // eslint-disable-next-line no-await-in-loop
       const status = await connection.getSignatureStatus(sx, {
         searchTransactionHistory: true,
