@@ -162,7 +162,7 @@ export const Stake = () => {
   ]);
 
   const maxStakeAmount = useMemo(() => {
-    const max =  Number(balance) - calculateFees(
+    const max = Number(balance) - calculateFees(
       Number(balance),
       feeBasisPoints,
       forever,
@@ -219,21 +219,22 @@ export const Stake = () => {
     try {
       openStakeModal();
 
+      const isCoinbaseWallet = localStorage.getItem('walletName') === '"Coinbase Wallet"';
       const ixs = await fullLock(
         connection,
         publicKey,
         new PublicKey(poolId),
-        feePayerPubKey,
+        isCoinbaseWallet ? feePayerPubKey : publicKey,
         Number(stakeAmount),
         Date.now() / 1000,
-        ACCOUNT_CREATION_ACS_PRICE * 1e6,
+        isCoinbaseWallet ? ACCOUNT_CREATION_ACS_PRICE * 1e6 : 0,
         env.PROGRAM_ID,
         undefined,
         stakedPool,
         forever ? 0 : -1,
       );
 
-      const sx = await sendTxThroughGoApi(connection, ixs, signTransaction);
+      const sx = await sendTxThroughGoApi(connection, ixs, signTransaction, publicKey);
       console.log('SIGNATURE:', sx);
 
       const lockedEvent = new CustomEvent('lock', {
