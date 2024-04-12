@@ -6,6 +6,7 @@ const CopyPlugin = require("copy-webpack-plugin");
 const StatoscopeWebpackPlugin = require("@statoscope/webpack-plugin").default;
 const { DuplicatesPlugin } = require("inspectpack/plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CompressionPlugin = require("compression-webpack-plugin");
 
 const bundleOutputDir = "./dist";
 
@@ -50,6 +51,7 @@ module.exports = (env) => {
       ];
       break;
     case "production":
+      devtool = false;
       plugins = [
         new Dotenv({
           path: path.join(__dirname, ".env.production"),
@@ -63,6 +65,12 @@ module.exports = (env) => {
         new CopyPlugin([{ from: "html-production/" }]),
         new MiniCssExtractPlugin({
           filename: "[name].css",
+        }),
+        new CompressionPlugin({
+          test: /\.(js|css)$/, // Compress .js and .css files
+          algorithm: "gzip", // Default compression algorithm
+          threshold: 10240, // Only assets bigger than this size (10 Kilobytes) are processed
+          minRatio: 0.8 // Only assets that compress better than this ratio are processed
         }),
       ];
       break;
@@ -81,6 +89,12 @@ module.exports = (env) => {
         new CopyPlugin([{ from: "html-staging/" }]),
         new MiniCssExtractPlugin({
           filename: "[name].css",
+        }),
+        new CompressionPlugin({
+          test: /\.(js|css)$/, // Compress .js and .css files
+          algorithm: "gzip", // Default compression algorithm
+          threshold: 10240, // Only assets bigger than this size (10 Kilobytes) are processed
+          minRatio: 0.8 // Only assets that compress better than this ratio are processed
         }),
       ];
       break;

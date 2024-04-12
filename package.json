@@ -37,6 +37,7 @@
     "browserify-zlib": "^0.2.0",
     "bs58": "^4.0.1",
     "buffer": "^6.0.3",
+    "compression-webpack-plugin": "^11.1.0",
     "copy-webpack-plugin": "^5.1.1",
     "crypto-browserify": "^3.12.0",
     "css-loader": "^3.4.2",
