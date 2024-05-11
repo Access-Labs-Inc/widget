@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@accessprotocol/js@2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@accessprotocol/js/-/js-2.1.0.tgz#2d5c57aae122d087dc3325a7ffdf214e87d4c06c"
-  integrity sha512-6CtoGuxGMvg4Kj4VrY66xM+3gNXS/pe3HSDR/uUXGDm9X0fdS1LtwaDqQ/5loij2pr36PAINodzKhXnspSVMKQ==
+"@accessprotocol/js@2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@accessprotocol/js/-/js-2.1.1.tgz#2cf5dceb97d36768e158842526bbb307e619d2c3"
+  integrity sha512-ISoMEEJ2lp/JGvuole3wIoklullE5Xz3wOB+mZyjSXz2ia5CvN1uKnqNVmGVJwuMkENZ1kM/vfwCaUyh3+F5Zg==
   dependencies:
     "@solana/spl-token" "^0.3.7"
     "@solana/web3.js" "^1.66.2"
@@ -2617,6 +2617,11 @@
     eventemitter3 "^4.0.7"
     uuid "^8.3.2"
 
+"@supercharge/promise-pool@^3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@supercharge/promise-pool/-/promise-pool-3.2.0.tgz#a6ab4afdf798e453a6bb51c4ae340852e1266af8"
+  integrity sha512-pj0cAALblTZBPtMltWOlZTQSLT07jIaFNeM8TWoJD1cQMgDB9mcMlVMoetiB35OzNJpqQ2b+QEtwiR9f20mADg==
+
 "@tootallnate/once@2":
   version "2.0.0"
   resolved "https://registry.npmjs.org/@tootallnate/once/-/once-2.0.0.tgz"
@@ -4181,7 +4186,7 @@ bs58@^3.0.0:
 
 bs58@^5.0.0:
   version "5.0.0"
-  resolved "https://registry.npmjs.org/bs58/-/bs58-5.0.0.tgz"
+  resolved "https://registry.yarnpkg.com/bs58/-/bs58-5.0.0.tgz#865575b4d13c09ea2a84622df6c8cbeb54ffc279"
   integrity sha512-r+ihvQJvahgYT50JD05dyJNKlmmSlMoOGwn1lCcEzanPglg7TxYjioQUYehQ9mAR/+hOSd2jRc/Z2y5UxBymvQ==
   dependencies:
     base-x "^4.0.0"

@@ -23,7 +23,7 @@ import Loading from '../components/Loading';
 import { ProgressModal } from '../components/ProgressModal';
 import { clsxp, formatACSCurrency } from '../libs/utils';
 import env from '../libs/env';
-import { useFeePayer } from '../hooks/useFeePayer';
+import { sendTxDirectly } from '../libs/send';
 
 const DONE_STEP = 'Done';
 const IDLE_STEP = 'Idle';
@@ -47,9 +47,8 @@ const calculateFees = (amount: number,
 export const Stake = () => {
   const { poolId, poolName, element, classPrefix } = useContext(ConfigContext);
   const { connection } = useConnection();
-  const { publicKey, signTransaction } =
+  const { publicKey, signTransaction, signAllTransactions } =
     useWallet();
-  const { feePayerPubKey, sendTxThroughGoApi } = useFeePayer();
   const [working, setWorking] = useState(IDLE_STEP);
   const [balance, setBalance] = useState<number | null | undefined>(undefined);
   const [forever, setForever] = useState<boolean>(false);
@@ -211,7 +210,7 @@ export const Stake = () => {
 
   const handle = async () => {
     if (
-      !(publicKey && poolId && connection && feePayerPubKey && balance && stakedPool)
+      !(publicKey && poolId && connection && balance && stakedPool)
     ) {
       return;
     }
@@ -219,23 +218,30 @@ export const Stake = () => {
     try {
       openStakeModal();
 
-      const isCoinbaseWallet = localStorage.getItem('walletName') === '"Coinbase Wallet"';
       const ixs = await fullLock(
         connection,
         publicKey,
         new PublicKey(poolId),
-        isCoinbaseWallet ? feePayerPubKey : publicKey,
+        publicKey,
         Number(stakeAmount),
         Date.now() / 1000,
-        isCoinbaseWallet ? ACCOUNT_CREATION_ACS_PRICE * 1e6 : 0,
+        0,
         env.PROGRAM_ID,
         undefined,
         stakedPool,
         forever ? 0 : -1,
       );
 
-      const sx = await sendTxThroughGoApi(connection, ixs, signTransaction, publicKey);
-      console.log('SIGNATURE:', sx);
+      const result = await sendTxDirectly(
+        ixs,
+        signAllTransactions,
+        signTransaction,
+        connection,
+        publicKey,
+        1_000_000, // todo dynamic
+      );
+
+      console.log('SIGNATURE:', result);
 
       const lockedEvent = new CustomEvent('lock', {
         detail: {
