@@ -122,7 +122,6 @@ const Main = () => {
           cancelable: true,
           composed: false, // if you want to listen on parent turn this on
         });
-        console.log("Connected event: ", connectedEvent);
         element.dispatchEvent(connectedEvent);
       })();
     }
