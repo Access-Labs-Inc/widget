@@ -19,10 +19,9 @@ import { WalletConnectButton } from '../components/wallet-adapter/ui/WalletConne
 import { WalletModalButton } from '../components/wallet-adapter/ui/WalletModalButton';
 import { useWallet } from '../components/wallet-adapter/useWallet';
 import { ConfigContext } from '../AppContext';
-import { BondAccount, StakeAccount } from '@accessprotocol/js';
+import { BondAccount, BondV2Account, getBondV2Accounts, getBondAccounts, StakeAccount } from '@accessprotocol/js';
 import env from '../libs/env';
 import { useConnection } from '../components/wallet-adapter/useConnection';
-import { getBondAccounts } from '../libs/program';
 import { clsxp } from '../libs/utils';
 
 const Main = () => {
@@ -30,8 +29,6 @@ const Main = () => {
   const [active, setActive] = useState(false);
   const ref = useRef<HTMLUListElement>(null);
   const {
-    disconnectButtonClass,
-    connectedButtonClass,
     element,
     poolId,
     classPrefix,
@@ -57,7 +54,7 @@ const Main = () => {
   useEffect(() => {
     if (connected && element && publicKey && poolId) {
       (async () => {
-        const [stakeAccountKey] = await StakeAccount.getKey(
+        const [stakeAccountKey] = StakeAccount.getKey(
           env.PROGRAM_ID,
           publicKey,
           new PublicKey(poolId)
@@ -92,11 +89,34 @@ const Main = () => {
         } else {
           console.log('No bond accounts found');
         }
+        const bondV2Accounts = await getBondV2Accounts(
+          connection,
+          publicKey,
+          env.PROGRAM_ID
+        );
+        let ba2Sum = new BN(0);
+        if (bondV2Accounts != null && bondV2Accounts.length > 0) {
+          try {
+            ba2Sum = bondV2Accounts.reduce((acc, bAccount) => {
+              const ba = BondV2Account.deserialize(bAccount.account.data);
+              if (ba.pool.toBase58() === poolId) {
+                acc = acc.add(ba.amount);
+              }
+              return acc;
+            }, new BN(0));
+          } catch (e) {
+            console.log('Error parsing bond V2 account', e);
+          }
+        } else {
+          console.log('No bond V2 accounts found');
+        }
         const connectedEvent = new CustomEvent('connected', {
           detail: {
             address: base58,
-            locked: stakeAccount?.stakeAmount.toNumber() || 0,
+            locked: (stakeAccount?.stakeAmount.toNumber() || 0) + ba2Sum.toNumber() + baSum.toNumber(),
+            staked: stakeAccount?.stakeAmount.toNumber() || 0,
             airdrop: baSum.toNumber(),
+            forever: ba2Sum.toNumber()
           },
           bubbles: true,
           cancelable: true,
