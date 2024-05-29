@@ -78,7 +78,8 @@
     "core-js": "2",
     "preact": "^10.2.1",
     "rc-util": "^5.24.4",
-    "react-input-slider": "^6.0.1"
+    "react-input-slider": "^6.0.1",
+    "zod": "^3.23.8"
   },
   "resolutions": {
     "buffer": "6.0.3",
