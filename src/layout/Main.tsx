@@ -7,8 +7,6 @@ import {
   useRef,
   useState,
 } from 'preact/hooks';
-import { PublicKey } from '@solana/web3.js';
-import BN from 'bn.js';
 import { Router, RouteComponent } from '../layout/Router';
 import { Actions } from '../routes/Actions';
 import { Stake } from '../routes/Stake';
@@ -19,10 +17,9 @@ import { WalletConnectButton } from '../components/wallet-adapter/ui/WalletConne
 import { WalletModalButton } from '../components/wallet-adapter/ui/WalletModalButton';
 import { useWallet } from '../components/wallet-adapter/useWallet';
 import { ConfigContext } from '../AppContext';
-import { BondAccount, BondV2Account, getBondV2Accounts, getBondAccounts, StakeAccount } from '@accessprotocol/js';
 import env from '../libs/env';
-import { useConnection } from '../components/wallet-adapter/useConnection';
 import { clsxp } from '../libs/utils';
+import { offchainBasicSubscriptionsSchema } from '../validations/subscriptions';
 
 const Main = () => {
   const { publicKey, wallet, connected } = useWallet();
@@ -33,8 +30,6 @@ const Main = () => {
     poolId,
     classPrefix,
   } = useContext(ConfigContext);
-  const { connection } = useConnection();
-
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey]);
   const content = useMemo(() => {
     if (!wallet || !base58) {
@@ -54,74 +49,44 @@ const Main = () => {
   useEffect(() => {
     if (connected && element && publicKey && poolId) {
       (async () => {
-        const [stakeAccountKey] = StakeAccount.getKey(
-          env.PROGRAM_ID,
-          publicKey,
-          new PublicKey(poolId)
-        );
-        let stakeAccount;
-        try {
-          stakeAccount = await StakeAccount.retrieve(
-            connection,
-            stakeAccountKey
-          );
-        } catch (e) {
-          console.log('No stake account found');
+        const response = await fetch(`${env.GO_API_URL}/subscriptions/${publicKey.toBase58()}`);
+        if (!response.ok) {
+          console.log('ERROR: ', response.statusText);
+          return;
         }
-        const bondAccounts = await getBondAccounts(
-          connection,
-          publicKey,
-          env.PROGRAM_ID
-        );
-        let baSum = new BN(0);
-        if (bondAccounts != null && bondAccounts.length > 0) {
-          try {
-            baSum = bondAccounts.reduce((acc, bAccount) => {
-              const ba = BondAccount.deserialize(bAccount.account.data);
-              if (ba.stakePool.toBase58() === poolId) {
-                acc = acc.add(ba.totalStaked);
-              }
-              return acc;
-            }, new BN(0));
-          } catch (e) {
-            console.log('Error parsing bond accounts', e);
+
+        const json = await response.json();
+        const data = offchainBasicSubscriptionsSchema.parse(json);
+
+        const { staked, bonds, forever } = data.reduce((acc, item) => {
+          if (item.pool === poolId) {
+            return {
+              staked: acc.staked + (item?.locked ?? 0),
+              bonds: acc.bonds + (item?.bonds ?? 0),
+              forever: acc.forever + (item?.forever ?? 0),
+            };
+          } else {
+            return acc;
           }
-        } else {
-          console.log('No bond accounts found');
-        }
-        const bondV2Accounts = await getBondV2Accounts(
-          connection,
-          publicKey,
-          env.PROGRAM_ID
-        );
-        let ba2Sum = new BN(0);
-        if (bondV2Accounts != null && bondV2Accounts.length > 0) {
-          try {
-            ba2Sum = bondV2Accounts.reduce((acc, bAccount) => {
-              const ba = BondV2Account.deserialize(bAccount.account.data);
-              if (ba.pool.toBase58() === poolId) {
-                acc = acc.add(ba.amount);
-              }
-              return acc;
-            }, new BN(0));
-          } catch (e) {
-            console.log('Error parsing bond V2 account', e);
-          }
-        } else {
-          console.log('No bond V2 accounts found');
-        }
+        }, {
+          staked: 0,
+          bonds: 0,
+          forever: 0
+        });
+
         const connectedEvent = new CustomEvent('connected', {
           detail: {
             address: base58,
-            locked: (stakeAccount?.stakeAmount.toNumber() || 0) + ba2Sum.toNumber() + baSum.toNumber(),
-            staked: stakeAccount?.stakeAmount.toNumber() || 0,
-            airdrop: baSum.toNumber(),
-            forever: ba2Sum.toNumber()
+            locked: staked + bonds + forever,
+            staked,
+            bonds,
+            forever
           },
           bubbles: true,
           cancelable: true,
           composed: false, // if you want to listen on parent turn this on
         });
+        console.log('Connected event: ', connectedEvent);
         element.dispatchEvent(connectedEvent);
       })();
     }
