@@ -51,7 +51,7 @@ const Main = () => {
       (async () => {
         const response = await fetch(`${env.GO_API_URL}/subscriptions/${publicKey.toBase58()}`);
         if (!response.ok) {
-          console.log("ERROR: ", response.statusText);
+          console.log('ERROR: ', response.statusText);
           return;
         }
 
@@ -64,7 +64,7 @@ const Main = () => {
               staked: acc.staked + (item?.locked ?? 0),
               bonds: acc.bonds + (item?.bonds ?? 0),
               forever: acc.forever + (item?.forever ?? 0),
-            }
+            };
           } else {
             return acc;
           }
@@ -86,7 +86,7 @@ const Main = () => {
           cancelable: true,
           composed: false, // if you want to listen on parent turn this on
         });
-        console.log("Connected event: ", connectedEvent);
+        console.log('Connected event: ', connectedEvent);
         element.dispatchEvent(connectedEvent);
       })();
     }
