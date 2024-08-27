@@ -31,10 +31,16 @@ export const confirmTxs = async (
       if (!sigBuffer) { throw new Error('No transaction signature.'); }
       const sig = bs58.encode(sigBuffer);
       // eslint-disable-next-line no-await-in-loop
-      const status = await connection.getSignatureStatus(sig, {
+      const statuses = await connection.getSignatureStatuses([sig], {
         searchTransactionHistory: true,
       });
-      const statusValue = status.value?.confirmationStatus;
+      if (!statuses || statuses.value.length === 0) {
+        console.log('No statuses found.');
+        finished = false;
+        continue;
+      }
+      const status = statuses.value[0];
+      const statusValue = status?.confirmationStatus;
       console.log('Confirmation status: ', statusValue);
       if (statusValue !== txStatus && statusValue !== 'finalized') {
         finished = false;
