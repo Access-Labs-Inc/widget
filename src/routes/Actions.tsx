@@ -1,11 +1,28 @@
 import { h } from 'preact';
-import { useCallback, useContext, useEffect, useMemo, useState, } from 'preact/hooks';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'preact/hooks';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
-import { calculateRewardForStaker, getBondAccounts, getStakeAccounts, getUserACSBalance, } from '../libs/program';
+import {
+  calculateRewardForStaker,
+  getBondAccounts,
+  getStakeAccounts,
+  getUserACSBalance,
+} from '../libs/program';
 import { ConfigContext } from '../AppContext';
-import { BondAccount, BondV2Account, getBondV2Accounts, StakeAccount, StakePool } from '@accessprotocol/js';
+import {
+  BondAccount,
+  BondV2Account,
+  getBondV2Accounts,
+  StakeAccount,
+  StakePool,
+} from '@accessprotocol/js';
 import { clsxp, formatPenyACSCurrency } from '../libs/utils';
 import { RouteLink } from '../layout/Router';
 import { Header } from '../components/Header';
@@ -83,8 +100,13 @@ export const Actions = () => {
         env.PROGRAM_ID
       );
       setBondAccounts(
-        bAccounts.map((bAccount: any) => BondAccount.deserialize(bAccount.account.data))
-          .filter((bAccount: BondAccount) => bAccount.stakePool.toBase58() === poolId)
+        bAccounts
+          .map((bAccount: any) =>
+            BondAccount.deserialize(bAccount.account.data)
+          )
+          .filter(
+            (bAccount: BondAccount) => bAccount.stakePool.toBase58() === poolId
+          )
       );
     })();
   }, [publicKey, connection, poolId]);
@@ -101,8 +123,13 @@ export const Actions = () => {
       );
 
       setBondV2Accounts(
-        bV2Accounts.map((bAccount: any) => BondV2Account.deserialize(bAccount.account.data))
-          .filter((bAccount: BondV2Account) => bAccount.pool.toBase58() === poolId)
+        bV2Accounts
+          .map((bAccount: any) =>
+            BondV2Account.deserialize(bAccount.account.data)
+          )
+          .filter(
+            (bAccount: BondV2Account) => bAccount.pool.toBase58() === poolId
+          )
       );
     })();
   }, [publicKey, connection, poolId]);
@@ -123,12 +150,16 @@ export const Actions = () => {
       return null;
     }
 
-    return bondAccounts.reduce((acc, ba) =>
-      acc + calculateRewardForStaker(
-        stakePool.currentDayIdx - ba.lastClaimedOffset.toNumber(),
-        stakePool,
-        ba.totalStaked as BN
-      ), 0);
+    return bondAccounts.reduce(
+      (acc, ba) =>
+        acc +
+        calculateRewardForStaker(
+          stakePool.currentDayIdx - ba.lastClaimedOffset.toNumber(),
+          stakePool,
+          ba.totalStaked as BN
+        ),
+      0
+    );
   }, [bondAccounts, stakePool]);
 
   const claimableBondV2Amount = useMemo(() => {
@@ -136,16 +167,24 @@ export const Actions = () => {
       return null;
     }
 
-    return bondV2Accounts.reduce((acc, ba) =>
-      acc + calculateRewardForStaker(
-        stakePool.currentDayIdx - ba.lastClaimedOffset.toNumber(),
-        stakePool,
-        ba.amount as BN
-      ), 0);
+    return bondV2Accounts.reduce(
+      (acc, ba) =>
+        acc +
+        calculateRewardForStaker(
+          stakePool.currentDayIdx - ba.lastClaimedOffset.toNumber(),
+          stakePool,
+          ba.amount as BN
+        ),
+      0
+    );
   }, [bondV2Accounts, stakePool]);
 
   const claimableAmount = useMemo(() => {
-    return (claimableBondAmount ?? 0) + (claimableStakeAmount ?? 0) + (claimableBondV2Amount ?? 0);
+    return (
+      (claimableBondAmount ?? 0) +
+      (claimableStakeAmount ?? 0) +
+      (claimableBondV2Amount ?? 0)
+    );
   }, [claimableBondAmount, claimableStakeAmount, claimableBondV2Amount]);
 
   const disconnectHandler = useCallback(async () => {
@@ -218,14 +257,20 @@ export const Actions = () => {
             classPrefix,
             'actions_staked_amount',
             (stakedAccount === undefined || bondAccounts === undefined) &&
-            'actions_blink'
+              'actions_blink'
           )}
         >
           <div>
             {formatPenyACSCurrency(
               (stakedAccount?.stakeAmount.toNumber() ?? 0) +
-              (bondAccounts?.reduce((acc, ba) => acc + ba.totalStaked.toNumber(), 0) ?? 0) +
-              (bondV2Accounts?.reduce((acc, ba) => acc + ba.amount.toNumber(), 0) ?? 0)
+                (bondAccounts?.reduce(
+                  (acc, ba) => acc + ba.totalStaked.toNumber(),
+                  0
+                ) ?? 0) +
+                (bondV2Accounts?.reduce(
+                  (acc, ba) => acc + ba.amount.toNumber(),
+                  0
+                ) ?? 0)
             )}{' '}
             ACS locked
           </div>
@@ -244,7 +289,7 @@ export const Actions = () => {
             classPrefix,
             'actions_balance',
             (stakedAccount === undefined || bondAccounts === undefined) &&
-            'actions_blink'
+              'actions_blink'
           )}
         >
           {formatPenyACSCurrency(claimableAmount ?? 0)} ACS rewards
@@ -258,7 +303,9 @@ export const Actions = () => {
         >
           Lock
         </RouteLink>
-        {(stakedAccount && stakedAccount.stakeAmount.toNumber() > 0) || hasUnlockableBonds || hasUnlockableBondsV2 ? (
+        {(stakedAccount && stakedAccount.stakeAmount.toNumber() > 0) ||
+        hasUnlockableBonds ||
+        hasUnlockableBondsV2 ? (
           <RouteLink
             className={clsxp(classPrefix, 'actions_button')}
             href='/unstake'
@@ -276,24 +323,12 @@ export const Actions = () => {
             Unlock ACS
           </span>
         )}
-        {claimableAmount && claimableAmount > 0 ? (
-          <RouteLink
-            className={clsxp(classPrefix, 'actions_button')}
-            href='/claim'
-          >
-            Claim
-          </RouteLink>
-        ) : (
-          <span
-            className={clsxp(
-              classPrefix,
-              'actions_button',
-              'actions_button_disabled'
-            )}
-          >
-            Claim rewards
-          </span>
-        )}
+        <RouteLink
+          className={clsxp(classPrefix, 'actions_button')}
+          href='/claim'
+        >
+          Claim
+        </RouteLink>
       </div>
     </div>
   );
