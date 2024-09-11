@@ -6,186 +6,78 @@ import {
   useMemo,
   useState,
 } from 'preact/hooks';
-import { PublicKey } from '@solana/web3.js';
-import BN from 'bn.js';
 
-import {
-  calculateRewardForStaker,
-  getBondAccounts,
-  getStakeAccounts,
-  getUserACSBalance,
-} from '../libs/program';
 import { ConfigContext } from '../AppContext';
-import {
-  BondAccount,
-  BondV2Account,
-  getBondV2Accounts,
-  StakeAccount,
-  StakePool,
-} from '@accessprotocol/js';
 import { clsxp, formatPenyACSCurrency } from '../libs/utils';
 import { RouteLink } from '../layout/Router';
 import { Header } from '../components/Header';
 import { useWallet } from '../components/wallet-adapter/useWallet';
 import { useConnection } from '../components/wallet-adapter/useConnection';
 import env from '../libs/env';
+import { offchainBasicSubscriptionsSchema } from '../validations/subscriptions';
+import { getUserACSBalance } from '../libs/program';
 
 export const Actions = () => {
   const { poolId, classPrefix } = useContext(ConfigContext);
-  const { connection } = useConnection();
   const { publicKey, disconnect, disconnecting, connected } = useWallet();
-  const [balance, setBalance] = useState<BN | null>(null);
-  const [stakedAccount, setStakedAccount] = useState<
-    StakeAccount | null | undefined
-  >(undefined);
-  const [bondAccounts, setBondAccounts] = useState<BondAccount[]>([]);
-  const [bondV2Accounts, setBondV2Accounts] = useState<BondV2Account[]>([]);
-  const [stakePool, setStakePool] = useState<StakePool | undefined>(undefined);
+  const { connection } = useConnection();
+  const [balance, setBalance] = useState<number | null>(null);
+  const [stakedAmount, setStakedAmount] = useState<number | null>(null);
+  const [bondsAmount, setBondsAmount] = useState<number | null>(null);
+  const [foreverAmount, setForeverAmount] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!(publicKey && connection)) {
+    if (!(publicKey && connected)) {
       return;
     }
     (async () => {
-      setBalance(
-        await getUserACSBalance(connection, publicKey, env.PROGRAM_ID)
-      );
-    })();
-  }, [publicKey, connection]);
+      try {
+        // Fetch balance using the old method
+        const userBalance = await getUserACSBalance(
+          connection,
+          publicKey,
+          env.PROGRAM_ID
+        );
+        setBalance(userBalance.toNumber());
 
-  useEffect(() => {
-    if (!(poolId && connection)) {
-      return;
-    }
-    (async () => {
-      setStakePool(await StakePool.retrieve(connection, new PublicKey(poolId)));
-    })();
-  }, [poolId, connection]);
-
-  useEffect(() => {
-    if (!(publicKey && poolId && connection)) {
-      return;
-    }
-    (async () => {
-      const stakedAccounts = await getStakeAccounts(
-        connection,
-        publicKey,
-        env.PROGRAM_ID
-      );
-      if (stakedAccounts != null && stakedAccounts.length > 0) {
-        const sAccount = stakedAccounts.find((st) => {
-          const sa = StakeAccount.deserialize(st.account.data);
-          return sa.stakePool.toBase58() === poolId;
-        });
-        if (sAccount) {
-          const sa = StakeAccount.deserialize(sAccount.account.data);
-          setStakedAccount(sa);
-        } else {
-          setStakedAccount(null);
+        // Fetch other data from GO API
+        const response = await fetch(
+          `${env.GO_API_URL}/subscriptions/${publicKey.toBase58()}`
+        );
+        if (!response.ok) {
+          console.log('ERROR: ', response.statusText);
+          return;
         }
-      } else {
-        setStakedAccount(null);
+
+        const json = await response.json();
+        const data = offchainBasicSubscriptionsSchema.parse(json);
+        const { locked, bonds, forever } = data.reduce(
+          (acc, item) => {
+            if (item.pool === poolId) {
+              return {
+                locked: acc.locked + (item.locked ?? 0),
+                bonds: acc.bonds + (item.bonds ?? 0),
+                forever: acc.forever + (item?.forever ?? 0),
+              };
+            } else {
+              return acc;
+            }
+          },
+          {
+            locked: 0,
+            bonds: 0,
+            forever: 0,
+          }
+        );
+
+        setStakedAmount(locked ?? 0);
+        setBondsAmount(bonds ?? 0);
+        setForeverAmount(forever ?? 0);
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
       }
     })();
-  }, [publicKey, connection, poolId]);
-
-  useEffect(() => {
-    if (!(publicKey && poolId && connection)) {
-      return;
-    }
-    (async () => {
-      const bAccounts = await getBondAccounts(
-        connection,
-        publicKey,
-        env.PROGRAM_ID
-      );
-      setBondAccounts(
-        bAccounts
-          .map((bAccount: any) =>
-            BondAccount.deserialize(bAccount.account.data)
-          )
-          .filter(
-            (bAccount: BondAccount) => bAccount.stakePool.toBase58() === poolId
-          )
-      );
-    })();
-  }, [publicKey, connection, poolId]);
-
-  useEffect(() => {
-    if (!(publicKey && poolId && connection)) {
-      return;
-    }
-    (async () => {
-      const bV2Accounts = await getBondV2Accounts(
-        connection,
-        publicKey,
-        env.PROGRAM_ID
-      );
-
-      setBondV2Accounts(
-        bV2Accounts
-          .map((bAccount: any) =>
-            BondV2Account.deserialize(bAccount.account.data)
-          )
-          .filter(
-            (bAccount: BondV2Account) => bAccount.pool.toBase58() === poolId
-          )
-      );
-    })();
-  }, [publicKey, connection, poolId]);
-
-  const claimableStakeAmount = useMemo(() => {
-    if (!(stakedAccount && stakePool)) {
-      return null;
-    }
-    return calculateRewardForStaker(
-      stakePool.currentDayIdx - stakedAccount.lastClaimedOffset.toNumber(),
-      stakePool,
-      stakedAccount.stakeAmount as BN
-    );
-  }, [stakedAccount, stakePool]);
-
-  const claimableBondAmount = useMemo(() => {
-    if (bondAccounts.length === 0 || !stakePool) {
-      return null;
-    }
-
-    return bondAccounts.reduce(
-      (acc, ba) =>
-        acc +
-        calculateRewardForStaker(
-          stakePool.currentDayIdx - ba.lastClaimedOffset.toNumber(),
-          stakePool,
-          ba.totalStaked as BN
-        ),
-      0
-    );
-  }, [bondAccounts, stakePool]);
-
-  const claimableBondV2Amount = useMemo(() => {
-    if (bondV2Accounts.length === 0 || !stakePool) {
-      return null;
-    }
-
-    return bondV2Accounts.reduce(
-      (acc, ba) =>
-        acc +
-        calculateRewardForStaker(
-          stakePool.currentDayIdx - ba.lastClaimedOffset.toNumber(),
-          stakePool,
-          ba.amount as BN
-        ),
-      0
-    );
-  }, [bondV2Accounts, stakePool]);
-
-  const claimableAmount = useMemo(() => {
-    return (
-      (claimableBondAmount ?? 0) +
-      (claimableStakeAmount ?? 0) +
-      (claimableBondV2Amount ?? 0)
-    );
-  }, [claimableBondAmount, claimableStakeAmount, claimableBondV2Amount]);
+  }, [publicKey, connected, poolId, connection]);
 
   const disconnectHandler = useCallback(async () => {
     try {
@@ -195,26 +87,9 @@ export const Actions = () => {
     }
   }, [disconnect]);
 
-  const hasUnlockableBonds = useMemo(() => {
-    if (!stakePool || !bondAccounts) {
-      return [];
-    }
-    return bondAccounts.find((ba) => {
-      return ba.unlockStartDate.toNumber() <= Date.now() / 1000;
-    });
-  }, [stakePool, bondAccounts]);
-
-  const hasUnlockableBondsV2 = useMemo(() => {
-    if (!stakePool || !bondV2Accounts) {
-      return [];
-    }
-    return bondV2Accounts.find((ba) => {
-      if (!ba.unlockTimestamp) {
-        return false;
-      }
-      return ba.unlockTimestamp.toNumber() <= Date.now() / 1000;
-    });
-  }, [stakePool, bondV2Accounts]);
+  const hasUnlockableAmount = useMemo(() => {
+    return (stakedAmount ?? 0) + (bondsAmount ?? 0) > 0;
+  }, [stakedAmount, bondsAmount]);
 
   return (
     <div className={clsxp(classPrefix, 'actions_root')}>
@@ -252,47 +127,16 @@ export const Actions = () => {
       </div>
 
       <div>
-        <div
-          className={clsxp(
-            classPrefix,
-            'actions_staked_amount',
-            (stakedAccount === undefined || bondAccounts === undefined) &&
-              'actions_blink'
-          )}
-        >
+        <div className={clsxp(classPrefix, 'actions_staked_amount')}>
           <div>
             {formatPenyACSCurrency(
-              (stakedAccount?.stakeAmount.toNumber() ?? 0) +
-                (bondAccounts?.reduce(
-                  (acc, ba) => acc + ba.totalStaked.toNumber(),
-                  0
-                ) ?? 0) +
-                (bondV2Accounts?.reduce(
-                  (acc, ba) => acc + ba.amount.toNumber(),
-                  0
-                ) ?? 0)
+              (stakedAmount ?? 0) + (bondsAmount ?? 0) + (foreverAmount ?? 0)
             )}{' '}
             ACS locked
           </div>
         </div>
-        <div
-          className={clsxp(
-            classPrefix,
-            'actions_balance',
-            balance === undefined && 'actions_blink'
-          )}
-        >
-          {formatPenyACSCurrency(balance?.toNumber() ?? 0)} ACS available
-        </div>
-        <div
-          className={clsxp(
-            classPrefix,
-            'actions_balance',
-            (stakedAccount === undefined || bondAccounts === undefined) &&
-              'actions_blink'
-          )}
-        >
-          {formatPenyACSCurrency(claimableAmount ?? 0)} ACS rewards
+        <div className={clsxp(classPrefix, 'actions_balance')}>
+          {formatPenyACSCurrency(balance ?? 0)} ACS available
         </div>
       </div>
 
@@ -303,9 +147,7 @@ export const Actions = () => {
         >
           Lock
         </RouteLink>
-        {(stakedAccount && stakedAccount.stakeAmount.toNumber() > 0) ||
-        hasUnlockableBonds ||
-        hasUnlockableBondsV2 ? (
+        {hasUnlockableAmount ? (
           <RouteLink
             className={clsxp(classPrefix, 'actions_button')}
             href='/unstake'
