@@ -91,6 +91,10 @@ export const Actions = () => {
     return (stakedAmount ?? 0) + (bondsAmount ?? 0) > 0;
   }, [stakedAmount, bondsAmount]);
 
+  const openClaimPage = useCallback(() => {
+    window.open('https://hub.accessprotocol.co', '_blank');
+  }, []);
+
   return (
     <div className={clsxp(classPrefix, 'actions_root')}>
       {connected && disconnecting && (
@@ -165,12 +169,12 @@ export const Actions = () => {
             Unlock ACS
           </span>
         )}
-        <RouteLink
+        <button
           className={clsxp(classPrefix, 'actions_button')}
-          href='/claim'
+          onClick={openClaimPage}
         >
-          Claim
-        </RouteLink>
+          View on HUB
+        </button>
       </div>
     </div>
   );

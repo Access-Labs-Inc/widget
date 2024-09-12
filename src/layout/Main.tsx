@@ -11,7 +11,6 @@ import { Router, RouteComponent } from '../layout/Router';
 import { Actions } from '../routes/Actions';
 import { Stake } from '../routes/Stake';
 import { Unstake } from '../routes/Unstake';
-import { Claim } from '../routes/Claim';
 import { Button } from '../components/wallet-adapter/ui/Button';
 import { WalletConnectButton } from '../components/wallet-adapter/ui/WalletConnectButton';
 import { WalletModalButton } from '../components/wallet-adapter/ui/WalletModalButton';
@@ -25,11 +24,7 @@ const Main = () => {
   const { publicKey, wallet, connected } = useWallet();
   const [active, setActive] = useState(false);
   const ref = useRef<HTMLUListElement>(null);
-  const {
-    element,
-    poolId,
-    classPrefix,
-  } = useContext(ConfigContext);
+  const { element, poolId, classPrefix } = useContext(ConfigContext);
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey]);
   const content = useMemo(() => {
     if (!wallet || !base58) {
@@ -49,7 +44,9 @@ const Main = () => {
   useEffect(() => {
     if (connected && element && publicKey && poolId) {
       (async () => {
-        const response = await fetch(`${env.GO_API_URL}/subscriptions/${publicKey.toBase58()}`);
+        const response = await fetch(
+          `${env.GO_API_URL}/subscriptions/${publicKey.toBase58()}`
+        );
         if (!response.ok) {
           console.log('ERROR: ', response.statusText);
           return;
@@ -58,21 +55,24 @@ const Main = () => {
         const json = await response.json();
         const data = offchainBasicSubscriptionsSchema.parse(json);
 
-        const { staked, bonds, forever } = data.reduce((acc, item) => {
-          if (item.pool === poolId) {
-            return {
-              staked: acc.staked + (item?.locked ?? 0),
-              bonds: acc.bonds + (item?.bonds ?? 0),
-              forever: acc.forever + (item?.forever ?? 0),
-            };
-          } else {
-            return acc;
+        const { staked, bonds, forever } = data.reduce(
+          (acc, item) => {
+            if (item.pool === poolId) {
+              return {
+                staked: acc.staked + (item?.locked ?? 0),
+                bonds: acc.bonds + (item?.bonds ?? 0),
+                forever: acc.forever + (item?.forever ?? 0),
+              };
+            } else {
+              return acc;
+            }
+          },
+          {
+            staked: 0,
+            bonds: 0,
+            forever: 0,
           }
-        }, {
-          staked: 0,
-          bonds: 0,
-          forever: 0
-        });
+        );
 
         const connectedEvent = new CustomEvent('connected', {
           detail: {
@@ -80,7 +80,7 @@ const Main = () => {
             locked: staked + bonds + forever,
             staked,
             bonds,
-            forever
+            forever,
           },
           bubbles: true,
           cancelable: true,
@@ -154,7 +154,6 @@ const Main = () => {
             '/': <RouteComponent component={Actions} />,
             '/stake': <RouteComponent component={Stake} />,
             '/unstake': <RouteComponent component={Unstake} />,
-            '/claim': <RouteComponent component={Claim} />,
           }}
         />
       </div>
