@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import { h } from "preact";
 import {
   useCallback,
   useContext,
@@ -6,30 +6,25 @@ import {
   useMemo,
   useRef,
   useState,
-} from 'preact/hooks';
-import { Router, RouteComponent } from '../layout/Router';
-import { Actions } from '../routes/Actions';
-import { Stake } from '../routes/Stake';
-import { Unstake } from '../routes/Unstake';
-import { Claim } from '../routes/Claim';
-import { Button } from '../components/wallet-adapter/ui/Button';
-import { WalletConnectButton } from '../components/wallet-adapter/ui/WalletConnectButton';
-import { WalletModalButton } from '../components/wallet-adapter/ui/WalletModalButton';
-import { useWallet } from '../components/wallet-adapter/useWallet';
-import { ConfigContext } from '../AppContext';
-import env from '../libs/env';
-import { clsxp } from '../libs/utils';
-import { offchainBasicSubscriptionsSchema } from '../validations/subscriptions';
+} from "preact/hooks";
+import { Router, RouteComponent } from "../layout/Router";
+import { Actions } from "../routes/Actions";
+import { Stake } from "../routes/Stake";
+import { Unstake } from "../routes/Unstake";
+import { Button } from "../components/wallet-adapter/ui/Button";
+import { WalletConnectButton } from "../components/wallet-adapter/ui/WalletConnectButton";
+import { WalletModalButton } from "../components/wallet-adapter/ui/WalletModalButton";
+import { useWallet } from "../components/wallet-adapter/useWallet";
+import { ConfigContext } from "../AppContext";
+import env from "../libs/env";
+import { clsxp } from "../libs/utils";
+import { offchainBasicSubscriptionsSchema } from "../validations/subscriptions";
 
 const Main = () => {
   const { publicKey, wallet, connected } = useWallet();
   const [active, setActive] = useState(false);
   const ref = useRef<HTMLUListElement>(null);
-  const {
-    element,
-    poolId,
-    classPrefix,
-  } = useContext(ConfigContext);
+  const { element, poolId, classPrefix } = useContext(ConfigContext);
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey]);
   const content = useMemo(() => {
     if (!wallet || !base58) {
@@ -49,44 +44,49 @@ const Main = () => {
   useEffect(() => {
     if (connected && element && publicKey && poolId) {
       (async () => {
-        const response = await fetch(`${env.GO_API_URL}/subscriptions/${publicKey.toBase58()}`);
+        const response = await fetch(
+          `${env.GO_API_URL}/subscriptions/${publicKey.toBase58()}`
+        );
         if (!response.ok) {
-          console.log('ERROR: ', response.statusText);
+          console.log("ERROR: ", response.statusText);
           return;
         }
 
         const json = await response.json();
         const data = offchainBasicSubscriptionsSchema.parse(json);
 
-        const { staked, bonds, forever } = data.reduce((acc, item) => {
-          if (item.pool === poolId) {
-            return {
-              staked: acc.staked + (item?.locked ?? 0),
-              bonds: acc.bonds + (item?.bonds ?? 0),
-              forever: acc.forever + (item?.forever ?? 0),
-            };
-          } else {
-            return acc;
+        const { staked, bonds, forever } = data.reduce(
+          (acc, item) => {
+            if (item.pool === poolId) {
+              return {
+                staked: acc.staked + (item?.locked ?? 0),
+                bonds: acc.bonds + (item?.bonds ?? 0),
+                forever: acc.forever + (item?.forever ?? 0),
+              };
+            } else {
+              return acc;
+            }
+          },
+          {
+            staked: 0,
+            bonds: 0,
+            forever: 0,
           }
-        }, {
-          staked: 0,
-          bonds: 0,
-          forever: 0
-        });
+        );
 
-        const connectedEvent = new CustomEvent('connected', {
+        const connectedEvent = new CustomEvent("connected", {
           detail: {
             address: base58,
             locked: staked + bonds + forever,
             staked,
             bonds,
-            forever
+            forever,
           },
           bubbles: true,
           cancelable: true,
           composed: false, // if you want to listen on parent turn this on
         });
-        console.log('Connected event: ', connectedEvent);
+        console.log("Connected event: ", connectedEvent);
         element.dispatchEvent(connectedEvent);
       })();
     }
@@ -104,40 +104,40 @@ const Main = () => {
       closeDropdown();
     };
 
-    document.addEventListener('mousedown', listener);
-    document.addEventListener('touchstart', listener);
+    document.addEventListener("mousedown", listener);
+    document.addEventListener("touchstart", listener);
 
     return () => {
-      document.removeEventListener('mousedown', listener);
-      document.removeEventListener('touchstart', listener);
+      document.removeEventListener("mousedown", listener);
+      document.removeEventListener("touchstart", listener);
     };
   }, [ref, closeDropdown]);
 
   if (!wallet) {
     return (
-      <div className={clsxp(classPrefix, 'wallet_adapter_dropdown_wrapper')}>
+      <div className={clsxp(classPrefix, "wallet_adapter_dropdown_wrapper")}>
         <WalletModalButton />
       </div>
     );
   }
   if (!base58) {
     return (
-      <div className={clsxp(classPrefix, 'wallet_adapter_dropdown_wrapper')}>
+      <div className={clsxp(classPrefix, "wallet_adapter_dropdown_wrapper")}>
         <WalletConnectButton />
       </div>
     );
   }
 
   return (
-    <div className={clsxp(classPrefix, 'wallet_adapter_dropdown_wrapper')}>
+    <div className={clsxp(classPrefix, "wallet_adapter_dropdown_wrapper")}>
       <Button
         aria-expanded={active}
         className={clsxp(
           classPrefix,
-          'wallet_adapter_button_trigger',
-          active && 'wallet_adapter_button_trigger_active'
+          "wallet_adapter_button_trigger",
+          active && "wallet_adapter_button_trigger_active"
         )}
-        style={{ pointerEvents: active ? 'none' : 'auto' }}
+        style={{ pointerEvents: active ? "none" : "auto" }}
         onClick={toggleDropdown}
       >
         {content}
@@ -145,16 +145,15 @@ const Main = () => {
       <div
         className={clsxp(
           classPrefix,
-          'wallet_adapter_dropdown',
-          active && 'wallet_adapter_dropdown_active'
+          "wallet_adapter_dropdown",
+          active && "wallet_adapter_dropdown_active"
         )}
       >
         <Router
           routes={{
-            '/': <RouteComponent component={Actions} />,
-            '/stake': <RouteComponent component={Stake} />,
-            '/unstake': <RouteComponent component={Unstake} />,
-            '/claim': <RouteComponent component={Claim} />,
+            "/": <RouteComponent component={Actions} />,
+            "/stake": <RouteComponent component={Stake} />,
+            "/unstake": <RouteComponent component={Unstake} />,
           }}
         />
       </div>
