@@ -6,7 +6,6 @@ const TOKEN_MINT = process.env.TOKEN_MINT;
 const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL;
 const SOLANA_NETWORK = process.env.SOLANA_NETWORK;
 const GO_API_URL = process.env.GO_API_URL;
-const FEE_PAYER_URL = process.env.FEE_PAYER_URL;
 const UNSTAKE_BASE_URL = process.env.UNSTAKE_BASE_URL;
 const REWARDS_BASE_URL = process.env.REWARDS_BASE_URL;
 const GET_ACS_URL = process.env.GET_ACS_URL;
@@ -25,10 +24,6 @@ if (!PROGRAM_ID) {
 
 if (!TOKEN_MINT) {
   throw new Error('TOKEN_MINT must be set!');
-}
-
-if (!FEE_PAYER_URL) {
-  throw new Error('FEE_PAYER_URL must be set!');
 }
 
 if (!UNSTAKE_BASE_URL) {
@@ -52,7 +47,6 @@ interface Config {
   SOLANA_NETWORK: string;
   PROGRAM_ID: PublicKey;
   TOKEN_MINT: PublicKey;
-  FEE_PAYER_URL: string;
   GO_API_URL: string;
   UNSTAKE_BASE_URL: string;
   REWARDS_BASE_URL: string;
@@ -64,7 +58,6 @@ const config: Config = {
   SOLANA_NETWORK,
   PROGRAM_ID: new PublicKey(PROGRAM_ID),
   TOKEN_MINT: new PublicKey(TOKEN_MINT),
-  FEE_PAYER_URL,
   GO_API_URL,
   UNSTAKE_BASE_URL,
   REWARDS_BASE_URL,
